@@ -316,11 +316,11 @@ size variables, including height and crown size with DBH (e.g.,
 \citeproc{ref-Jucker2024}{Jucker et al. 2024}). The relationships among
 tree size variables often involve complex interactions influenced by
 various factors, such as species diversity, environmental conditions,
-and individual variability (e.g., \citeproc{ref-Poorter2012a}{Poorter et
-al. 2012a}; \citeproc{ref-Laurans2024}{Laurans et al. 2024}).
+and individual variability (\citeproc{ref-Laurans2024}{Laurans et al.
+2024}; e.g., \citeproc{ref-Poorter2012}{\textbf{Poorter2012?}}).
 Consequently, power-law models often fail to accurately capture the
 allometric relationships across the full range of tree sizes, leading to
-underestimation of dimensions for smaller trees and overestimation for
+underestimation of dimensions for smaller trees and underestimation for
 larger trees (e.g., \citeproc{ref-Fayolle2016}{Fayolle et al. 2016};
 \citeproc{ref-Song2024}{Song et al. 2024}). This highlights the need to
 adopt alternative functional forms---such as saturating
@@ -330,15 +330,15 @@ allometric scaling in vegetation models (e.g.,
 \citeproc{ref-Song2024}{Song et al. 2024}).
 
 Earth observation (EO) technologies, including remote sensing and Light
-Detection and Ranging (LiDAR), have revolutionized the monitoring of
-forests (e.g., \citeproc{ref-Jucker2017}{Jucker et al. 2017}) by
-enabling the identification and measurement of individual tree heights
-and crown dimensions using airborne imagery (e.g.,
+Detection and Ranging (LiDAR), have revolutionized monitoring forests
+(e.g., \citeproc{ref-Jucker2017}{Jucker et al. 2017}) by enabling the
+identification and measurement of individual tree heights and crown
+dimensions using airborne imagery (e.g.,
 \citeproc{ref-Shendryk2016}{Shendryk et al. 2016};
-\citeproc{ref-Jucker2017}{Jucker et al. 2017}). However, because
-existing allometric models still rely on stem diameter as a crucial
-input for biomass estimation, this reliance presents a challenge for
-effectively integrating EO technologies into AGB estimation
+\citeproc{ref-Jucker2017}{Jucker et al. 2017}). Because existing
+allometric models still depend on stem diameter as a crucial input for
+biomass estimation, it also presents the challenge of determining the
+most effective way to utilize EO technologies for AGB estimation
 (\citeproc{ref-Shendryk2016}{Shendryk et al. 2016};
 \citeproc{ref-Jucker2017}{Jucker et al. 2017}). While ground-based LiDAR
 can measure DBH directly and is much more efficient than traditional
@@ -354,7 +354,7 @@ integrating airborne imagery into carbon monitoring programs
 
 Accurately representing tree allometry relationships also requires
 considering underlying ecological constraints, particularly the
-interplay of plant functional traits and their trade-offs influence
+interplay of plant functional traits and their trade-offs influences
 individual tree architecture and the composition of entire forest
 communities (e.g., \citeproc{ref-Iida2012}{Iida et al. 2012};
 \citeproc{ref-LoubotaPanzou2018}{Loubota Panzou et al. 2018};
@@ -364,13 +364,14 @@ and horizontal space use crucial for species coexistence (e.g.,
 \citeproc{ref-Aiba2009}{Aiba and Nakashizuka 2009};
 \citeproc{ref-Iida2012}{Iida et al. 2012}). Among functional traits,
 wood density is closely linked to both plant life history strategies
-(\citeproc{ref-Fajardo2022a}{Fajardo 2022}) and light demand (e.g.,
-\citeproc{ref-King2006}{King et al. 2006}; \citeproc{ref-Aiba2009}{Aiba
-and Nakashizuka 2009}; \citeproc{ref-Poorter2012a}{Poorter et al.
-2012a}). Several studies suggest that wood density explains a trade-off
-between rapid stem expansion and broader crowns, shaping mechanical
-constraints on species with diverse architecture and light capture
-strategies (\citeproc{ref-Aiba2009}{Aiba and Nakashizuka 2009};
+(\citeproc{ref-Fajardo2022}{\textbf{Fajardo2022?}}) and light demand
+(e.g., \citeproc{ref-King2006}{King et al. 2006};
+\citeproc{ref-Aiba2009}{Aiba and Nakashizuka 2009};
+\citeproc{ref-Poorter2012}{\textbf{Poorter2012?}}). Several studies
+suggest that wood density explains a trade-off between rapid stem
+expansion and broader crowns, shaping mechanical constraints on species
+with diverse architecture and light capture strategies
+(\citeproc{ref-Aiba2009}{Aiba and Nakashizuka 2009};
 \citeproc{ref-Iida2012}{Iida et al. 2012}; \citeproc{ref-Yang2023}{Yang
 and Swenson 2023}). However, these types of studies have examined this
 relationship post hoc, relating species-specific allometric parameters
@@ -391,39 +392,34 @@ al. 2020}; \citeproc{ref-Jucker2022}{Jucker et al. 2022}), which span a
 diverse array of tree forms across global forest types and climatic
 conditions, we overcome the limitations of previous studies that often
 relied on site-specific or regional observations with limited samples
-and species. By integrating species-level wood density (WD) into a
-multilevel model, our methodology avoids the post-hoc correlations used
-in previous studies, offering a more universal and scalable model,
-effectively capturing variability from the species to the community
-level. Our main objective is to develop models informed by tree
-allometric variables (H, CR, DBH, WD) to capture interspecific variation
-in allometric scaling globally and offer an improved framework for
-estimating above ground biomass. Specifically, we ask the following
-questions: (1) What is the best function to estimate tree architecture
-from DBH and \emph{vice versa}? (2) How does wood density shape
-interspecific variation in these allometric scaling relationships? (3)
-How does the choice of allometric relationships affect subsequent AGB
-estimation?
+and species. By integrating species-level wood density into a multilevel
+model, our methodology avoids the post-hoc correlations used in previous
+studies, offering a more universal and scalable model, effectively
+capturing variability from the species to the community level.
+Specifically, we ask the following questions: (1) What is the best
+function to estimate tree architecture from DBH and \emph{vice versa}?
+(2) How does wood density shape interspecific variation in these
+allometric scaling relationships? (3) How does the choice of allometric
+relationships affect subsequent AGB estimation?
 
 \section{Materials and Methods}\label{materials-and-methods}
 
 \subsection{Data}\label{data}
 
 Our analysis combined tree allometry data from Tallo, which includes
-standardized measurements of DBH, height, and crown radius for 5,163
-species across various biomes (\citeproc{ref-Jucker2022}{Jucker et al.
-2022}), with wood density data for 10,995 species from TRY version 6
-(\citeproc{ref-Kattge2020}{Kattge et al. 2020}) (see Supplementary Table
-S1 for further details). Detailed information on data access and
-availability can be found in the Data availability section. We
-thoroughly processed the Tallo dataset by removing 998 outliers
-following Jucker et al. (\citeproc{ref-Jucker2022}{2022}). To ensure
-consistency, we selected only species with standardized wood density
-values in g cm\textsuperscript{-3} from TRY and removed any records with
-missing data. Subsequently, we created an overlapping dataset between
-Tallo and TRY, resulting in a combined dataset encompassing allometric
-and wood density information for 355,881 individuals across 2,961
-species.
+standardized measurements of DBH, height, crown radius for 5,163 species
+across various biomes (\citeproc{ref-Jucker2022}{Jucker et al. 2022},
+https://doi.org/10.5281/zenodo.6637599) along with wood density data for
+10,995 species from TRY version 6 (\citeproc{ref-Kattge2020}{Kattge et
+al. 2020}, https://www.try-db.org/TryWeb/Home.php) (see Supplementary
+Table S1 for further details). We thoroughly processed the Tallo dataset
+by removing 998 outliers following Jucker et al.
+(\citeproc{ref-Jucker2022}{2022}). To ensure consistency, we selected
+only species with standardized wood density values in g
+cm\textsuperscript{-3} from TRY and removed any records with missing
+data. Subsequently, we created an overlapping dataset between Tallo and
+TRY, resulting in a combined dataset encompassing allometric and wood
+density information for 355,881 individuals across 2,961 species.
 
 To reduce computational complexity and ensure the robustness of the
 models, we further filtered species with fewer than 20 individuals and
@@ -514,25 +510,18 @@ utilized PSIS-LOO to calculate the LOO Information Criterion (LOOIC) for
 each model. A model with lower LOOIC is considered to have better
 predictive accuracy (\citeproc{ref-Vehtari2017}{Vehtari et al. 2017}).
 
-Once the best-performing models for each allometric relationship were
-identified, we tested whether adding wood density as a species-level
-predictor would further improve the predictive performance of those
-models and also examined its influence on tree architecture diversity.
-Species-specific parameters (\(\beta_j\)) were modeled as a function of
-wood density (\(u_j\)): \begin{equation}\phantomsection\label{eq-wood}{
+Once the best-performing models were identified for each allometric
+relationship, we then tested whether adding a species-level predictor
+(wood density) would further improve that model's predictive
+performance. Species-specific parameters (\(\beta_j\)) were modeled as a
+function of wood density (\(u_j\)):
+\begin{equation}\phantomsection\label{eq-wood}{
 \beta_{j} \sim N(\gamma_{0} + \gamma_{1} u_j, \sigma_{\beta}),
 }\end{equation}
 
 where \(\gamma_{0}\) and \(\gamma_{1}\) are the species-level intercept
 and slope, respectively, and \(\sigma_{\beta}\) is the standard
-deviation of the species-specific parameters. To facilitate
-interpretation and visualization, species were then classified into
-``light'' and ``dense'' wood groups based on the 10th and 90th
-percentiles of wood density distribution in the observed dataset,
-respectively. This classification allowed us to illustrate the
-relationships between wood density and the parameters of the
-best-performing models, enabling an evaluation of how wood density
-contributes to variation in tree architecture. Additionally, we explored
+deviation of the species-specific parameters. Additionally, we explored
 a model that accounts for covariance between species-specific parameters
 using a multivariate normal distribution. However, due to the complexity
 of this approach, the model did not converge for the nonlinear models,
@@ -563,16 +552,15 @@ Statistical analyses were performed in R version 4.3.2
 (\citeproc{ref-RCoreTeam2023}{R Core Team 2023}), using the R packages
 \emph{targets} version 1.7.0 for workflow management
 (\citeproc{ref-Landau2021}{Landau 2021}). Codes are made available on
-Zenodo (https://zenodo.org) and GitHub
-(\url{https://github.com/duyenecology/tree-allo}). Stan code is provided
-in Supplementary Section S2.
+GitHub at \url{https://github.com/duyenecology/tree-allometry} (Stan
+code is provided in Supplementary Section S2).
 
 \subsection{Aboveground biomass
 estimates}\label{aboveground-biomass-estimates}
 
-For angiosperm species, we used the widely applied equation from Chave
-et al. (\citeproc{ref-Chave2014}{2014}) to estimate aboveground biomass
-(AGB; kg of dry mass):
+For angiosperm species, we estimated aboveground biomass (AGB; kg of dry
+mass) using the equation from Chave et al.
+(\citeproc{ref-Chave2014}{2014}):
 
 \begin{equation}\phantomsection\label{eq-agb}{
 \mathrm{AGB} = 0.0673 \times (\rho D^2H)^{0.976}
@@ -603,7 +591,7 @@ equations are species-specific and do not incorporate wood density
 
 The optimal model to predict tree height was a Weibull function for both
 angiosperms (ang) and gymnosperms (gym) (Table 1). Across the global
-dataset, the best model to predict H from DBH of each clade was:
+dataset, the best model to predict H from DBH of each division was:
 \begin{equation}\phantomsection\label{eq-h_ang}{
 \mathrm{H_{ang}} =50.0
 \left\{ 1 - \exp\left( - 0.0476
@@ -626,11 +614,11 @@ parameter \(k_{\text{ang}}\) = 0.629 {[}0.618, 0.639{]},
 \(k_{\text{gym}}\) = 0.750 {[}0.719, 0.784{]}.
 
 The second-best model, which used the gMM function, showed poorer
-predictive performance in angiosperms (\(\Delta\)LOOIC = 101.01) but
-showed competitive predictive performance in gymnosperms
-(\(\Delta\)LOOIC = 4.87). While power-law models (Eq.~\ref{eq-pl}) can
-exhibit saturating behavior when 0 \textless{} \emph{b} \textless{} 1,
-they performed the worst overall compared to other saturating models
+predictive performance in angiosperms (\(\Delta\) LOOIC = 101.01) but
+showed competitive predictive performance in gymnosperms (\(\Delta\)
+LOOIC = 4.87). While power-law models (Eq.~\ref{eq-pl}) can exhibit
+saturating behavior when 0 \textless{} \emph{b} \textless{} 1, they
+performed the worst overall compared to other saturating models
 (Eq.~\ref{eq-gMM}; Eq.~\ref{eq-wb}). Incorporating wood density did not
 significantly improve predictive performance (Table 1).
 
@@ -639,11 +627,8 @@ procedure. Models were ranked using the Leave-One-Out Information
 Criterion (LOOIC) to assess their predictive performance. For each
 model, we report the Expected Log Predictive Density (ELPD), the LOOIC,
 and the \(R^2\) values. The difference in LOOIC relative to the
-best-performing model, \(\Delta\)LOOIC, is also included, with a
-\(\Delta\)LOOIC greater than 4 suggests a meaningful difference in
-predictive performance (\citeproc{ref-Cochrane2023}{Cochrane et al.
-2023}; \citeproc{ref-Sivula2023}{Sivula et al. 2023}). Lower
-\(\Delta\)LOOIC values indicate models that perform closer to the best
+best-performing model, \(\Delta\)\_LOOIC, is also included. Lower
+\(\Delta\)\_LOOIC values indicate models that perform closer to the best
 model in terms of predictive accuracy, while higher ELPD values reflect
 better model fit. Higher \(R^2\) values reflect better explanatory
 power, indicating how well the model explains the variance in the
@@ -702,14 +687,15 @@ DBH & CR & Gymnosperm & Power-Law & Without & -2392.47 & 4784.95 & 2862.36 & 0.7
 
 }
 
-\caption{\label{fig-compare}Allometric relationships between DBH and
-tree height or crown radius in angiosperms (a, c) and gymnosperms (b,
-d), based on three different models: power-law (orange), generalized
-Michaelis-Menten (green), and Weibull (blue). A color gradient from
-black (low density) to yellow (high density) indicates the density of
-overlapping data points, calculated via 2D kernel density estimation on
-a 300\,\(\times\)\,300 grid. See Supplementary Figure S1 for the
-log-scale version of these plots.}
+\caption{\label{fig-compare}Allometric relationships between tree height
+and crown radius with DBH of angiosperm (a, c) and gymnosperm (b, d)
+based on three different models: power-law (orange), generalized
+Michaelis-Menten (green), and Weibull (blue). The density of overlapping
+points is shown using a color gradient ranging from black (low density)
+to yellow (high density). Point density was calculated using a 2D kernel
+density estimation on a 300 \(\times\) 300 grid, estimating the
+concentration of data points in the space of DBH and tree height or
+crown radius (see Supplementary Figure S1 for the log-scale version).}
 
 \end{figure}%
 
@@ -720,7 +706,7 @@ the best predictive performance for modeling the relationship between
 crown radius and DBH in angiosperms. Whereas for gymnosperms, the gMM
 function offered the best performance for this allometric scaling (Table
 1). Across the global dataset, the best model for predicting CR from DBH
-of each clade was: \begin{equation}\phantomsection\label{eq-cr_ang}{
+of each division was: \begin{equation}\phantomsection\label{eq-cr_ang}{
 \mathrm{CR_{ang}} = \mathrm{0.349}
 \, \mathrm{DBH}^{\mathrm{0.626}}
 }\end{equation}
@@ -741,23 +727,24 @@ factor \(a_{\text{ang}}\) = 0.349 {[}0.340, 0.359{]}, asymptote
 
 For angiosperms, the saturating functions (Eq.~\ref{eq-gMM};
 Eq.~\ref{eq-wb}) performed worse than the power-law model, with
-\(\Delta\)LOOIC values of 124.57 for gMM and 126.35 for the Weibull
+\(\Delta\) LOOIC values of 124.57 for gMM and 126.35 for the Weibull
 function. In gymnosperms, the Weibull function showed a competitive
 performance compared to the gMM function, while the power-law function
-(Eq.~\ref{eq-pl}) performed the worst, with a \(\Delta\)LOOIC of 162.72.
-Incorporating wood density did not significantly improve predictive
-performance (Table 1).
+(Eq.~\ref{eq-pl}) performed the worst, with a \(\Delta\) LOOIC of
+162.72. Incorporating wood density did not significantly improve
+predictive performance (Table 1).
 
 \textbf{Table 2}: Posterior estimates of the parameters for the best
 hierarchical models selected for tree height, crown radius, and DBH
-allometries in angiosperms and gymnosperms. Each set includes posterior
-estimates both without and with the inclusion of wood density, reported
-as median and 95\% Bayesian credible intervals for the community-level
-parameters of each allometric function. For tree height, the Weibull
-model was identified as the best for both clades. Crown radius was best
-described by a power-law model in angiosperms and a gMM model for
-gymnosperms. The best model for DBH allometry in both clades, which
-incorporates both tree height and crown radius information (\(CR,H\)
+allometries. Each set includes the best models for angiosperms and
+gymnosperms, with posterior estimates reported both without and with the
+inclusion of wood density. Table entries represent the median and 95\%
+Bayesian credible intervals for the community-level parameters of each
+allometric function. For tree height, the Weibull model was identified
+as the best for both angiosperm and gymnosperm groups. Crown radius was
+best described by a power-law model for angiosperms and a gMM model for
+gymnosperms. The best model for DBH allometry in both divisions
+incorporated both tree height and crown radius information (\(CR,H\)
 model).
 
 \newpage
@@ -768,46 +755,46 @@ model).
 \toprule
 Dependent\_variable & Division & Functional\_form & Wood\_density & Parameter & Intercept\_CI & Slope\_CI & Tau\_CI\\
 \midrule
-Tree Height & Angiosperm & Weibull & With & a & 50.0 (48.0, 52.3) & 1.00 (0.966, 1.04) & 0.109 (0.0850, 0.134)\\
-Tree Height & Angiosperm & Weibull & With & b & 0.0477 (0.0456, 0.0495) & -0.000250 (-0.00189, 0.00142) & 0.0118 (0.0109, 0.0126)\\
-Tree Height & Angiosperm & Weibull & With & k & 0.628 (0.618, 0.638) & -0.0155 (-0.0254, -0.00591) & 0.141 (0.134, 0.149)\\
-Tree Height & Angiosperm & Weibull & Without & a & 50.0 (48.0, 52.2) & - & 0.109 (0.0847, 0.133)\\
-Tree Height & Angiosperm & Weibull & Without & b & 0.0476 (0.0458, 0.0495) & - & 0.0118 (0.0110, 0.0126)\\
+Tree Height & Angiosperm & Weibull & With & a & 50.0358625836953 (48.0185910757846, 52.2782021867477) & 1.0030357535955 (0.966279786642521, 1.04204878932111) & 0.1094080515 (0.08504578, 0.133867675)\\
+Tree Height & Angiosperm & Weibull & With & b & 0.0476521 (0.0456004375, 0.04954112) & -0.0002497295 (-0.0018876475, 0.001416113) & 0.0117625713666667 (0.0108990775, 0.01264796)\\
+Tree Height & Angiosperm & Weibull & With & k & 0.627988 (0.6179271, 0.638469025) & -0.0155465 (-0.025364455, -0.005908563) & 0.141325601 (0.134013175, 0.148615)\\
+Tree Height & Angiosperm & Weibull & Without & a & 49.986601524105 (48.0397359146718, 52.1676071716969) & - & 0.108623839 (0.084699285, 0.13259475)\\
+Tree Height & Angiosperm & Weibull & Without & b & 0.04761845 (0.045788395, 0.0495194425) & - & 0.0117794441333333 (0.0109647775, 0.012630005)\\
 \addlinespace
-Tree Height & Angiosperm & Weibull & Without & k & 0.629 (0.618, 0.639) & - & 0.142 (0.135, 0.149)\\
-Tree Height & Gymnosperm & Weibull & With & a & 114 (85.1, 170) & 0.974 (0.776, 1.21) & 0.0976 (0.00466, 0.257)\\
-Tree Height & Gymnosperm & Weibull & With & b & 0.0123 (0.00836, 0.0163) & 0.000633 (-0.00188, 0.00342) & 0.00382 (0.00225, 0.00553)\\
-Tree Height & Gymnosperm & Weibull & With & k & 0.751 (0.721, 0.784) & -0.0224 (-0.0538, 0.00762) & 0.113 (0.0905, 0.140)\\
-Tree Height & Gymnosperm & Weibull & Without & a & 117 (89.2, 175) & - & 0.0912 (0.00357, 0.229)\\
+Tree Height & Angiosperm & Weibull & Without & k & 0.628505 (0.61806375, 0.63871895) & - & 0.142012394 (0.135037575, 0.1493971)\\
+Tree Height & Gymnosperm & Weibull & With & a & 114.392440818366 (85.1394073936058, 170.399810107161) & 0.973669651215167 (0.775709235915639, 1.21272840336665) & 0.0976113393243333 (0.00465741875, 0.256888)\\
+Tree Height & Gymnosperm & Weibull & With & b & 0.01226515 (0.00835557525, 0.01627371) & 0.0006333235 (-0.001878769, 0.003421633) & 0.00382281789033333 (0.0022539225, 0.00552581075)\\
+Tree Height & Gymnosperm & Weibull & With & k & 0.75131 (0.720762275, 0.78392225) & -0.0223577 (-0.053752515, 0.00762075675000001) & 0.11290265 (0.0904752175, 0.139776975)\\
+Tree Height & Gymnosperm & Weibull & Without & a & 117.410929580669 (89.2163884742527, 175.128720630186) & - & 0.0912130060437333 (0.00357252325, 0.229208275)\\
 \addlinespace
-Tree Height & Gymnosperm & Weibull & Without & b & 0.0119 (0.00806, 0.0155) & - & 0.00371 (0.00230, 0.00525)\\
-Tree Height & Gymnosperm & Weibull & Without & k & 0.750 (0.719, 0.784) & - & 0.114 (0.0919, 0.139)\\
-Crown Radius & Angiosperm & Power-Law & With & a & 0.349 (0.340, 0.359) & 0.0680 (0.0395, 0.0970) & 0.331 (0.311, 0.354)\\
-Crown Radius & Angiosperm & Power-Law & With & b & 0.626 (0.617, 0.635) & -0.0110 (-0.0199, -0.00253) & 0.0921 (0.0844, 0.100)\\
-Crown Radius & Angiosperm & Power-Law & Without & a & 0.349 (0.340, 0.359) & - & 0.336 (0.316, 0.358)\\
+Tree Height & Gymnosperm & Weibull & Without & b & 0.01189855 (0.00806481775, 0.0155006175) & - & 0.00370917828 (0.00230250075, 0.005250409)\\
+Tree Height & Gymnosperm & Weibull & Without & k & 0.750261 (0.71890345, 0.7840528) & - & 0.113927871366667 (0.0919335325, 0.139492325)\\
+Crown Radius & Angiosperm & Power-Law & With & a & 0.348870320614843 (0.339558002412552, 0.358617649941404) & 0.067951 (0.0395029625, 0.09696407) & 0.331462941666667 (0.3107583, 0.353737675)\\
+Crown Radius & Angiosperm & Power-Law & With & b & 0.6262655 (0.61724685, 0.6347153) & -0.0110058 (-0.01988032, -0.00253456499999999) & 0.0921479955666667 (0.0844064425, 0.100138025)\\
+Crown Radius & Angiosperm & Power-Law & Without & a & 0.349041308960668 (0.340277352929455, 0.358866706688696) & - & 0.336416977 (0.315543425, 0.35812015)\\
 \addlinespace
-Crown Radius & Angiosperm & Power-Law & Without & b & 0.626 (0.617, 0.635) & - & 0.0929 (0.0852, 0.101)\\
-Crown Radius & Gymnosperm & gMM & With & a & 975 (312, 2010) & 0.988 (0.766, 1.27) & 0.367 (0.280, 0.474)\\
-Crown Radius & Gymnosperm & gMM & With & b & 0.629 (0.599, 0.659) & 0.0345 (0.00507, 0.0642) & 0.0949 (0.0691, 0.126)\\
-Crown Radius & Gymnosperm & gMM & With & k & 3371 (1094, 6978) & 35.7 (-769, 914) & 9.36 (0.100, 52.3)\\
-Crown Radius & Gymnosperm & gMM & Without & a & 769 (227, 1818) & - & 0.367 (0.280, 0.465)\\
+Crown Radius & Angiosperm & Power-Law & Without & b & 0.625775 (0.61686365, 0.634504125) & - & 0.0928698366666667 (0.08518862, 0.101327225)\\
+Crown Radius & Gymnosperm & gMM & With & a & 975.002465780217 (311.898479923573, 2010.23216629045) & 0.98826173732258 (0.765945182590572, 1.26629969928617) & 0.366709977 (0.27977655, 0.473532775)\\
+Crown Radius & Gymnosperm & gMM & With & b & 0.629287 (0.599257875, 0.658672975) & 0.03446325 (0.00506576425, 0.0642449925) & 0.0948956725666667 (0.0691086525, 0.126110225)\\
+Crown Radius & Gymnosperm & gMM & With & k & 3371.455 (1094.23225, 6977.7715) & 35.71465 (-768.70475, 913.79515) & 9.363854693469 (0.10023131, 52.3180125)\\
+Crown Radius & Gymnosperm & gMM & Without & a & 769.406932080409 (227.345355225331, 1818.30585925327) & - & 0.367348107833333 (0.280439875, 0.465157075)\\
 \addlinespace
-Crown Radius & Gymnosperm & gMM & Without & b & 0.631 (0.600, 0.663) & - & 0.101 (0.0755, 0.131)\\
-Crown Radius & Gymnosperm & gMM & Without & k & 2657 (809, 6274) & - & 19.0 (0.112, 200)\\
-DBH & Angiosperm & Power-Law & With & a & 0.949 (0.928, 0.970) & -0.00254 (-0.0265, 0.0190) & 0.301 (0.284, 0.320)\\
-DBH & Angiosperm & Power-Law & With & b & 0.373 (0.361, 0.386) & -0.00327 (-0.0146, 0.00891) & 0.135 (0.125, 0.145)\\
-DBH & Angiosperm & Power-Law & With & c & 0.589 (0.575, 0.605) & 0.00511 (-0.00957, 0.0200) & 0.168 (0.156, 0.179)\\
+Crown Radius & Gymnosperm & gMM & Without & b & 0.630821 (0.60042295, 0.6625657) & - & 0.101279463966667 (0.0755376825, 0.130907775)\\
+Crown Radius & Gymnosperm & gMM & Without & k & 2657.085 (808.712975, 6274.33575) & - & 18.9842685191737 (0.11158275, 200.190725)\\
+DBH & Angiosperm & Power-Law & With & a & 0.948873203444669 (0.92824124982295, 0.970115458681121) & -0.00254114 (-0.026471175, 0.019015775) & 0.301446662333333 (0.28422895, 0.320054325)\\
+DBH & Angiosperm & Power-Law & With & b & 0.3733935 (0.36112825, 0.385692275) & -0.003273 (-0.014598435, 0.008914959) & 0.1350893 (0.12519295, 0.145357375)\\
+DBH & Angiosperm & Power-Law & With & c & 0.589474 (0.574794525, 0.604623) & 0.005107385 (-0.00957317475, 0.020006805) & 0.167959387666667 (0.1564333, 0.1794579)\\
 \addlinespace
-DBH & Angiosperm & Power-Law & Without & a & 0.948 (0.927, 0.969) & - & 0.302 (0.284, 0.320)\\
-DBH & Angiosperm & Power-Law & Without & b & 0.374 (0.361, 0.386) & - & 0.135 (0.125, 0.145)\\
-DBH & Angiosperm & Power-Law & Without & c & 0.590 (0.575, 0.605) & - & 0.168 (0.157, 0.180)\\
-DBH & Gymnosperm & Power-Law & With & a & 0.971 (0.900, 1.04) & -0.0451 (-0.120, 0.0295) & 0.274 (0.225, 0.339)\\
-DBH & Gymnosperm & Power-Law & With & b & 0.408 (0.371, 0.444) & 0.0284 (-0.00773, 0.0616) & 0.112 (0.0845, 0.148)\\
+DBH & Angiosperm & Power-Law & Without & a & 0.948185804143355 (0.927358177080849, 0.969205798294886) & - & 0.302088741 (0.2843181, 0.320217575)\\
+DBH & Angiosperm & Power-Law & Without & b & 0.373565 (0.361136275, 0.38552) & - & 0.134749882666667 (0.125359425, 0.145310525)\\
+DBH & Angiosperm & Power-Law & Without & c & 0.589786 (0.5749327, 0.604729725) & - & 0.168123297666667 (0.156878925, 0.180291175)\\
+DBH & Gymnosperm & Power-Law & With & a & 0.970943839654932 (0.900241719046287, 1.04481714578926) & -0.04506835 (-0.119699575, 0.0295394575) & 0.273574103 (0.22492635, 0.338502075)\\
+DBH & Gymnosperm & Power-Law & With & b & 0.408055 (0.37113765, 0.443653025) & 0.02839555 (-0.007731709, 0.0616446325) & 0.112309440333333 (0.0845160475, 0.14804745)\\
 \addlinespace
-DBH & Gymnosperm & Power-Law & With & c & 0.588 (0.538, 0.637) & -0.0364 (-0.0841, 0.0140) & 0.165 (0.128, 0.209)\\
-DBH & Gymnosperm & Power-Law & Without & a & 0.972 (0.903, 1.05) & - & 0.273 (0.222, 0.336)\\
-DBH & Gymnosperm & Power-Law & Without & b & 0.410 (0.373, 0.446) & - & 0.115 (0.0861, 0.150)\\
-DBH & Gymnosperm & Power-Law & Without & c & 0.588 (0.540, 0.638) & - & 0.165 (0.129, 0.209)\\
+DBH & Gymnosperm & Power-Law & With & c & 0.5880865 (0.538007975, 0.636716225) & -0.0363728 (-0.0841089975, 0.0139803) & 0.164765638 (0.127992925, 0.2091867)\\
+DBH & Gymnosperm & Power-Law & Without & a & 0.972360848599851 (0.903429908240124, 1.05107834246826) & - & 0.272779666666667 (0.22238815, 0.3356855)\\
+DBH & Gymnosperm & Power-Law & Without & b & 0.409878 (0.3725057, 0.446499075) & - & 0.114795101166667 (0.0861228225, 0.15017945)\\
+DBH & Gymnosperm & Power-Law & Without & c & 0.587609 (0.540198275, 0.638262825) & - & 0.165230531666667 (0.129457475, 0.209437675)\\
 \bottomrule
 \end{longtable*}
 \endgroup{}
@@ -817,7 +804,7 @@ DBH & Gymnosperm & Power-Law & Without & c & 0.588 (0.540, 0.638) & - & 0.165 (0
 The \(CR,H\) model, which treated CR and H as separate factors,
 exhibited the best predictive performance among all tested models (Table
 1). Across the global dataset, the most effective model for predicting
-DBH from H and CR for each clade was:
+DBH from H and CR for each division was:
 \begin{equation}\phantomsection\label{eq-dbh_ang}{
 \mathrm{DBH_{ang}} = \mathrm{0.948}
 \mathrm{CR}^{\text{0.374}}
@@ -894,8 +881,8 @@ angiosperms (b) and gymnosperms (c). Curves represent the allometric
 scaling for species with light (orange) and dense (brown) wood density,
 corresponding to the 10\% and 90\% quantiles of wood density
 distribution in the observed dataset, respectively. The shaded areas
-illustrate the 95\% Bayesian credible intervals. Only statistically
-significant associations from Fig.~\ref{fig-wood1} are plotted.}
+illustrate the 95\% CIs. Only statistically significant associations
+from Fig.~\ref{fig-wood1} are plotted.}
 
 \end{figure}%
 
@@ -904,7 +891,7 @@ biomass}\label{estimating-aboveground-biomass}
 
 AGB estimates based on the Weibull model (\(\text{AGB}_\text{H-WB}\))
 showed the highest predictive accuracy based both on the lowest root
-mean square error (RMSE) of 0.279 Mg and the smallest bias of 2.04\%
+mean square error (RMSE) of 0.279 Mg and the smallest bias of 2.043\%
 (Fig.~\ref{fig-agb} a). Estimates based on the power-law model
 (\(\text{AGB}_\text{H-PL}\)) also showed competitive performance but had
 higher RMSE and bias compared to the Weibull-based approach, with RMSE
@@ -921,7 +908,7 @@ models that used estimated DBH performed substantially worse
 }
 
 \caption{\label{fig-agb}Comparison of individual tree above-ground
-biomass (AGB) estimated using different approaches with reference AGB
+biomass estimated from different approaches with reference AGB
 (\(\text{AGB}_\text{ref}\)) derived from observed DBH and tree height in
 angiosperms. (a, b) AGB estimates based on observed DBH and tree height
 predicted by the Weibull function (\(\text{AGB}_\text{H-WB}\)) or the
@@ -932,8 +919,8 @@ tree height as separate factors
 (\(\text{AGB}_{\text{DBH} \sim \text{CR × H}}\)), from tree height alone
 (\(\text{AGB}_{\text{DBH} \sim \text{H}}\)), or from crown radius alone
 (\(\text{AGB}_{\text{DBH} \sim \text{CR}}\)). Dashed lines represent the
-1:1 relationships, and the solid lines show linear regression fits to
-the data, highlighting how predictive accuracy varies with tree size.
+1:1 relationships, and the solid lines are linear regression fits to the
+data points to highlight how predictive accuracy varies with tree size.
 RMSE (root mean square error) and bias values for each model are
 reported.}
 
@@ -986,8 +973,8 @@ exponent close to 2/3 (\(H \propto DBH^{2/3}\),
 \(CR \propto DBH^{2/3}\)), based on assumptions regarding mechanical and
 hydraulic constraints to plant growth (\citeproc{ref-West1999}{West et
 al. 1999}). However, our findings revealed that the power-law model
-exponent of angiosperms (\emph{b} = 0.538) was significantly smaller,
-while the actual exponent in gymnosperms (\emph{b} = 0.704) was larger
+exponent of angiosperms (\emph{b} = 0.54) was significantly smaller,
+while the actual exponent in gymnosperms (\emph{b} = 0.7) was larger
 than the theoretical value of 2/3 (Supplementary Table S3). This
 divergence highlights the importance of separately modeling the
 allometric relationships of each functional group to accurately capture
@@ -1001,26 +988,26 @@ highlighting fundamental differences in growth strategies and ecological
 adaptations between angiosperms and gymnosperms. In angiosperms, the
 CR--DBH relationship follows a power-law form, suggesting a capacity for
 plastic crown expansion in competitive environments
-(\citeproc{ref-Lines2012}{Lines et al. 2012}; e.g.,
-\citeproc{ref-Poorter2012a}{Poorter et al. 2012a};
-\citeproc{ref-Hulshof2015}{Hulshof et al. 2015}), a conclusion
+(\citeproc{ref-Lines2012}{Lines et al. 2012};
+\citeproc{ref-Hulshof2015}{Hulshof et al. 2015}; e.g.,
+\citeproc{ref-Poorter2012}{\textbf{Poorter2012?}}), a conclusion
 consistent with a study in tropical moist forests by Martínez Cano et
 al. (\citeproc{ref-MartinezCano2019}{2019}). In addition, the estimated
 exponent aligns closely with MST predictions for crown radius,
 supporting the selection of the power-law model for angiosperms, where
 the community-level exponent \emph{b} is near the expected 2/3
-(\(b_{\text{ang}}\) = 0.626 {[}0.617, 0.635{]}, Table 2). In contrast,
-the CR-DBH allometry in gymnosperms showed an asymptotic relationship
-best described by the gMM function, with the Weibull function also
-showing competitive predictive performance (Table 1). This asymptotic
-pattern likely arises from structural constraints in gymnosperms growth
-forms that favour vertical over lateral expansion (e.g.,
+(\(b_{\text{ang}} = 0.625775 \,
+\left[ 0.6168636, 0.6345041 \right]\), Table 2). In contrast, the CR-DBH
+allometry in gymnosperms showed an asymptotic relationship best
+described by the gMM function, with the Weibull function also showing
+competitive predictive performance (Table 1). This asymptotic pattern
+likely arises from structural constraints in gymnosperms growth forms
+that favour vertical over lateral expansion (e.g.,
 \citeproc{ref-Lines2012}{Lines et al. 2012};
-\citeproc{ref-Hulshof2015}{Hulshof et al. 2015};
-\citeproc{ref-Jucker2024}{Jucker et al. 2024}), an adaptation that can
+\citeproc{ref-Hulshof2015}{Hulshof et al. 2015}), an adaptation that can
 mitigate risks such as branch breakage under heavy snow loads (e.g.,
 \citeproc{ref-Mikola1938}{Mikola 1938}; \citeproc{ref-Loehle2016}{Loehle
-2016}; \citeproc{ref-Tavankar2019}{Tavankar et al. 2019}).
+2016}).
 
 Finally, we tested models to estimate DBH from biometric variables
 (i.e., tree height and crown radius) measurable via Earth observation
@@ -1030,8 +1017,8 @@ Finally, we tested models to estimate DBH from biometric variables
 accurately predicting DBH requires both tree height and crown radius
 (\citeproc{ref-Jucker2017}{Jucker et al. 2017}), which is especially
 important for distinguishing among trees of similar height but varying
-DBH (\citeproc{ref-King2005}{King 2005}; \citeproc{ref-King2011}{King
-and Clark 2011}). Among the tested models, the \(CR,H\) model
+DBH (\citeproc{ref-King2005}{King 2005}). Among the tested models, the
+\(CR,H\) model
 (\(\mathrm{DBH} = a_1 \mathrm{CR}^{b_1} \times \mathrm{H}^{c_1}\))
 provided the highest predictive accuracy, a result that contrasts with
 the previous study (\citeproc{ref-Jucker2017}{Jucker et al. 2017}),
@@ -1055,8 +1042,8 @@ their mature height more rapidly than those with denser wood
 (Fig.~\ref{fig-wood1} a-c; Fig.~\ref{fig-wood2} a). In contrast,
 gymnosperms exhibit a height growth strategy that is largely independent
 of wood density (Fig.~\ref{fig-wood1} d-f). These results are consistent
-with the previous study (\citeproc{ref-Poorter2012b}{Poorter et al.
-2012b}), which showed that among seven angiosperm species, those with
+with the previous study (\citeproc{ref-Poorter2012a}{Poorter et al.
+2012}), which showed that among seven angiosperm species, those with
 lighter wood exhibited taller maximum heights, while no significant
 correlations were observed for six gymnosperm species. A recent study
 using the Tallo database alongside two additional datasets reported a
@@ -1102,25 +1089,13 @@ often regarded as a key functional trait (e.g.,
 \citeproc{ref-Anten2009}{Anten and Schieving 2009};
 \citeproc{ref-Jucker2024}{Jucker et al. 2024}), variations in tree
 allometry across individuals are likely influenced by a combination of
-species identity and environmental factors. Across species or along
-broad environmental gradients, wood density systematically
-varies---tending to be denser in drier, colder climates and in
-nutrient-poor soils (\citeproc{ref-Muller-Landau2004}{Muller-Landau
-2004}; \citeproc{ref-Chave2009}{Chave et al. 2009};
-\citeproc{ref-Fajardo2022b}{Fajardo et al. 2022};
-\citeproc{ref-Mo2024}{Mo et al. 2024})---reflecting species' adaptive
-strategies. Such environmental influences might confound simple
-correlations between wood density and DBH when examining diverse tree
-communities. At the intraspecific level, recent findings suggest that
-wood density may be more closely related to vessel anatomy than to tree
-architecture across different environments
-(\citeproc{ref-Fajardo2022b}{Fajardo et al. 2022}). Furthermore,
-substantial measurement errors in tree height and crown radius relative
-to DBH may introduce noise that obscures potential relationships between
-wood density and stem diameter. These highlight the importance of
-adopting a more integrative framework that accounts for additional
-functional traits and environmental variables to deepen our
-understanding of the factors driving DBH growth.
+species identity and environmental factors. Furthermore, substantial
+measurement errors in tree height and crown radius relative to DBH may
+introduce noise that obscures potential relationships between wood
+density and stem diameter. These highlight the importance of adopting a
+more integrative framework that accounts for additional functional
+traits and environmental variables to deepen our understanding of the
+factors driving DBH growth.
 
 Our analysis indicated distinct patterns in which wood density has a
 greater influence on the interspecific variation in angiosperms than
@@ -1157,9 +1132,8 @@ Our findings revealed minimal differences in AGB estimates derived from
 \(\text{H}_\text{WB}\) and \(\text{H}_\text{PL}\) (Fig.~\ref{fig-agb} a,
 b). This result can stem from the fact that over 97\% of the trees used
 to estimate AGB are small to medium-sized (DBH \textless{} 70 cm
-(\citeproc{ref-Slik2013}{Slik et al. 2013};
-\citeproc{ref-Murphy2022}{Murphy and Bradford 2022})), whose H-DBH
-relationships can still be well captured by the power-law function
+(\citeproc{ref-Slik2013}{Slik et al. 2013})), whose H-DBH relationships
+can still be well captured by the power-law function
 (Fig.~\ref{fig-compare} a) (e.g., \citeproc{ref-Molto2014}{Molto et al.
 2014}). In contrast, individuals with DBH ≥ 70 cm, while typically
 forming a small proportion of the tree population, contribute
@@ -1174,15 +1148,15 @@ leading to significant inaccuracies in stand-level biomass estimates
 (e.g., \citeproc{ref-Feldpausch2011}{Feldpausch et al. 2011};
 \citeproc{ref-Fayolle2016}{Fayolle et al. 2016};
 \citeproc{ref-Sullivan2018}{Sullivan et al. 2018};
-\citeproc{ref-MartinezCano2019}{Martínez Cano et al. 2019}). Because
-large trees contribute disproportionately to overall biomass (e.g.,
+\citeproc{ref-MartinezCano2019}{Martínez Cano et al. 2019}). Given the
+disproportionate contribution of large trees in biomass dynamics (e.g.,
 \citeproc{ref-Slik2013}{Slik et al. 2013};
 \citeproc{ref-Fauset2015}{Fauset et al. 2015};
-\citeproc{ref-Ligot2018}{Ligot et al. 2018}), if direct height
-measurements are unavailable, height estimates should be derived by
-fitting asymptotic models (e.g., Eq.~\ref{eq-gMM}; Eq.~\ref{eq-wb}) to
-datasets with sufficient representation of large trees, ensuring that
-the saturating component is accurately captured
+\citeproc{ref-Ligot2018}{Ligot et al. 2018}), when heights are not
+directly measured, height estimates should be derived by fitting
+asymptotic models (e.g., Eq.~\ref{eq-gMM}; Eq.~\ref{eq-wb}) to datasets
+with sufficient representation of large trees, ensuring the accurate
+capture of the saturating component
 (\citeproc{ref-Sullivan2018}{Sullivan et al. 2018}).
 
 In the scenarios where DBH is not directly measured, models estimating
@@ -1200,16 +1174,16 @@ term in equations (e.g., \citeproc{ref-Brown1989}{Brown et al. 1989};
 \citeproc{ref-Chave2014}{Chave et al. 2014}), meaning that even minor
 errors in DBH predictions can significantly affect the accuracy of AGB
 estimates (\citeproc{ref-Jucker2017}{Jucker et al. 2017}).
-Interestingly, our results revealed that, although the \(CR,H\) model
-provided more accurate direct DBH predictions, using those predictions
-in the AGB equation resulted in higher RMSE and bias than when DBH
-estimates from the \(CR \times H\) model were used (Fig.~\ref{fig-agb}
-c, d). This is likely due to the \(CR \times H\) model's ability to
-capture the inherent interdependence between the crown radius and tree
-height (\emph{r} = 0.703), offering a more biologically realistic
-framework (e.g., \citeproc{ref-Dormann2013}{Dormann et al. 2013}). The
-observed importance of crown radius in improving AGB estimation aligns
-with prior studies (e.g., \citeproc{ref-Henry2010}{Henry et al. 2010};
+Interestingly, our results revealed that the \(CR,H\) model was more
+effective in predicting DBH; however, when these predicted DBH values
+were used to estimate AGB, the \(CR \times H\) model exhibited
+substantially lower RMSE and bias (Fig.~\ref{fig-agb} c, d). This is
+likely due to the \(CR \times H\) model's ability to capture the
+inherent interdependence between the crown radius and tree height
+(\emph{r} = 0.703), offering a more biologically realistic framework
+(e.g., \citeproc{ref-Dormann2013}{Dormann et al. 2013}). The observed
+importance of crown radius in improving AGB estimation aligns with prior
+studies (e.g., \citeproc{ref-Henry2010}{Henry et al. 2010};
 \citeproc{ref-Goodman2014}{Goodman et al. 2014}), whereas our finding of
 strong relationships between AGB and crown dimensions is consistent with
 those reported by Jucker et al. (\citeproc{ref-Jucker2017}{2017}). While
@@ -1238,37 +1212,22 @@ forecasting ecosystem services in forests with a broad range of species
 and structural heterogeneity. Future studies should investigate
 additional functional traits and environmental factors to improve both
 ecological understanding and carbon monitoring practices at global
-scales.
+scales monitoring practices at global scales.
 
 \newpage
 
 \section*{Acknowledgments}\label{acknowledgments}
 \addcontentsline{toc}{section}{Acknowledgments}
 
-We thank the editors and two anonymous reviewers, whose comments greatly
-improved the manuscript. We also thank the Alliance of International
-Science Organizations (ANSO) for providing financial support for TDN's
-Master's studies.
+We sincerely thank the Alliance of International Science Organizations
+(ANSO) for providing financial support for TDN's Master's studies.
 
 \section*{Funding}\label{funding}
 \addcontentsline{toc}{section}{Funding}
 
-MK was supported by the Xingdian Talenj Support Program of Yunnan
-Province, the Xishuangbanna State Rainforest Talent Support Program
-(E4BN041B01), and the CAS President's International Fellowship
+MK was supported by the Xishuangbanna State Rainforest Talent Support
+Program (E4BN041B01) and the CAS President's International Fellowship
 Initiative (2020FYB0003).
-
-\section*{Data availability}\label{data-availability}
-\addcontentsline{toc}{section}{Data availability}
-
-The tree allometry data is avaiable from tallo
-(\citeproc{ref-Jucker2022}{Jucker et al. 2022},
-https://doi.org/10.5281/zenodo.6637599), and the wood density data are
-available on request from TRY version 6
-(\citeproc{ref-Kattge2020}{Kattge et al. 2020},
-\url{https://www.try-db.org/TryWeb/Home.php}). All codes and scripts
-used for analysis are available on Zenodo (https://zenodo.org) and
-GitHub (\url{https://github.com/duyenecology/tree-allo}).
 
 \newpage
 
@@ -1312,38 +1271,16 @@ Carpenter B, Gelman A, Hoffman MD, et al (2017) Stan: {A}
 {Probabilistic} {Programming} {Language}. Journal of Statistical
 Software 76:1--32. \url{https://doi.org/10.18637/jss.v076.i01}
 
-\bibitem[\citeproctext]{ref-Chave2009}
-Chave J, Coomes D, Jansen S, et al (2009) Towards a worldwide wood
-economics spectrum. Ecology Letters 12:351--366.
-\url{https://doi.org/10.1111/j.1461-0248.2009.01285.x}
-
 \bibitem[\citeproctext]{ref-Chave2014}
 Chave J, Réjou-Méchain M, Búrquez A, et al (2014) Improved allometric
 models to estimate the aboveground biomass of tropical trees. Global
 Change Biology 20:3177--3190. \url{https://doi.org/10.1111/gcb.12629}
-
-\bibitem[\citeproctext]{ref-Cochrane2023}
-Cochrane A, Sims CR, Bejjanki VR, et al (2023) Multiple timescales of
-learning indicated by changes in evidence-accumulation processes during
-perceptual decision-making. npj Science of Learning 8:1--10.
-\url{https://doi.org/10.1038/s41539-023-00168-9}
 
 \bibitem[\citeproctext]{ref-Dormann2013}
 Dormann CF, Elith J, Bacher S, et al (2013) Collinearity: A review of
 methods to deal with it and a simulation study evaluating their
 performance. Ecography 36:27--46.
 \url{https://doi.org/10.1111/j.1600-0587.2012.07348.x}
-
-\bibitem[\citeproctext]{ref-Fajardo2022a}
-Fajardo A (2022) Wood density relates negatively to maximum plant height
-across major angiosperm and gymnosperm orders. American Journal of
-Botany 109:250--258. \url{https://doi.org/10.1002/ajb2.1805}
-
-\bibitem[\citeproctext]{ref-Fajardo2022b}
-Fajardo A, Piper FI, García-Cervigón AI (2022) The intraspecific
-relationship between wood density, vessel diameter and other traits
-across environmental gradients. Functional Ecology 36:1585--1598.
-\url{https://doi.org/10.1111/1365-2435.14069}
 
 \bibitem[\citeproctext]{ref-Falster2017}
 Falster DS, Brännström Å, Westoby M, Dieckmann U (2017) Multitrait
@@ -1451,12 +1388,6 @@ King DA (2005) Linking tree form, allocation and growth with an
 allometrically explicit model. Ecological Modelling 185:77--91.
 \url{https://doi.org/10.1016/j.ecolmodel.2004.11.017}
 
-\bibitem[\citeproctext]{ref-King2011}
-King DA, Clark DA (2011)
-\href{https://www.jstor.org/stable/23012404}{Allometry of emergent tree
-species from saplings to above-canopy adults in a {Costa} {Rican} rain
-forest}. Journal of Tropical Ecology 27:573--579
-
 \bibitem[\citeproctext]{ref-King2006}
 King DA, Davies SJ, Tan S, Noor NSMd (2006) The role of wood density and
 stem support costs in the growth and mortality of tropical trees.
@@ -1533,17 +1464,6 @@ Moore JR (2010) Allometric equations to predict the total above-ground
 biomass of radiata pine trees. Annals of Forest Science 67:806--806.
 \url{https://doi.org/10.1051/forest/2010042}
 
-\bibitem[\citeproctext]{ref-Muller-Landau2004}
-Muller-Landau HC (2004) Interspecific and {Inter}-site {Variation} in
-{Wood} {Specific} {Gravity} of {Tropical} {Trees}. Biotropica 36:20--32.
-\url{https://doi.org/10.1111/j.1744-7429.2004.tb00292.x}
-
-\bibitem[\citeproctext]{ref-Murphy2022}
-Murphy HT, Bradford MG (2022) The role of big trees and abundant species
-in driving spatial patterns of species richness in an {Australian}
-tropical rainforest. Ecology and Evolution 12:e9324.
-\url{https://doi.org/10.1002/ece3.9324}
-
 \bibitem[\citeproctext]{ref-Niklas2007}
 Niklas KJ (2007) Maximum plant height and the biophysical factors that
 limit it. Tree Physiology 27:433--440.
@@ -1554,7 +1474,7 @@ Niklas KJ (1994) Plant allometry: The scaling of form and process.
 University of Chicago Press, Chicago
 
 \bibitem[\citeproctext]{ref-Poorter2012a}
-Poorter H, Niklas KJ, Reich PB, et al (2012a) Biomass allocation to
+Poorter H, Niklas KJ, Reich PB, et al (2012) Biomass allocation to
 leaves, stems and roots: Meta-analyses of interspecific variation and
 environmental control. New Phytologist 193:30--50.
 \url{https://doi.org/10.1111/j.1469-8137.2011.03952.x}
@@ -1564,12 +1484,6 @@ Poorter L, Bongers L, Bongers F (2006) Architecture of 54
 {Moist}-{Forest} {Tree} {Species}: {Traits}, {Trade}-{Offs}, and
 {Functional} {Groups}. Ecology 87:1289--1301.
 \url{https://doi.org/10.1890/0012-9658(2006)87\%5B1289:AOMTST\%5D2.0.CO;2}
-
-\bibitem[\citeproctext]{ref-Poorter2012b}
-Poorter L, Lianes E, Moreno-de las Heras M, Zavala MA (2012b)
-Architecture of {Iberian} canopy tree species in relation to wood
-density, shade tolerance and climate. Plant Ecology 213:707--722.
-\url{https://doi.org/10.1007/s11258-012-0032-6}
 
 \bibitem[\citeproctext]{ref-RCoreTeam2023}
 R Core Team (2023) \href{https://www.R-project.org/}{R: A language and
@@ -1592,12 +1506,6 @@ Sileshi GW, Nath AJ, Kuyah S (2023) Allometric scaling and allocation
 patterns: {Implications} for predicting productivity across plant
 communities. Frontiers in Forests and Global Change 5:
 \url{https://doi.org/10.3389/ffgc.2022.1084480}
-
-\bibitem[\citeproctext]{ref-Sivula2023}
-Sivula T, Magnusson M, Matamoros AA, Vehtari A (2023)
-\href{https://doi.org/10.48550/arXiv.2008.10296}{Uncertainty in
-{Bayesian} {Leave}-{One}-{Out} {Cross}-{Validation} {Based} {Model}
-{Comparison}}
 
 \bibitem[\citeproctext]{ref-Slik2013}
 Slik JWF, Paoli G, McGuire K, et al (2013) Large trees drive forest
@@ -1633,12 +1541,6 @@ Tatsumi S, Yamaguchi K, Furuya N (2023) {ForestScanner}: {A} mobile
 application for measuring and mapping trees with {LiDAR}-equipped
 {iPhone} and {iPad}. Methods in Ecology and Evolution 14:1603--1609.
 \url{https://doi.org/10.1111/2041-210X.13900}
-
-\bibitem[\citeproctext]{ref-Tavankar2019}
-Tavankar F, Lo Monaco A, Nikooy M, et al (2019) Snow damages on trees of
-an uneven age in mixed broadleaf forests: Effects of topographical
-conditions and tree characteristics. Journal of Forestry Research
-30:1383--1394. \url{https://doi.org/10.1007/s11676-018-0710-x}
 
 \bibitem[\citeproctext]{ref-Thomas1996}
 Thomas SC (1996) Asymptotic height as a predictor of growth and
