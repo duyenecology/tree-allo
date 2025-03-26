@@ -101,17 +101,6 @@ biomes <- c(
       "Dryland",
       "Mangrove")
 
-biome_mcmc_names <- expand_grid(
-  model = c("gmm", "weibull", "pl"),
-  div = c("ang", "gym"),
-  variable = c("cr", "h"),
-  biome = biomes
-) |>
-  mutate(mcmc_names = case_when(
-    model == "pl" ~ str_c("fit_lr_nou_each_mcmc_", model, "_", div, "_", variable, "_", biome),
-    TRUE ~ str_c("fit_nlr_nou_each_mcmc_", model, "_", div, "_", variable, "_", biome)
-  )) |>
-  pull(mcmc_names)
 
 
 # Define the tar_map for LOOIC calculation
@@ -119,14 +108,6 @@ loo_map <- tar_map(
   values = list(mcmc = rlang::syms(mcmc_names)),
   tar_target(
     loo,
-    my_loo(mcmc)
-  )
-)
-
-loo_each_map <- tar_map(
-  values = list(mcmc = rlang::syms(biome_mcmc_names)),
-  tar_target(
-    loo_each,
     my_loo(mcmc)
   )
 )
@@ -348,128 +329,6 @@ tar_nlr_nou2 <-
       )
    )
 
-tar_map_lr_nou_each <-
-  tar_map(
-    values = expand_grid(
-      div = c("ang", "gym"),
-      variable = c("cr", "h"),
-      biome = c(
-        "Boreal/montane forest",
-        "Tropical rain forest",
-        "Temperate broadleaf forest",
-        "Tropical savanna",
-        "Temperate grassland",
-        "Temperate conifer forest",
-        "Mediterranean woodland",
-        "Tropical dry forest",
-        "Dryland",
-        "Mangrove")),
-    tar_target(
-      tallo_reduced_lr_df_each, {
-        if (variable == "cr") {
-          tmp <- tallo_wd_df0 |>
-            filter(!is.na(cr))
-        } else if (variable == "h") {
-          tmp <- tallo_wd_df0 |>
-            filter(!is.na(h))
-        }
-        reduce_trees_simple(tmp, 100)
-      }
-    ),
-    tar_target(
-      stan_data_lr_each, {
-        tallo_reduced_lr_df_each |>
-          filter(biome == biome) |>
-          generate_stan_data(
-            model = "lr", div = div, variable = variable)
-      }
-    ),
-    tar_stan_mcmc(
-      fit_lr_nou_each,
-      "stan/pl.stan",
-      data = stan_data_lr_each,
-      refresh = 0,
-      chains = 3,
-      parallel_chains = 3,
-      iter_warmup = 1000,
-      iter_sampling = 1000,
-      adapt_delta = 0.9,
-      seed = 123,
-      return_draws = FALSE,
-      return_diagnostics = TRUE,
-      return_summary = TRUE,
-      summaries = list(
-        mean = ~mean(.x),
-        sd = ~sd(.x),
-        mad = ~mad(.x),
-        ~posterior::quantile2(.x, probs = c(0.025, 0.05, 0.25, 0.5, 0.75, 0.95, 0.975)),
-        posterior::default_convergence_measures()
-      )
-     ),
-    NULL
-   )
-
-tar_map_nlr_nou_each <-
-  tar_map(
-    values = expand_grid(
-      div = c("ang", "gym"),
-      variable = c("cr", "h"),
-      biome = c(
-        "Boreal/montane forest",
-        "Tropical rain forest",
-        "Temperate broadleaf forest",
-        "Tropical savanna",
-        "Temperate grassland",
-        "Temperate conifer forest",
-        "Mediterranean woodland",
-        "Tropical dry forest",
-        "Dryland",
-        "Mangrove")),
-    tar_target(
-      tallo_reduced_nlr_df_each, {
-        if (variable == "cr") {
-          tmp <- tallo_wd_df0 |>
-            filter(!is.na(cr))
-        } else if (variable == "h") {
-          tmp <- tallo_wd_df0 |>
-            filter(!is.na(h))
-        }
-        reduce_trees_simple(tmp, 100)
-      }
-    ),
-    tar_target(
-      stan_data_nlr_each, {
-        tallo_reduced_nlr_df_each |>
-          filter(biome == biome) |>
-          generate_stan_data(
-            model = "nlr", div = div, variable = variable)
-      }
-    ),
-    tar_stan_mcmc(
-      fit_nlr_nou_each,
-      c("stan/weibull.stan", "stan/gmm.stan"),
-      data = stan_data_nlr_each,
-      refresh = 0,
-      chains = 3,
-      parallel_chains = 3,
-      iter_warmup = 1000,
-      iter_sampling = 1000,
-      adapt_delta = 0.9,
-      seed = 123,
-      return_draws = FALSE,
-      return_diagnostics = TRUE,
-      return_summary = TRUE,
-      summaries = list(
-        mean = ~mean(.x),
-        sd = ~sd(.x),
-        mad = ~mad(.x),
-        ~posterior::quantile2(.x, probs = c(0.025, 0.05, 0.25, 0.5, 0.75, 0.95, 0.975)),
-        posterior::default_convergence_measures()
-      )
-     ),
-    NULL
-   )
-
 
 
 main_ <- list(
@@ -482,8 +341,6 @@ main_ <- list(
   tar_map_lr_nou,
   tar_map_nlr_nou,
   tar_nlr_nou2,
-  tar_map_nlr_nou_each,
-  tar_map_lr_nou_each,
   # model with wood density -----------------
   tar_stan_mcmc(
     fit_wd_ang_h,
@@ -624,24 +481,14 @@ main_ <- list(
     )
   ),
  loo_map,
-  loo_each_map,
   tar_combine(
     loo_list,
     loo_map,
     command = list(!!!.x)
   ),
-  tar_combine(
-    loo_each_list,
-    loo_each_map,
-    command = list(!!!.x)
-  ),
   tar_target(
     loo_tbl,
     generate_loo_tbl(loo_list)
-  ),
-  tar_target(
-    loo_each_tbl,
-    generate_loo_tbl(loo_each_list, each = TRUE)
   ),
   tar_target(
     test_loo,
@@ -1329,70 +1176,6 @@ main_ <- list(
       stan_data_lr_gym_dbh3
     )
   ),
-# AGB in one combined plot
-  tar_target(
-    agb_com,
-    generate_agb_estimation_com(
-      tallo_wd_df0,
-      sp_posterior_agb_df,
-      export_yaml = TRUE,
-      yaml_file = "agb_metrics.yaml"
-    )
-  ),
-  tar_target(
-    combined_agb_plot,
-    {
-      my_ggsave(
-        filename = "figs/agb_com",
-        plot = agb_com$p,
-        dpi = 600,
-        width = 173,
-        height = 130,
-        units = "mm"
-      )
-    },
-    format = "file"
-  ),
-  tar_target(
-    agb_metrics_yaml,
-    {
-      agb_com$metrics_ang
-      "agb_metrics.yaml"
-      },
-    format = "file"
-  ),
-# ALTERNATIVE AGB Eq1
-  tar_target(
-    agb_com1,
-    generate_agb_estimation_com1(
-      tallo_wd_df0,
-      sp_posterior_agb_df,
-      export_yaml = TRUE,
-      yaml_file = "agb_metrics1.yaml"
-    )
-  ),
-  tar_target(
-    combined_agb_plot1,
-    {
-      my_ggsave(
-        filename = "figs/agb_com1",
-        plot = agb_com1$p,
-        dpi = 600,
-        width = 173,
-        height = 130,
-        units = "mm"
-      )
-    },
-    format = "file"
-  ),
-  tar_target(
-    agb_metrics_yaml1,
-    {
-      agb_com1$metrics_ang1
-      "agb_metrics1.yaml"
-      },
-    format = "file"
-  ),
 # ALTERNATIVE AGB Eq1 ANGIOSPERM
   tar_target(
     agb,
@@ -1425,103 +1208,6 @@ main_ <- list(
       },
     format = "file"
   ),
-# ALTERNATIVE AGB Eq2
-  tar_target(
-    agb_com2,
-    generate_agb_estimation_com2(
-      tallo_wd_df0,
-      sp_posterior_agb_df,
-      export_yaml = TRUE,
-      yaml_file = "agb_metrics2.yaml"
-    )
-  ),
-  tar_target(
-    combined_agb_plot2,
-    {
-      my_ggsave(
-        filename = "figs/agb_com2",
-        plot = agb_com2$p,
-        dpi = 600,
-        width = 173,
-        height = 130,
-        units = "mm"
-      )
-    },
-    format = "file"
-  ),
-  tar_target(
-    agb_metrics_yaml2,
-    {
-      agb_com2$metrics_ang2
-      "agb_metrics2.yaml"
-      },
-    format = "file"
-  ),
-# ALTERNATIVE AGB Eq3
-  tar_target(
-    agb_com3,
-    generate_agb_estimation_com3(
-      tallo_wd_df0,
-      sp_posterior_agb_df,
-      export_yaml = TRUE,
-      yaml_file = "agb_metrics3.yaml"
-    )
-  ),
-  tar_target(
-    combined_agb_plot3,
-    {
-      my_ggsave(
-        filename = "figs/agb_com3",
-        plot = agb_com3$p,
-        dpi = 600,
-        width = 173,
-        height = 130,
-        units = "mm"
-      )
-    },
-    format = "file"
-  ),
-  tar_target(
-    agb_metrics_yaml3,
-    {
-      agb_com3$metrics_ang3
-      "agb_metrics3.yaml"
-    },
-    format = "file"
-  ),
-# ALTERNATIVE AGB Eq4
-  tar_target(
-    agb_com4,
-    generate_agb_estimation_com4(
-      tallo_wd_df0,
-      sp_posterior_agb_df,
-      export_yaml = TRUE,
-      yaml_file = "agb_metrics4.yaml"
-    )
-  ),
-  tar_target(
-    combined_agb_plot4,
-    {
-      my_ggsave(
-        filename = "figs/agb_com4",
-        plot = agb_com4$p,
-        dpi = 600,
-        width = 173,
-        height = 130,
-        units = "mm"
-      )
-    },
-    format = "file"
-  ),
-  tar_target(
-    agb_metrics_yaml4,
-    {
-      agb_com4$metrics_ang4
-      "agb_metrics4.yaml"
-    },
-    format = "file"
-  ),
-
 # DATA DESCRIPTION
   tar_target(
     data_yaml,
@@ -1584,47 +1270,6 @@ main_ <- list(
 
     )
   ),
-  # tar_target(
-  #   sp_posterior_h_df,
-  #   sp_posterior_df$sp_posterior_h_df
-  # ),
-  # tar_target(
-  #   sp_posterior_cr_df,
-  #   sp_posterior_df$sp_posterior_cr_df
-  # ),
-  # tar_target(
-  #   sp_posterior_dbh_df,
-  #   sp_posterior_df$sp_posterior_dbh_df
-  # ),
-  # tar_target(
-  #   save_sp_posterior_df,
-  #   {
-  #     my_write_csv(sp_posterior_h_df, "data/TableS6_height_sp_estimates.csv")
-  #     my_write_csv(sp_posterior_cr_df, "data/TableS7_crown_radius_sp_estimates.csv")
-  #     my_write_csv(sp_posterior_dbh_df, "data/TableS8_dbh_sp_estimates.csv")
-  #     c(
-  #       "data/TableS6_height_sp_estimates.csv",
-  #       "data/TableS7_crown_radius_sp_estimates.csv",
-  #       "data/TableS8_dbh_sp_estimates.csv"
-  #     )
-  #   },
-  #   format = "file"
-  # ),
-  # tar_target(
-  #   save_sp_posterior_df_xlsx,
-  #   {
-  #     write_xlsx(sp_posterior_h_df, "data/TableS6_height_sp_estimates.xlsx")
-  #     write_xlsx(sp_posterior_cr_df, "data/TableS7_crown_radius_sp_estimates.xlsx")
-  #     write_xlsx(sp_posterior_dbh_df, "data/TableS8_dbh_sp_estimates.xlsx")
-      
-  #     c(
-  #       "data/TableS6_height_sp_estimates.xlsx",
-  #       "data/TableS7_crown_radius_sp_estimates.xlsx",
-  #       "data/TableS8_dbh_sp_estimates.xlsx"
-  #     )
-  #   },
-  #   format = "file"
-  # ),
   # 3 SIGNIFICANT FIGURES
   tar_target(
     sp_posterior_h_df,

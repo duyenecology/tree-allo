@@ -1,7 +1,7 @@
 % Options for packages loaded elsewhere
 %DIF LATEXDIFF DIFFERENCE FILE
-%DIF DEL ms_old.tex   Tue Mar 25 07:45:08 2025
-%DIF ADD ms.tex       Tue Mar 25 07:44:39 2025
+%DIF DEL ms_old.tex   Wed Mar 26 13:41:37 2025
+%DIF ADD ms.tex       Wed Mar 26 13:37:40 2025
 \PassOptionsToPackage{unicode}{hyperref}
 \PassOptionsToPackage{hyphens}{url}
 \PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
@@ -445,9 +445,10 @@ integrating airborne imagery into carbon monitoring programs
 
 Accurately representing tree allometry relationships also requires
 considering underlying ecological constraints, particularly the
-interplay of plant functional traits and their trade-offs \DIFaddbegin \DIFadd{that
-}\DIFaddend influences individual tree architecture and the composition of entire
-forest communities (e.g., \citeproc{ref-Iida2012}{Iida et al. 2012};
+interplay of plant functional traits and their trade-offs \DIFdelbegin \DIFdel{influences
+}\DIFdelend \DIFaddbegin \DIFadd{influence
+}\DIFaddend individual tree architecture and the composition of entire forest
+communities (e.g., \citeproc{ref-Iida2012}{Iida et al. 2012};
 \citeproc{ref-LoubotaPanzou2018}{Loubota Panzou et al. 2018};
 \citeproc{ref-Yang2023}{Yang and Swenson 2023}). Under closed-canopy
 conditions, strong light competition makes the balance between vertical
@@ -1384,7 +1385,7 @@ forecasting ecosystem services in forests with a broad range of species
 and structural heterogeneity. Future studies should investigate
 additional functional traits and environmental factors to improve both
 ecological understanding and carbon monitoring practices at global
-scales monitoring practices at global scales.
+scales\DIFdelbegin \DIFdel{monitoring practices at global scales}\DIFdelend .
 
 \newpage
 
@@ -1404,7 +1405,14 @@ Province, the }\DIFaddend Xishuangbanna State Rainforest Talent Support Program
 (E4BN041B01)\DIFaddbegin \DIFadd{, }\DIFaddend and the CAS President's International Fellowship
 Initiative (2020FYB0003).
 
-\newpage
+\DIFaddbegin \section*{\DIFadd{Data availability}}\label{data-availability}
+\addcontentsline{toc}{section}{\DIFadd{Data availability}}
+
+\DIFadd{Tallo and TRY data are available from their respective platforms. Codes
+are available from Zenodo at xxx
+}
+
+\DIFaddend \newpage
 
 \section*{References}\label{references}
 \addcontentsline{toc}{section}{References}
