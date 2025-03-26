@@ -1,0 +1,663 @@
+---
+title: "Comparing DBH models"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: coderpro
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/workspaces/tree-allometry")
+```
+
+```{r global_options, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+```
+
+# Load necessary libraries
+
+```{r}
+library(targets)
+library(cmdstanr)
+library(posterior)
+library(loo)
+library(dplyr)
+library(ggplot2)
+library(stringr)
+library(reshape2)
+library(scales)
+# Define and run the targets pipeline
+# tar_make()
+```
+
+- Note:
+
+MCMC setting:
+  chains = 3,
+  parallel_chains = 3,
+  iter_warmup = 1000,
+  iter_sampling = 1000,
+  adapt_delta = 0.9,
+  max_treedepth = 15,
+
+# Diagnostics checking
+
+```{r}
+options(width = 100)
+# Assuming you have CmdStanMCMC or CmdStanFit objects for each model
+# Load diagnostics for each model
+diagnostics_dbh <- tar_read(fit_lr1_diagnostics_power_law_dbh)
+diagnostics_dbh1 <- tar_read(fit_lr1_diagnostics_power_law_dbh1)
+diagnostics_dbh2 <- tar_read(fit_lr1_diagnostics_power_law_dbh2)
+diagnostics_dbh3 <- tar_read(fit_lr1_diagnostics_power_law_dbh3)
+diagnostics_nou_dbh <- tar_read(fit_lr1_diagnostics_power_law_nou_dbh)
+diagnostics_nou_dbh1 <- tar_read(fit_lr1_diagnostics_power_law_nou_dbh1)
+diagnostics_nou_dbh2 <- tar_read(fit_lr1_diagnostics_power_law_nou_dbh2)
+diagnostics_nou_dbh3 <- tar_read(fit_lr1_diagnostics_power_law_nou_dbh3)
+
+summary(diagnostics_dbh)
+summary(diagnostics_dbh1)
+summary(diagnostics_dbh2)
+summary(diagnostics_dbh3)
+summary(diagnostics_nou_dbh)
+summary(diagnostics_nou_dbh1)
+summary(diagnostics_nou_dbh2)
+summary(diagnostics_nou_dbh3)
+```
+
+- All models exhibit stable treedepth, no divergences, and consistent behavior across chains and iterations. The mean energy levels, acceptance statistics, and step sizes vary slightly among the models but remain within acceptable ranges, indicating well-mixed chains and reliable diagnostics.
+
+# Extract log-likelihood values
+
+```{r}
+draws_dbh <- tar_read(fit_lr1_draws_power_law_dbh)
+draws_dbh1 <- tar_read(fit_lr1_draws_power_law_dbh1)
+draws_dbh2 <- tar_read(fit_lr1_draws_power_law_dbh2)
+draws_dbh3 <- tar_read(fit_lr1_draws_power_law_dbh3)
+draws_nou_dbh <- tar_read(fit_lr1_draws_power_law_nou_dbh)
+draws_nou_dbh1 <- tar_read(fit_lr1_draws_power_law_nou_dbh1)
+draws_nou_dbh2 <- tar_read(fit_lr1_draws_power_law_nou_dbh2)
+draws_nou_dbh3 <- tar_read(fit_lr1_draws_power_law_nou_dbh3)
+```
+
+```{r}
+log_lik_dbh <- as.matrix(draws_dbh |> select(starts_with("log_lik")))
+log_lik_dbh1 <- as.matrix(draws_dbh1 |> select(starts_with("log_lik")))
+log_lik_dbh2 <- as.matrix(draws_dbh2 |> select(starts_with("log_lik")))
+log_lik_dbh3 <- as.matrix(draws_dbh3 |> select(starts_with("log_lik")))
+log_lik_nou_dbh <- as.matrix(draws_nou_dbh |> select(starts_with("log_lik")))
+log_lik_nou_dbh1 <- as.matrix(draws_nou_dbh1 |> select(starts_with("log_lik")))
+log_lik_nou_dbh2 <- as.matrix(draws_nou_dbh2 |> select(starts_with("log_lik")))
+log_lik_nou_dbh3 <- as.matrix(draws_nou_dbh3 |> select(starts_with("log_lik")))
+```
+
+# Compute LOOIC for each model
+
+```{r}
+loo_dbh <- loo(log_lik_dbh)
+loo_dbh1 <- loo(log_lik_dbh1)
+loo_dbh2 <- loo(log_lik_dbh2)
+loo_dbh3 <- loo(log_lik_dbh3)
+loo_nou_dbh <- loo(log_lik_nou_dbh)
+loo_nou_dbh1 <- loo(log_lik_nou_dbh1)
+loo_nou_dbh2 <- loo(log_lik_nou_dbh2)
+loo_nou_dbh3 <- loo(log_lik_nou_dbh3)
+
+# loo_dbh
+# loo_dbh1
+# loo_dbh2
+# loo_dbh3
+# loo_nou_dbh
+# loo_nou_dbh1
+# loo_nou_dbh2
+# loo_nou_dbh3
+```
+
+
+```{r}
+# Function to save LOO plots
+save_loo_plot <- function(loo_object, filename) {
+  png(filename, width = 8, height = 6, units = "in", res = 300)
+  plot(loo_object)
+  dev.off()
+}
+
+# Create and save the plots with titles
+save_loo_plot(loo_dbh, "figs/dbh/dbh_loo_plot.png")
+save_loo_plot(loo_dbh1, "figs/dbh/dbh1_loo_plot.png")
+save_loo_plot(loo_dbh2, "figs/dbh/dbh2_loo_plot.png")
+save_loo_plot(loo_dbh3, "figs/dbh/dbh3_loo_plot.png")
+save_loo_plot(loo_nou_dbh, "figs/dbh/nou_dbh_loo_plot.png")
+save_loo_plot(loo_nou_dbh1, "figs/dbh/nou_dbh1_loo_plot.png")
+save_loo_plot(loo_nou_dbh2, "figs/dbh/nou_dbh2_loo_plot.png")
+save_loo_plot(loo_nou_dbh3, "figs/dbh/nou_dbh3_loo_plot.png")
+```
+
+
+# Compare models using LOOIC
+```{r}
+comparison <- loo_compare(loo_dbh, loo_dbh1, loo_dbh2, loo_dbh3, loo_nou_dbh, loo_nou_dbh1, loo_nou_dbh2, loo_nou_dbh3)
+
+# Print comparison results
+print(comparison)
+```
+
+- Note:
+
+print(comparison)
+       elpd_diff se_diff 
+model1      0.0       0.0
+model5     -0.9       2.1
+model6  -2705.2      93.2
+model2  -2707.0      93.2
+model8 -10973.9     169.4
+model4 -10975.6     169.4
+model7 -17706.9     213.3
+model3 -17707.4     213.3
+
+
+```{r}
+# Create a data frame for comparison
+model_names <- c("loo_dbh", "loo_dbh1", "loo_dbh2", "loo_dbh3", "loo_nou_dbh", "loo_nou_dbh1", "loo_nou_dbh2", "loo_nou_dbh3")
+elpd_diff <- comparison[, "elpd_diff"]
+se_diff <- comparison[, "se_diff"]
+
+# Map the results back to the model names based on loo_compare output
+comparison_df <- data.frame(
+  Model = model_names[c(1, 5, 6, 2, 8, 4, 7, 3)],  # Reorder based on loo_compare output order
+  ELPD_Difference = round(elpd_diff, 1),
+  SE_Difference = round(se_diff, 1),
+  Formula = c(
+    "DBH = a * (CR^b * H^c)",
+    "DBH = a * (CR^b * H^c)",
+    "DBH = a * (CR * H)^b",
+    "DBH = a * (CR * H)^b",
+    "DBH = a * H^b",
+    "DBH = a * H^b",
+    "DBH = a * CR^b",
+    "DBH = a * CR^b"
+  )
+)
+comparison_df
+# Print the comparison table
+library(knitr)
+kable(comparison_df, caption = "LOOIC Comparison of DBH Models")
+```
+
+- Best Model:
+Model 1 (loo_dbh) with the formula DBH = a * (CR^b * H^c) is the best-performing model.
+
+The best-performing models (1, 5, 6, 2) use the formula DBH = a * (CR^b * H^c), DBH = a * (CR * H)^b, indicating that including both CR and H is crucial for accurate DBH estimation.
+
+Models without wood density (indicated by the prefix “nou” in  table) do not show significantly worse performance compared to their counterparts with wood density. For example, model 1 (loo_dbh) and model 5 (loo_nou_dbh) have very similar ELPD differences, suggesting that simpler models without wood density are nearly as effective.
+
+While simpler models without wood density perform well, the model incorporating wood density as a species-level predictor (model 1: DBH = a * (CR^b * H^c)) shows the best overall performance. This indicates that, despite the minimal difference in performance, including wood density may still provide some benefit.
+
+- Key findings:
+
+Accurate DBH Estimation: Incorporating both tree height (H) and crown radius (CR) is essential for accurate DBH estimation.
+
+Wood Density: While the inclusion of wood density does not significantly improve the model’s performance, it provides a slight benefit, making the model with wood density the best performer overall.
+
+# Plot DBH = aCR^b * H^c model (1, 5)
+
+```{r}
+# Extract relevant data for model 1 (loo_dbh)
+stan_data_lr_dbh <- tar_read(stan_data_lr_dbh)
+str(stan_data_lr_dbh)
+
+log_y <- stan_data_lr_dbh$log_y
+log_x_cr <- stan_data_lr_dbh$log_x[, 2]
+log_x_h <- stan_data_lr_dbh$log_x[, 3]
+sp <- as.factor(stan_data_lr_dbh$jj)
+
+str(log_x_cr)
+str(log_x_h)
+
+# Read in the model summary for model 
+dbh_summary <- tar_read(fit_lr1_summary_power_law_dbh)
+colnames(dbh_summary)
+
+# Filter rows where the variable is "beta"
+beta <- dbh_summary |>
+  filter(grepl("beta", variable))
+
+
+beta
+
+log_a <- beta |> filter(str_detect(variable, "beta\\[1,\\d+\\]")) |> pull(mean)
+b_cr <- beta |> filter(str_detect(variable, "beta\\[2,\\d+\\]")) |> pull(mean)
+b_h <- beta |> filter(str_detect(variable, "beta\\[3,\\d+\\]")) |> pull(mean)
+
+# Compute fitted values for DBH using the power law formula
+fitted_log_y_dbh <- sapply(1:length(log_a), function(i) {
+  log_a[i] + b_cr[i] * log_x_cr + b_h[i] * log_x_h
+})
+
+
+fitted_dbh <- exp(fitted_log_y_dbh)
+
+gamma <- dbh_summary |>
+  filter(grepl("gamma", variable))
+gamma
+
+# Calculate community-level fitted line by averaging the species-level coefficients
+community_log_a <- gamma |> filter(variable == "gamma[1,1]") |> pull(mean)
+community_b_cr <- gamma |> filter(variable == "gamma[2,1]") |> pull(mean)
+community_b_h <- gamma |> filter(variable == "gamma[3,1]") |> pull(mean)
+
+community_fitted_log_y_dbh <- community_log_a + community_b_cr * log_x_cr + community_b_h * log_x_h
+community_fitted_DBH <- exp(community_fitted_log_y_dbh)
+
+# Create a data frame for plotting
+data_dbh <- data.frame(DBH = exp(log_y), CR = exp(log_x_cr), H = exp(log_x_h), sp = sp)
+data_dbh$community_fitted_DBH <- community_fitted_DBH
+head(data_dbh)
+
+# Add species-specific fitted values to the data frame
+for (i in 1:length(log_a)) {
+  data_dbh[[paste0("fitted_DBH_sp_", i)]] <- fitted_dbh[, i]
+}
+
+# Combine CR and H for plotting
+data_dbh$CR_H <- data_dbh$CR^community_b_cr * data_dbh$H^community_b_h
+
+data_long <- reshape2::melt(data_dbh, id.vars = c("DBH", "CR_H", "sp", "community_fitted_DBH"), measure.vars = grep("fitted_DBH_sp_", names(data_dbh), value = TRUE))
+
+head(data_long)
+
+dbh_plot <- ggplot(data_dbh, aes(x = CR_H, y = DBH)) +
+  geom_point(alpha = 0.5, color = "grey") +
+  geom_line(data = data_long, aes(x = CR_H, y = value, group = variable), color = "#4682B4", alpha = 0.3) + # SteelBlue color for species fits
+  geom_line(aes(y = community_fitted_DBH), color = "white", linewidth = 1.2) +
+  labs(title = "DBH = a*CR^b * H^c",
+       x = "CR_H",
+       y = "DBH") +
+  scale_x_log10(labels = label_number()) +
+  scale_y_log10(labels = label_number()) +
+  theme_minimal()
+
+# Save the plot
+ggsave(filename = "figs/dbh/H_CR_DBH1.png", plot = dbh_plot, width = 12, height = 8, dpi = 300, bg = "white")
+```
+
+- Note: Plot looks weird
+
+# Fixxing code
+```{r}
+# Extract relevant data for model 1 (loo_dbh)
+stan_data_lr_dbh <- tar_read(stan_data_lr_dbh)
+str(stan_data_lr_dbh)
+head(stan_data_lr_dbh$log_x)
+
+log_y <- stan_data_lr_dbh$log_y
+log_x_cr <- stan_data_lr_dbh$log_x[, 2]
+log_x_h <- stan_data_lr_dbh$log_x[, 3]
+sp <- as.factor(stan_data_lr_dbh$jj)
+
+head(log_x_cr)
+head(log_x_h)
+
+# Read in the model summary for model 
+dbh_summary <- tar_read(fit_lr1_summary_power_law_dbh)
+
+# Filter rows where the variable is "beta"
+beta <- dbh_summary |>
+  filter(grepl("beta", variable))
+
+beta
+
+log_a <- beta |> filter(str_detect(variable, "beta\\[1,\\d+\\]")) |> pull(mean)
+b_cr <- beta |> filter(str_detect(variable, "beta\\[2,\\d+\\]")) |> pull(mean)
+b_h <- beta |> filter(str_detect(variable, "beta\\[3,\\d+\\]")) |> pull(mean)
+
+# Debug: Check the lengths of log_a, b_cr, and b_h
+cat("Lengths of log_a, b_cr, b_h:\n", length(log_a), length(b_cr), length(b_h), "\n")
+
+# Compute fitted values for DBH using the power law formula
+fitted_log_y_dbh <- sapply(1:length(log_a), function(i) {
+  log_a[i] + b_cr[i] * log_x_cr + b_h[i] * log_x_h
+})
+
+fitted_dbh <- exp(fitted_log_y_dbh)
+gamma <- dbh_summary |>
+  filter(grepl("gamma", variable))
+gamma
+
+# Calculate community-level fitted line by averaging the species-level coefficients
+community_log_a <- gamma |> filter(variable == "gamma[1,1]") |> pull(mean)
+community_b_cr <- gamma |> filter(variable == "gamma[2,1]") |> pull(mean)
+community_b_h <- gamma |> filter(variable == "gamma[3,1]") |> pull(mean)
+
+community_fitted_log_y_dbh <- community_log_a + community_b_cr * log_x_cr + community_b_h * log_x_h
+community_fitted_DBH <- exp(community_fitted_log_y_dbh)
+
+# Create a data frame for plotting
+data_dbh <- data.frame(DBH = exp(log_y), CR = exp(log_x_cr), H = exp(log_x_h), sp = sp)
+data_dbh$community_fitted_DBH <- community_fitted_DBH
+head(data_dbh)
+
+# Add species-specific fitted values to the data frame
+for (i in 1:length(log_a)) {
+  data_dbh[[paste0("fitted_DBH_sp_", i)]] <- fitted_dbh[, i]
+}
+
+# Combine CR and H for plotting
+data_dbh$CR_H <- data_dbh$CR^community_b_cr * data_dbh$H^community_b_h
+
+data_long <- reshape2::melt(data_dbh, id.vars = c("DBH", "CR_H", "sp", "community_fitted_DBH"), measure.vars = grep("fitted_DBH_sp_", names(data_dbh), value = TRUE))
+
+head(data_long)
+
+# Plotting with no background
+dbh_plot <- ggplot(data_dbh, aes(x = CR_H, y = DBH)) +
+  geom_point(alpha = 0.5, color = "grey") +
+  geom_line(data = data_long, aes(x = CR_H, y = value, group = variable), color = "#4682B4", alpha = 0.3) + # SteelBlue color for species fits
+  geom_line(aes(x = CR_H, y = community_fitted_DBH), color = "red", linewidth = 1.2) + # Community fit line in red
+  labs(title = "DBH = a * CR^b * H^c",
+       x = "CR^b * H^c",
+       y = "DBH") +
+  scale_x_log10(labels = scales::label_number()) +
+  scale_y_log10(labels = scales::label_number()) +
+  theme_minimal() +
+  theme(panel.background = element_blank(), 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        axis.line = element_line(colour = "black"),
+        plot.background = element_blank(),
+        legend.background = element_blank(),
+        legend.box.background = element_blank())
+
+# Save the plot
+ggsave(filename = "figs/dbh/H_CR_DBH1_2.png", plot = dbh_plot, width = 12, height = 8, dpi = 300, bg = "transparent")
+
+# Print the plot to visualize in R
+print(dbh_plot)
+```
+
+- Note: still weird
+
+```{r}
+# Create a data frame for plotting
+data_dbh <- data.frame(log_DBH = log_y, log_CR = log_x_cr, log_H = log_x_h, sp = sp)
+head(data_dbh)
+
+# Fit the overall model
+fit <- lm(log_DBH ~ log_CR + log_H, data = data_dbh)
+summary(fit)
+
+# Generate overall fitted values
+data_dbh$fitted_log_DBH <- predict(fit, newdata = data_dbh)
+head(data_dbh)
+
+species_fitted_values <- data_dbh |>
+  group_by(sp) |>
+  do({
+    fit_sp <- lm(log_DBH ~ log_CR + log_H, data = .)
+    data.frame(
+      log_DBH = .$log_DBH,
+      fitted_log_DBH_sp = predict(fit_sp, newdata = .),
+      sp = .$sp
+    )
+  })
+
+# Merge the species fitted values back to the main data frame
+data_dbh <- merge(data_dbh, species_fitted_values, by = c("log_DBH", "sp"))
+head(data_dbh)
+
+plot_observed_vs_predicted <- ggplot(data_dbh, aes(x = fitted_log_DBH, y = log_DBH)) +
+  geom_point(alpha = 0.3, color = "grey") +
+  geom_abline(intercept = 0, slope = 1, color = "#4682B4", linetype = "dashed") + # Perfect fit line
+  geom_smooth(aes(group = sp, color = ), method = "lm", se = FALSE, alpha = 0.5) + # Species-specific fitted lines
+  labs(title = "DBH = aCR^b*H^c",
+       x = "log(CR) + log(H)",
+       y = "log(DBH)") +
+  theme_minimal() +
+  guides(color = "none") # Remove the legend
+plot_observed_vs_predicted
+```
+
+
+# Plot DBH = a(CR*H)^b model (6, 2)
+
+```{r}
+comparison1 <- loo_compare(loo_dbh1, loo_dbh2, loo_dbh3, loo_nou_dbh1, loo_nou_dbh2, loo_nou_dbh3)
+
+# Print comparison results
+print(comparison1)
+```
+
+# Read the data
+
+```{r}
+stan_data_lr_dbh1 <- tar_read(stan_data_lr_dbh1)
+str(stan_data_lr_dbh1)
+
+# Extract relevant data
+log_y <- stan_data_lr_dbh1$log_y
+log_x <- stan_data_lr_dbh1$log_x
+sp <- as.factor(stan_data_lr_dbh1$jj)
+# u <- stan_data_lr_dbh1$u
+
+str(log_x)
+head(log_x)
+
+# Read in the model summary
+dbh1 <- tar_read(fit_lr1_summary_power_law_dbh1)
+dbh1
+
+# Filter rows where the variable is "beta"
+beta <- dbh1 |>
+  filter(grepl("beta", variable))
+
+beta
+
+log_a <- beta |> filter(str_detect(variable, "beta\\[1,\\d+\\]")) |> pull(mean)
+b <- beta |> filter(str_detect(variable, "beta\\[2,\\d+\\]")) |> pull(mean)
+
+print(length(log_a))
+print(length(b))
+print(length(sp))
+
+# Compute fitted values for DBH using the power law formula
+fitted_log_y_dbh <- sapply(1:length(log_a), function(i) {
+  log_a[i] + b[i] * log_x[, 2]
+})
+
+fitted_dbh <- exp(fitted_log_y_dbh)
+
+# Extract the gamma values
+gamma <- dbh1 |> filter(grepl("gamma", variable))
+
+# Compute the community-level intercept and slope using gamma
+community_log_a <- gamma |> filter(variable == "gamma[1,1]") |> pull(mean)
+community_b <- gamma |> filter(variable == "gamma[2,1]") |> pull(mean)
+
+# Compute fitted values for the community-level line
+community_fitted_log_y_dbh <- community_log_a + community_b * log_x[, 2]
+community_fitted_DBH <- exp(community_fitted_log_y_dbh)
+
+# Create a data frame for plotting
+data_dbh <- data.frame(DBH = exp(log_y), CRxH = exp(log_x[, 2]), sp = sp)
+
+data_dbh$community_fitted_DBH <- community_fitted_DBH
+
+# Add species-specific fitted values to the data frame
+for (i in 1:length(log_a)) {
+  data_dbh[[paste0("fitted_DBH_sp_", i)]] <- fitted_dbh[, i]
+}
+
+
+# Transform data for plotting
+data_long <- data_dbh |> melt(id.vars = c("DBH", "CRxH", "sp", "community_fitted_DBH"), measure.vars = grep("fitted_DBH_sp_", names(data_dbh), value = TRUE))
+
+
+head(data_long)
+summary(data_long)
+str(data_long)
+```
+
+```{r}
+# Plotting
+dbh_plot1 <- ggplot(data_dbh, aes(x = CRxH, y = DBH)) +
+  geom_point(alpha = 0.5, color = "grey") +
+  geom_line(data = data_long, aes(x = CRxH, y = value, group = variable), color = "#4682B4", alpha = 0.3) + # SteelBlue color for species fits
+  geom_line(aes(y = community_fitted_DBH), color = "white", linewidth = 1.2) +
+  labs(title = "DBH = a*(CR*H)^b",
+       x = "CR*H",
+       y = "DBH") +
+  scale_x_log10(labels = label_number()) +
+  scale_y_log10(labels = label_number()) +
+  theme_minimal()
+
+# Save the plot
+ggsave(filename = "figs/dbh/CR*H_DBH.png", plot = dbh_plot1, width = 12, height = 8, dpi = 300, bg = "white")
+
+```
+
+
+```{r}
+stan_data_lr_dbh1 <- tar_read(stan_data_lr_dbh1)
+str(stan_data_lr_dbh1)
+
+# Extract relevant data
+log_y <- stan_data_lr_dbh1$log_y
+log_x <- stan_data_lr_dbh1$log_x
+sp <- as.factor(stan_data_lr_dbh1$jj)
+# u <- stan_data_lr_dbh1$u
+
+str(log_x)
+head(log_x)
+
+# Read in the model summary
+dbh1 <- tar_read(fit_lr1_summary_power_law_dbh1)
+dbh1
+
+
+# Community parameters
+community_log_a <- dbh1 |> filter(variable == "gamma[1,1]") |> pull(mean)
+community_b <- dbh1 |> filter(variable == "gamma[1,2]") |> pull(mean)
+community_log_a
+community_b
+
+community_fitted_log_y_dbh <- community_log_a + community_b * log_x[, 2]
+community_fitted_DBH <- exp(community_fitted_log_y_dbh)
+
+# Create a data frame for plotting
+data_dbh <- data.frame(DBH = exp(log_y), CRxH = exp(log_x[, 2]), community_fitted_DBH, sp = sp)
+
+data_dbh$community_fitted_DBH <- community_fitted_DBH
+head(data_dbh)
+str(data_dbh)
+
+dbh <- ggplot(data_dbh, aes(x = CRxH, y = DBH)) +
+  geom_point(alpha = 0.5) +
+  geom_line(aes(x = CRxH, y = community_fitted_DBH, color = sp, group = sp), show.legend = FALSE) +
+  labs(title = "DBH = a*(CR*H)^b",
+       x = "CRxH ",
+       y = "DBH (cm)") +
+  scale_x_log10() +
+  scale_y_log10() +
+  theme_minimal()
+
+dbh
+```
+
+
+# Plot DBH = a(CR*H)^b model (6, 2) (Using gamma as community-level parameters)
+
+```{r}
+# Read the data
+stan_data_lr_dbh1 <- tar_read(stan_data_lr_dbh1)
+str(stan_data_lr_dbh1)
+
+# Extract relevant data
+log_y <- stan_data_lr_dbh1$log_y
+log_x <- stan_data_lr_dbh1$log_x
+sp <- as.factor(stan_data_lr_dbh1$jj)
+
+str(log_x)
+head(log_x)
+
+# Read in the model summary
+dbh1 <- tar_read(fit_lr1_summary_power_law_dbh1)
+dbh1
+
+# Filter rows where the variable is "beta"
+beta <- dbh1 |>
+  filter(grepl("beta", variable))
+
+beta
+
+log_a <- beta |> filter(str_detect(variable, "beta\\[1,\\d+\\]")) |> pull(mean)
+b <- beta |> filter(str_detect(variable, "beta\\[2,\\d+\\]")) |> pull(mean)
+
+print(length(log_a))
+print(length(b))
+print(length(sp))
+
+# Compute fitted values for DBH using the power law formula
+fitted_log_y_dbh <- sapply(1:length(log_a), function(i) {
+  log_a[i] + b[i] * log_x[, 2]
+})
+
+fitted_dbh <- exp(fitted_log_y_dbh)
+
+# Extract community-level parameters directly
+community_log_a <- dbh1 |> filter(variable == "gamma[1,1]") |> pull(mean)
+community_b <- dbh1 |> filter(variable == "gamma[2,1]") |> pull(mean)
+
+community_fitted_log_y_dbh <- community_log_a + community_b * log_x[, 2]
+
+community_fitted_DBH <- exp(community_fitted_log_y_dbh)
+
+# Create a data frame for plotting
+data_dbh <- data.frame(DBH = exp(log_y), CRxH = exp(log_x[, 2]), sp = sp)
+data_dbh$community_fitted_DBH <- community_fitted_DBH
+
+head(data_dbh)
+summary(data_dbh)
+
+# Add species-specific fitted values to the data frame
+for (i in 1:length(log_a)) {
+  data_dbh[[paste0("fitted_DBH_sp_", i)]] <- fitted_dbh[, i]
+}
+
+data_long <- melt(data_dbh, id.vars = c("DBH", "CRxH", "sp", "community_fitted_DBH"), measure.vars = grep("fitted_DBH_sp_", names(data_dbh), value = TRUE))
+
+head(data_long)
+summary(data_long)
+str(data_long)
+
+# Plotting
+dbh_plot1 <- ggplot(data_dbh, aes(x = CRxH, y = DBH)) +
+  geom_point(alpha = 0.5, color = "grey") +
+  geom_line(data = data_long, aes(x = CRxH, y = value, group = variable), color = "#4682B4", alpha = 0.3) + # SteelBlue color for species fits
+  geom_line(aes(y = community_fitted_DBH), color = "white", linewidth = 1.2) +
+  labs(title = "DBH = a*(CR*H)^b",
+       x = "CR*H",
+       y = "DBH") +
+  scale_x_log10(labels = label_number()) +
+  scale_y_log10(labels = label_number()) +
+  theme_minimal()
+
+# Save the plot
+ggsave(filename = "figs/dbh/CR*H_DBH1.png", plot = dbh_plot1, width = 12, height = 8, dpi = 300, bg = "white")
+
+```

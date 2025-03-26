@@ -1,0 +1,388 @@
+---
+title: "Diagnostic checking"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: coderpro
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/workspaces/tree-allometry")
+```
+
+```{r global_options, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+```
+
+# Load necessary libraries
+
+```{r}
+library(targets)
+library(cmdstanr)
+# tar_make()
+```
+
+# Diagnostic-checking
+
+- Note: List of all potential diagnostic file names (lr2, nlr)
+  "fit_lr2_diagnostics_power_law1_cr", "fit_lr2_diagnostics_power_law1_dbh",
+  "fit_lr2_diagnostics_power_law1_dbh1", "fit_lr2_diagnostics_power_law1_dbh2",
+  "fit_lr2_diagnostics_power_law1_dbh3", "fit_lr2_diagnostics_power_law1_h",
+  "fit_lr2_diagnostics_power_law1_nou_cr", "fit_lr2_diagnostics_power_law1_nou_dbh",
+  "fit_lr2_diagnostics_power_law1_nou_dbh1", "fit_lr2_diagnostics_power_law1_nou_dbh2",
+  "fit_lr2_diagnostics_power_law1_nou_dbh3", "fit_lr2_diagnostics_power_law1_nou_h",
+  "fit_nlr_diagnostics_gmm1_cr", "fit_nlr_diagnostics_gmm1_h",
+  "fit_nlr_diagnostics_gmm1_nou_cr", "fit_nlr_diagnostics_gmm1_nou_h",
+  "fit_nlr_diagnostics_weibull1_cr", "fit_nlr_diagnostics_weibull1_h",
+  "fit_nlr_diagnostics_weibull1_nou_cr", "fit_nlr_diagnostics_weibull1_nou_h"
+
+```{r}
+options(width = 200)
+# Load diagnostics data for specific fit_lr2 and fit_nlr models
+pl1_cr <- tar_read(fit_lr2_diagnostics_power_law1_cr)
+pl1_dbh <- tar_read(fit_lr2_diagnostics_power_law1_dbh)
+pl1_dbh1 <- tar_read(fit_lr2_diagnostics_power_law1_dbh1)
+pl1_dbh2 <- tar_read(fit_lr2_diagnostics_power_law1_dbh2)
+pl1_dbh3 <- tar_read(fit_lr2_diagnostics_power_law1_dbh3)
+pl1_h <- tar_read(fit_lr2_diagnostics_power_law1_h)
+pl1_nou_cr <- tar_read(fit_lr2_diagnostics_power_law1_nou_cr)
+pl1_nou_dbh <- tar_read(fit_lr2_diagnostics_power_law1_nou_dbh)
+pl1_nou_dbh1 <- tar_read(fit_lr2_diagnostics_power_law1_nou_dbh1)
+pl1_nou_dbh2 <- tar_read(fit_lr2_diagnostics_power_law1_nou_dbh2)
+pl1_nou_dbh3 <- tar_read(fit_lr2_diagnostics_power_law1_nou_dbh3)
+pl1_nou_h <- tar_read(fit_lr2_diagnostics_power_law1_nou_h)
+gmm1_cr <- tar_read(fit_nlr_diagnostics_gmm1_cr)
+gmm1_h <- tar_read(fit_nlr_diagnostics_gmm1_h)
+gmm1_nou_cr <- tar_read(fit_nlr_diagnostics_gmm1_nou_cr)
+gmm1_nou_h <- tar_read(fit_nlr_diagnostics_gmm1_nou_h)
+weibull1_cr <- tar_read(fit_nlr_diagnostics_weibull1_cr)
+weibull1_h <- tar_read(fit_nlr_diagnostics_weibull1_h)
+weibull1_nou_cr <- tar_read(fit_nlr_diagnostics_weibull1_nou_cr)
+weibull1_nou_h <- tar_read(fit_nlr_diagnostics_weibull1_nou_h)
+```
+
+```{r}
+summary(pl1_cr)
+summary(pl1_dbh)
+summary(pl1_dbh1)
+summary(pl1_dbh2)
+summary(pl1_dbh3)
+summary(pl1_h)
+summary(pl1_nou_cr)
+summary(pl1_nou_dbh)
+summary(pl1_nou_dbh1)
+summary(pl1_nou_dbh2)
+summary(pl1_nou_dbh3)
+summary(pl1_nou_h)
+
+# fit_nlr models summaries
+summary(gmm1_cr)
+summary(gmm1_h)
+summary(gmm1_nou_cr)
+summary(gmm1_nou_h)
+summary(weibull1_cr)
+summary(weibull1_h)
+summary(weibull1_nou_cr)
+summary(weibull1_nou_h)
+
+```
+
+# Checking ESS_bulk and R_hat
+```{r}
+pl1_cr <- tar_read(fit_lr2_summary_power_law1_cr)
+pl1_dbh <- tar_read(fit_lr2_summary_power_law1_dbh)
+pl1_dbh1 <- tar_read(fit_lr2_summary_power_law1_dbh1)
+pl1_dbh2 <- tar_read(fit_lr2_summary_power_law1_dbh2)
+pl1_dbh3 <- tar_read(fit_lr2_summary_power_law1_dbh3)
+pl1_h <- tar_read(fit_lr2_summary_power_law1_h)
+pl1_nou_cr <- tar_read(fit_lr2_summary_power_law1_nou_cr)
+pl1_nou_dbh <- tar_read(fit_lr2_summary_power_law1_nou_dbh)
+pl1_nou_dbh1 <- tar_read(fit_lr2_summary_power_law1_nou_dbh1)
+pl1_nou_dbh2 <- tar_read(fit_lr2_summary_power_law1_nou_dbh2)
+pl1_nou_dbh3 <- tar_read(fit_lr2_summary_power_law1_nou_dbh3)
+pl1_nou_h <- tar_read(fit_lr2_summary_power_law1_nou_h)
+
+gmm1_cr <- tar_read(fit_nlr_summary_gmm1_cr)
+gmm1_h <- tar_read(fit_nlr_summary_gmm1_h)
+gmm1_nou_cr <- tar_read(fit_nlr_summary_gmm1_nou_cr)
+gmm1_nou_h <- tar_read(fit_nlr_summary_gmm1_nou_h)
+weibull1_cr <- tar_read(fit_nlr_summary_weibull1_cr)
+weibull1_h <- tar_read(fit_nlr_summary_weibull1_h)
+weibull1_nou_cr <- tar_read(fit_nlr_summary_weibull1_nou_cr)
+weibull1_nou_h <- tar_read(fit_nlr_summary_weibull1_nou_h)
+```
+
+```{r}
+pl1_cr
+pl1_dbh
+pl1_dbh1
+pl1_dbh2
+pl1_dbh3
+pl1_h
+pl1_nou_cr
+pl1_nou_dbh
+pl1_nou_dbh1
+pl1_nou_dbh2
+pl1_nou_dbh3
+pl1_nou_h
+gmm1_cr
+gmm1_h
+gmm1_nou_cr
+gmm1_nou_h
+weibull1_cr
+weibull1_h
+weibull1_nou_cr
+weibull1_nou_h
+```
+
+
+```{r}
+summary(pl1_cr)
+summary(pl1_dbh)
+summary(pl1_dbh1)
+summary(pl1_dbh2)
+summary(pl1_dbh3)
+summary(pl1_h)
+summary(pl1_nou_cr)
+summary(pl1_nou_dbh)
+summary(pl1_nou_dbh1)
+summary(pl1_nou_dbh2)
+summary(pl1_nou_dbh3)
+summary(pl1_nou_h)
+
+# fit_nlr models summaries
+summary(gmm1_cr)
+summary(gmm1_h)
+summary(gmm1_nou_cr)
+summary(gmm1_nou_h)
+summary(weibull1_cr)
+summary(weibull1_h)
+summary(weibull1_nou_cr)
+summary(weibull1_nou_h)
+```
+
+# Divergent transition checking
+```{r}
+library(targets)
+library(posterior)
+library(bayesplot)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(cmdstanr)
+library(stringr)
+
+```
+
+```{r}
+divergent_tbl <- tar_read(divergent_tbl)
+print(divergent_tbl, n = Inf)
+```
+
+# Parallel coordinates plot
+```{r}
+pl1_h_sam <- tar_read(fit_lr2_draws_power_law1_h)
+pl1_h_sam_df <- as_draws_df(pl1_h_sam)
+pl1_h_sam_plot <- pl1_h_sam_df[, c("gamma[1,1]", "gamma[2,1]", "gamma[1,2]", "gamma[2,2]")]
+
+pl1_h_pairs <- mcmc_pairs(pl1_h_sam_plot, diag_fun = "hist", off_diag_fun = "hex")
+pl1_h_pairs
+```
+
+```{r}
+pl1_cr_sam <- tar_read(fit_lr2_draws_power_law1_cr)
+pl1_cr_sam_df <- as_draws_df(pl1_cr_sam)
+pl1_cr_sam_df
+pl1_cr_sam_plot <- pl1_cr_sam_df[,c("gamma[1,1]", "gamma[2,1]", "gamma[1,2]", "gamma[2,2]")]
+pl1_cr_pairs <- mcmc_pairs(pl1_cr_sam_plot, diag_fun = "hist", off_diag_fun = "hex")
+pl1_cr_pairs
+
+```
+
+```{r}
+pl1_dbh_sam <- tar_read(fit_lr2_draws_power_law1_dbh)
+pl1_dbh_sam_df <- as_draws_df(pl1_dbh_sam)
+pl1_dbh_sam_df
+pl1_dbh_sam_plot <- pl1_dbh_sam_df[, c("gamma[1,1]", "gamma[2,1]", "gamma[3,1]",  "gamma[1,2]", "gamma[2,2]", "gamma[3,2]")]
+pl1_dbh_pairs <- mcmc_pairs(pl1_dbh_sam_plot, diag_fun = "hist", off_diag_fun = "hex")
+pl1_dbh_pairs
+```
+
+```{r}
+pl1_dbh1_sam <- tar_read(fit_lr2_draws_power_law1_dbh1)
+pl1_dbh1_sam_df <- as_draws_df(pl1_dbh1_sam)
+pl1_dbh1_sam_df
+pl1_dbh1_sam_plot <- pl1_dbh1_sam_df[, c("gamma[1,1]", "gamma[2,1]", "gamma[1,2]", "gamma[2,2]")]
+pl1_dbh1_pairs <- mcmc_pairs(pl1_dbh1_sam_plot, diag_fun = "hist", off_diag_fun = "hex")
+pl1_dbh1_pairs
+
+```
+
+```{r}
+pl1_dbh2_sam <- tar_read(fit_lr2_draws_power_law1_dbh2)
+pl1_dbh2_sam_df <- as_draws_df(pl1_dbh2_sam)
+pl1_dbh2_sam_df
+pl1_dbh2_sam_plot <- pl1_dbh2_sam_df[, c("gamma[1,1]", "gamma[2,1]", "gamma[1,2]", "gamma[2,2]")]
+pl1_dbh2_pairs <- mcmc_pairs(pl1_dbh2_sam_plot, diag_fun = "hist", off_diag_fun = "hex")
+pl1_dbh2_pairs
+```
+
+```{r}
+pl1_dbh3_sam <- tar_read(fit_lr2_draws_power_law1_dbh3)
+pl1_dbh3_sam_df <- as_draws_df(pl1_dbh3_sam)
+pl1_dbh3_sam_df
+pl1_dbh3_sam_plot <- pl1_dbh3_sam_df[, c("gamma[1,1]", "gamma[2,1]", "gamma[1,2]", "gamma[2,2]")]
+pl1_dbh3_pairs <- mcmc_pairs(pl1_dbh3_sam_plot, diag_fun = "hist", off_diag_fun = "hex")
+pl1_dbh3_pairs
+```
+
+```{r}
+pl1_nou_h_sam <- tar_read(fit_lr2_draws_power_law1_nou_h)
+pl1_nou_h_sam_df <- as_draws_df(pl1_nou_h_sam)
+pl1_nou_h_sam_df
+pl1_nou_h_sam_plot <- pl1_nou_h_sam_df[, c("gamma[1]", "gamma[2]")]
+pl1_nou_h_pairs <- mcmc_pairs(pl1_nou_h_sam_plot, diag_fun = "hist", off_diag_fun = "hex")
+pl1_nou_h_pairs
+```
+
+```{r}
+pl1_nou_cr_sam <- tar_read(fit_lr2_draws_power_law1_nou_cr)
+pl1_nou_cr_sam_df <- as_draws_df(pl1_nou_cr_sam)
+pl1_nou_cr_sam_df
+pl1_nou_cr_sam_plot <- pl1_nou_cr_sam_df[, c("gamma[1]", "gamma[2]")]
+pl1_nou_cr_pairs <- mcmc_pairs(pl1_nou_cr_sam_plot, diag_fun = "hist", off_diag_fun = "hex")
+pl1_nou_cr_pairs
+```
+
+```{r}
+pl1_nou_dbh_sam <- tar_read(fit_lr2_draws_power_law1_nou_dbh)
+pl1_nou_dbh_sam_df <- as_draws_df(pl1_nou_dbh_sam)
+pl1_nou_dbh_sam_df
+pl1_nou_dbh_sam_plot <- pl1_nou_dbh_sam_df[, c("gamma[1]", "gamma[2]", "gamma[3]")]
+pl1_nou_dbh_pairs <- mcmc_pairs(pl1_nou_dbh_sam_plot, diag_fun = "hist", off_diag_fun = "hex")
+pl1_nou_dbh_pairs
+```
+
+```{r}
+pl1_nou_dbh1_sam <- tar_read(fit_lr2_draws_power_law1_nou_dbh1)
+pl1_nou_dbh1_sam_df <- as_draws_df(pl1_nou_dbh1_sam)
+pl1_nou_dbh1_sam_df 
+pl1_nou_dbh1_sam_plot <- pl1_nou_dbh1_sam_df[, c("gamma[1]", "gamma[2]")]
+pl1_nou_dbh1_pairs <- mcmc_pairs(pl1_nou_dbh1_sam_plot, diag_fun = "hist", off_diag_fun = "hex")
+pl1_nou_dbh1_pairs
+```
+
+
+```{r}
+pl1_nou_dbh2_sam <- tar_read(fit_lr2_draws_power_law1_nou_dbh2)
+pl1_nou_dbh2_sam_df <- as_draws_df(pl1_nou_dbh2_sam)
+pl1_nou_dbh2_sam_df
+pl1_nou_dbh2_sam_plot <- pl1_nou_dbh2_sam_df[, c("gamma[1]", "gamma[2]")]
+pl1_nou_dbh2_pairs <- mcmc_pairs(pl1_nou_dbh2_sam_plot, diag_fun = "hist", off_diag_fun = "hex")
+pl1_nou_dbh2_pairs
+```
+
+
+```{r}
+pl1_nou_dbh3_sam <- tar_read(fit_lr2_draws_power_law1_nou_dbh3)
+pl1_nou_dbh3_sam_df <- as_draws_df(pl1_nou_dbh3_sam)
+pl1_nou_dbh3_sam_df
+pl1_nou_dbh3_sam_plot <- pl1_nou_dbh3_sam_df[, c("gamma[1]", "gamma[2]")]
+pl1_nou_dbh3_pairs <- mcmc_pairs(pl1_nou_dbh3_sam_plot, diag_fun = "hist", off_diag_fun = "hex")
+pl1_nou_dbh3_pairs
+```
+
+```{r}
+gmm1_h_sam <- tar_read(fit_nlr_draws_gmm1_h)
+gmm1_h_sam_df <- as_draws_df(gmm1_h_sam)
+gmm1_h_sam_df
+gmm1_h_sam_plot <- gmm1_h_sam_df[, c("gamma[1,1]", "gamma[2,1]", "gamma[1,2]", "gamma[2,2]", "gamma[1,3]",  "gamma[2,3]")]
+gmm1_h_pairs <- mcmc_pairs(gmm1_h_sam_plot, diag_fun = "hist", off_diag_fun = "hex")
+gmm1_h_pairs
+```
+
+
+```{r}
+gmm1_cr_sam <- tar_read(fit_nlr_draws_gmm1_cr)
+gmm1_cr_sam_df <- as_draws_df(gmm1_cr_sam)
+gmm1_cr_sam_df
+gmm1_cr_sam_plot <- gmm1_cr_sam_df[, c("gamma[1,1]", "gamma[2,1]", "gamma[1,2]", "gamma[2,2]", "gamma[1,3]",  "gamma[2,3]")]
+gmm1_cr_pairs <- mcmc_pairs(gmm1_cr_sam_plot, diag_fun = "hist", off_diag_fun = "hex")
+gmm1_cr_pairs
+```
+
+
+```{r}
+gmm1_nou_h_sam <- tar_read(fit_nlr_draws_gmm1_nou_h)
+gmm1_nou_h_sam_df <- as_draws_df(gmm1_nou_h_sam)
+gmm1_nou_h_sam_df
+gmm1_nou_h_sam_plot <- gmm1_nou_h_sam_df[, c("gamma[1]", "gamma[2]", "gamma[3]")]
+gmm1_nou_h_pairs <- mcmc_pairs(gmm1_nou_h_sam_plot, diag_fun = "hist", off_diag_fun = "hex")
+gmm1_nou_h_pairs
+```
+
+
+```{r}
+gmm1_nou_cr_sam <- tar_read(fit_nlr_draws_gmm1_nou_cr)
+gmm1_nou_cr_sam_df <- as_draws_df(gmm1_nou_cr_sam)
+gmm1_nou_cr_sam_df
+gmm1_nou_cr_sam_plot <- gmm1_nou_cr_sam_df[, c("gamma[1]", "gamma[2]", "gamma[3]")]
+gmm1_nou_cr_pairs <- mcmc_pairs(gmm1_nou_cr_sam_plot, diag_fun = "hist", off_diag_fun = "hex")
+gmm1_nou_cr_pairs
+```
+
+
+```{r}
+weibull1_h_sam <- tar_read(fit_nlr_draws_weibull1_h)
+weibull1_h_sam_df <- as_draws_df(weibull1_h_sam)
+weibull1_h_sam_df
+weibull1_h_sam_plot <- weibull1_h_sam_df[, c("gamma[1,1]", "gamma[2,1]", "gamma[1,2]", "gamma[2,2]", "gamma[1,3]",  "gamma[2,3]")]
+weibull1_h_pairs <- mcmc_pairs(weibull1_h_sam_plot, diag_fun = "hist", off_diag_fun = "hex")
+weibull1_h_pairs
+```
+
+
+```{r}
+weibull1_cr_sam <- tar_read(fit_nlr_draws_weibull1_cr)
+weibull1_cr_sam_df <- as_draws_df(weibull1_cr_sam)
+weibull1_cr_sam_df
+weibull1_cr_sam_plot <- weibull1_cr_sam_df[, c("gamma[1,1]", "gamma[2,1]", "gamma[1,2]", "gamma[2,2]", "gamma[1,3]",  "gamma[2,3]")]
+weibull1_cr_pairs <- mcmc_pairs(weibull1_cr_sam_plot, diag_fun = "hist", off_diag_fun = "hex")
+weibull1_cr_pairs
+```
+
+
+```{r}
+weibull1_nou_h_sam <- tar_read(fit_nlr_draws_weibull1_nou_h)
+weibull1_nou_h_sam_df <- as_draws_df(weibull1_nou_h_sam)
+weibull1_nou_h_sam
+weibull1_nou_h_sam_plot <- weibull1_nou_h_sam_df[, c("gamma[1]", "gamma[2]", "gamma[3]")]
+weibull1_nou_h_pairs <- mcmc_pairs(weibull1_nou_h_sam_plot, diag_fun = "hist", off_diag_fun = "hex")
+weibull1_nou_h_pairs
+```
+
+```{r}
+weibull1_nou_cr_sam <- tar_read(fit_nlr_draws_weibull1_nou_cr)
+weibull1_nou_cr_sam_df <- as_draws_df(weibull1_nou_cr_sam)
+weibull1_nou_cr_sam_df
+weibull1_nou_cr_sam_plot <- weibull1_nou_cr_sam_df[, c("gamma[1]", "gamma[2]", "gamma[3]")]
+weibull1_nou_cr_pairs <- mcmc_pairs(weibull1_nou_cr_sam_plot, diag_fun = "hist", off_diag_fun = "hex")
+weibull1_nou_cr_pairs
+```

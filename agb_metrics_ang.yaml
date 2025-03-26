@@ -1,0 +1,15 @@
+metrics_agb_ang:
+  rmse_wb_h: 0.2787409
+  bias_wb_h: 0.0204284
+  rmse_pl_h: 0.2804039
+  bias_pl_h: 0.0228998
+  rmse_pl_dbh: 2.5762803
+  bias_pl_dbh: -2.4210512
+  rmse_pl_dbh1: 1.2637769
+  bias_pl_dbh1: -0.1930535
+  rmse_pl_dbh2: 4.4116688
+  bias_pl_dbh2: -4.3496354
+  rmse_pl_dbh3: 1.908135
+  bias_pl_dbh3: -1.5522532
+  num_species: '624'
+  num_trees: '124,206'

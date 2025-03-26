@@ -1,0 +1,559 @@
+---
+title: "Wood density vs. CR-DBH allometry parameters (Weibull)"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: coderpro
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = TRUE, message = TRUE)
+knitr::opts_knit$set(root.dir = here::here())
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+```
+
+
+```{r, include=FALSE}
+library(targets)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(cowplot)
+library(patchwork)
+library(posterior)
+options(width = 150)
+```
+
+# Summary result
+
+## Ang
+
+```{r}
+
+pl_cr_wd_ang <- tar_read(fit_wd_ang_cr_summary_pl_wd)
+pl_cr_wd_ang 
+
+fit_wd_ang_cr_draws_pl_wd <- tar_read(fit_wd_ang_cr_draws_pl_wd)
+fit_wd_ang_cr_draws_pl_wd
+
+
+```
+
+- Key finding: Wood density is signifcant effect the horizontal expansion of *Angiosperm* tree.
+
+## Gym
+
+```{r}
+gmm_cr_wd_gym <- tar_read(fit_wd_gym_cr_summary_gmm_wd)
+gmm_cr_wd_gym
+
+gmm_cr_wd_gym <- gmm_cr_wd_gym |>
+  filter(str_detect(variable, "gamma"))
+
+gmm_cr_wd_gym
+
+gmm_cr_wd_gym <- gmm_cr_wd_gym |>
+  filter(str_detect(variable, "gamma_int") | str_detect(variable, "gamma_slope"))
+gmm_cr_wd_gym
+
+```
+
+- Key finding: Wood density significantly affects parameter b, but not a and k of CR-DBH allometry of *Gymnosperm*.
+
+# Plotting
+
+## Data preparation
+
+### Ang
+
+```{r}
+tallo_wd_df_cr <- tar_read(tallo_wd_df_cr)
+tallo_wd_df_cr
+
+ang_cr_df <- tallo_wd_df_cr |> filter(division == "Angiosperm")
+ang_cr_df
+
+wd_df_cr_ang <- ang_cr_df |>
+  group_by(sp) |>
+  summarize(wd = mean(wd), .groups = "drop") |>
+  mutate(wd_s = scale(wd) |> as.numeric(), sp_id = row_number())
+
+wd_df_cr_ang
+
+```
+
+- 762 species
+
+```{r}
+pl_cr_wd_ang_draws <- tar_read(fit_wd_ang_cr_draws_pl_wd)
+pl_cr_wd_ang_draws
+
+gamma_ang_cr <- pl_cr_wd_ang_draws |>
+  select(starts_with("gamma"))
+
+gamma_ang_cr
+
+beta_ang_cr <- pl_cr_wd_ang_draws |>
+  select(starts_with("beta["))
+
+beta_ang_cr
+
+beta_ang_cr_long <- beta_ang_cr |>
+  pivot_longer(
+    cols = everything(),
+    names_to = c("parameter", "species"),
+    names_pattern = "beta\\[(\\d+),(\\d+)\\]",
+    names_transform = list(parameter = as.integer, species = as.integer),
+    values_to = "value"
+  ) |>
+  mutate(parameter = case_when(
+    parameter == 1 ~ "log_a",  # Assign 'log_a' for [1,]
+    parameter == 2 ~ "b"       # Assign 'b' for [2,]
+  ),
+  value = log(value))
+
+beta_ang_cr_long
+
+plot_ang_cr_data <- beta_ang_cr_long |>
+  left_join(wd_df_cr_ang, by = c("species" = "sp_id"))
+
+plot_ang_cr_data
+
+
+```
+
+
+### Gym
+
+#### Species ID
+
+```{r}
+
+gym_cr_df <- tallo_wd_df_cr |> filter(division == "Gymnosperm")
+gym_cr_df
+
+wd_df_cr_gym <- gym_cr_df |>
+  group_by(sp) |>
+  summarize(wd = mean(wd), .groups = "drop") |>
+  mutate(wd_s = scale(wd) |> as.numeric(), sp_id = row_number())
+
+wd_df_cr_gym
+
+wd_seq_cr_gym <- seq(min(wd_df_cr_gym$wd_s), max(wd_df_cr_gym$wd_s), length.out = 100)
+```
+
+#### Extracting parameters
+
+```{r}
+gmm_cr_wd_gym_draws <- tar_read(fit_wd_gym_cr_draws_gmm_wd)
+gmm_cr_wd_gym_draws
+
+fit_wd_gym_cr_data <- tar_read(fit_wd_gym_cr_data)
+
+gamma_gym_cr <- gmm_cr_wd_gym_draws |>
+  select(starts_with("gamma"))
+
+gamma_gym_cr
+
+beta_gym_cr <- gmm_cr_wd_gym_draws |>
+  select(starts_with("beta["))
+
+beta_gym_cr
+
+beta_gym_cr_long <- beta_gym_cr |>
+  pivot_longer(
+    cols = everything(),
+    names_to = c("species", "parameter"),
+    names_pattern = "beta\\[(\\d+),(\\d+)\\]",
+    names_transform = list(species = as.integer, parameter = as.integer),
+    values_to = "value"
+  ) |>
+  mutate(parameter = case_when(
+    parameter == 1 ~ "log_a",
+    parameter == 2 ~ "b",
+    parameter == 3 ~ "k"
+  ),
+  value = log(value)) 
+
+beta_gym_cr_long
+
+
+plot_gym_cr_data <- beta_gym_cr_long |>
+  left_join(wd_df_cr_gym, by = c("species" = "sp_id"))
+
+plot_gym_cr_data
+```
+
+
+# Plotting function
+
+```{r}
+tallo_reduced_lr_df_ang_cr <- tar_read(tallo_reduced_lr_df_ang_cr)
+tallo_reduced_lr_df_ang_cr
+
+fit_wd_ang_cr_draws_pl_wd <- tar_read(fit_wd_ang_cr_draws_pl_wd)
+fit_wd_ang_cr_draws_pl_wd
+
+fit_wd_ang_cr_data <- tar_read(fit_wd_ang_cr_data)
+str(fit_wd_ang_cr_data)
+
+stan_data_lr_ang_cr <- tar_read(stan_data_lr_ang_cr)
+str(stan_data_lr_ang_cr)
+
+# same as fit_wd_ang_cr_data
+
+tallo_reduced_lr_df_ang_cr <- tar_read(tallo_reduced_lr_df_ang_cr)
+tallo_reduced_lr_df_ang_cr
+str(tallo_reduced_lr_df_ang_cr)
+
+ang_cr_df <- tallo_reduced_lr_df_ang_cr |> filter(division == "Angiosperm")
+
+ang_cr_df
+
+wd_df_ang <- ang_cr_df |>
+    group_by(sp) |>
+    summarize(wd = mean(wd, na.rm = TRUE)) |>
+    mutate(wd_s = scale(wd) |> as.numeric(), sp_id = row_number())
+  
+wd_seq_ang <- seq(min(wd_df_ang$wd_s), max(wd_df_ang$wd_s), length.out = 100)
+
+wd_seq_df_ang <- data.frame(
+    wd_s = wd_seq_ang,
+    wd = approx(wd_df_ang$wd_s, wd_df_ang$wd, xout = wd_seq_ang)$y
+  )
+
+
+```
+
+
+```{r}
+fit_wd_ang_cr_draws_pl_wd <- tar_read(fit_wd_ang_cr_draws_pl_wd)
+fit_wd_ang_cr_draws_pl_wd
+
+gamma_ang_cr <- fit_wd_ang_cr_draws_pl_wd |>
+  select(starts_with("gamma"))
+
+gamma_ang_cr
+
+beta_ang_cr <- fit_wd_ang_cr_draws_pl_wd |>
+  select(starts_with("beta["))
+
+beta_ang_cr
+
+
+beta_ang_cr_long <- beta_ang_cr |>
+  pivot_longer(
+    cols = everything(),  # Pivot all columns
+    names_to = c("parameter", "species"),  # Split column names into 'parameter' and 'species'
+    names_pattern = "beta\\[(\\d+),(\\d+)\\]",  # Extract the two parts from column names like beta[1,1]
+    names_transform = list(parameter = as.integer, species = as.integer),  # Convert to integers
+    values_to = "value"  # Store values in 'value'
+  ) |>
+  mutate(
+    parameter = case_when(
+      parameter == 1 ~ "log_a",  # Map '1' to 'log_a'
+      parameter == 2 ~ "b"       # Map '2' to 'b'
+    )
+  )
+
+beta_ang_cr_long
+
+plot_ang_cr_data <- beta_ang_cr_long |>
+  left_join(wd_df_ang, by = c("species" = "sp_id"))
+
+plot_ang_cr_data
+
+
+
+summary_stats <- plot_ang_cr_data |>
+  group_by(species, parameter, wd, wd_s) |>
+  summarize(
+    median = median(value),
+    lower = quantile(value, 0.025),
+    upper = quantile(value, 0.975),
+    .groups = "drop"
+  )
+
+# Join summary_stats with wd_df_ang to get the `wd` values
+# summary_stats <- summary_stats |>
+#   left_join(wd_df_ang, by = c("wd_s"))
+
+
+summary_stats
+
+
+gamma_log_a <- gamma_ang_cr |>
+  select(`gamma[1,1]`, `gamma[1,2]`)
+gamma_b <- gamma_ang_cr |>
+  select(`gamma[1,2]`, `gamma[2,2]`)
+
+lines_data <- do.call(rbind, lapply(1:nrow(gamma_log_a), function(i) {
+  data.frame(
+    wd_s = wd_seq_df_ang$wd_s,
+    wd = wd_seq_df_ang$wd,
+    log_a = gamma_log_a$`gamma[1,1]`[i] + gamma_log_a$`gamma[1,2]`[i] * wd_seq_df_ang$wd_s,
+    draw = i
+  )
+}))
+
+median_intercept <- median(gamma_log_a$`gamma[1,1]`)
+median_slope <- median(gamma_log_a$`gamma[1,2]`)
+
+
+# Update `lines_data` to compute `a` from `log_a`
+lines_data <- do.call(rbind, lapply(1:nrow(gamma_log_a), function(i) {
+  data.frame(
+    wd_s = wd_seq_df_ang$wd_s,
+    wd = wd_seq_df_ang$wd,
+    a = exp(gamma_log_a$`gamma[1,1]`[i] + gamma_log_a$`gamma[1,2]`[i] * wd_seq_df_ang$wd_s),  # Now using `a` instead of `log_a`
+    draw = i
+  )
+}))
+
+fit_line_a <- data.frame(
+    wd_s = wd_seq_df_ang$wd_s,
+    wd = wd_seq_df_ang$wd,
+    a = exp(median_intercept + median_slope * wd_seq_df_ang$wd_s)
+)
+
+
+# Updated plot code
+ggplot() +
+  geom_line(data = lines_data, aes(x = wd, y = a, group = draw), alpha = 0.1, color = "blue") +  # Pile of lines using `a` for y
+  geom_line(data = fit_line_a, aes(x = wd, y = a), color = "red", size = 1) +  # Median fit line using `a`
+  geom_point(data = summary_stats |> filter(parameter == "log_a"), aes(x = wd, y = exp(median)), color = "green") +  # Species-specific points using `a`
+  geom_errorbar(data = summary_stats |> filter(parameter == "log_a"), aes(x = wd, ymin = exp(lower), ymax = exp(upper)), width = 0.02, color = "green") +  # 95% CIs using `a`
+  theme_minimal() +
+  labs(
+    x = "WD",  # Label for x-axis
+    y = "a"  # Label for y-axis (now using `a`)
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(size = 12)
+  )
+
+```
+
+### for b
+
+```{r}
+# Select gamma terms for `b` from gamma_ang_cr
+gamma_b <- gamma_ang_cr |>
+  select(`gamma[2,1]`, `gamma[2,2]`)
+
+# Prepare data for lines corresponding to `b`
+lines_data_b <- do.call(rbind, lapply(1:nrow(gamma_b), function(i) {
+  data.frame(
+    wd_s = wd_seq_df_ang$wd_s,
+    wd = wd_seq_df_ang$wd,
+    b = gamma_b$`gamma[2,1]`[i] + gamma_b$`gamma[2,2]`[i] * wd_seq_df_ang$wd_s,
+    draw = i
+  )
+}))
+
+# Median fit line for `b`
+median_intercept_b <- median(gamma_b$`gamma[2,1]`)
+median_slope_b <- median(gamma_b$`gamma[2,2]`)
+
+fit_line_b <- data.frame(
+    wd_s = wd_seq_df_ang$wd_s,
+    wd = wd_seq_df_ang$wd,
+    b = median_intercept_b + median_slope_b * wd_seq_df_ang$wd_s
+)
+
+# Updated plot for `b`
+ggplot() +
+  geom_line(data = lines_data_b, aes(x = wd, y = b, group = draw), alpha = 0.1, color = "blue") +  # Pile of lines using `b` for y
+  geom_line(data = fit_line_b, aes(x = wd, y = b), color = "red", size = 1) +  # Median fit line using `b`
+  geom_point(data = summary_stats |> filter(parameter == "b"), aes(x = wd, y = median), color = "green") +  # Species-specific points using `b`
+  geom_errorbar(data = summary_stats |> filter(parameter == "b"), aes(x = wd, ymin = lower, ymax = upper), width = 0.02, color = "green") +  # 95% CIs using `b`
+  theme_minimal() +
+  labs(
+    x = "WD",  # Label for x-axis
+    y = "b"  # Label for y-axis (now using `b`)
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(size = 12)
+  )
+```
+
+## The scale of points is weird? WHYYY?
+
+```{r}
+fit_wd_ang_cr_data <- tar_read(fit_wd_ang_cr_data)
+
+fit_wd_ang_cr_draws_pl_wd <- tar_read(fit_wd_ang_cr_draws_pl_wd)
+
+tallo_reduced_lr_df_ang_cr <- tar_read(tallo_reduced_lr_df_ang_cr)
+tallo_reduced_lr_df_ang_cr
+str(tallo_reduced_lr_df_ang_cr)
+
+# Filter Angiosperms
+ang_cr_df <- tallo_reduced_lr_df_ang_cr |> filter(division == "Angiosperm")
+
+# Group by species and calculate mean wood density for Angiosperms
+wd_df_ang <- ang_cr_df |>
+  group_by(sp) |>
+  summarize(wd = mean(wd, na.rm = TRUE)) |>
+  mutate(wd_s = scale(wd) |> as.numeric(), sp_id = row_number())
+
+# Create the sequence for wood density for Angiosperms
+wd_seq_ang <- seq(min(wd_df_ang$wd_s), max(wd_df_ang$wd_s), length.out = 100)
+
+wd_seq_ang
+
+wd_seq_df_ang <- data.frame(
+  wd_s = wd_seq_ang,
+  wd = approx(wd_df_ang$wd_s, wd_df_ang$wd, xout = wd_seq_ang)$y
+)
+
+
+# Prepare function for plotting
+prepare_and_plot_parameter <- function(fit_data, fit_draws, wd_df, param_name, color_point, color_ribbon, line_color, show_ribbon = TRUE) {
+  # Extract gamma parameters for the selected parameter
+  gamma_params <- fit_draws |>
+    dplyr::select(starts_with("gamma"))
+
+  # Extract beta (species-specific) parameters
+  beta_params <- fit_draws |>
+    dplyr::select(starts_with("beta[")) |>
+    pivot_longer(
+      cols = everything(),
+      names_to = c("parameter", "species"),
+      names_pattern = "beta\\[(\\d+),(\\d+)\\]",
+      names_transform = list(parameter = as.integer, species = as.integer),
+      values_to = "value"
+    ) |>
+    mutate(parameter = case_when(
+      parameter == 1 ~ "log_a",
+      parameter == 2 ~ "b"
+    ))
+
+  # Combine species-specific beta with wd_df
+  plot_data <- beta_params |>
+    left_join(wd_df, by = c("species" = "sp_id"))
+
+  # Summarize the posterior distributions for plotting
+  summary_stats <- plot_data |>
+    group_by(species, parameter, wd, wd_s) |>
+    summarize(
+      median = median(value, na.rm = TRUE),
+      lower = quantile(value, 0.025, na.rm = TRUE),
+      upper = quantile(value, 0.975, na.rm = TRUE),
+      .groups = "drop"
+    )
+
+  # Prepare data for lines using gamma parameters
+  gamma_param <- gamma_params |>
+    dplyr::select(paste0("gamma[1,", which(c("log_a", "b") == param_name), "]"), 
+            paste0("gamma[2,", which(c("log_a", "b") == param_name), "]"))
+
+  lines_data <- do.call(rbind, lapply(1:nrow(gamma_param), function(i) {
+    data.frame(
+      wd_s = wd_seq_df_ang$wd_s,
+      wd = wd_seq_df_ang$wd,
+      value = if (param_name == "log_a") {
+        exp(gamma_param[[1]][i] + gamma_param[[2]][i] * wd_seq_df_ang$wd_s)
+      } else {
+        gamma_param[[1]][i] + gamma_param[[2]][i] * wd_seq_df_ang$wd_s
+      },
+      draw = i
+    )
+  }))
+
+  # Calculate the fit line and 95% CIs
+  median_intercept <- median(gamma_param[[1]], na.rm = TRUE)
+  median_slope <- median(gamma_param[[2]], na.rm = TRUE)
+
+  fit_line <- data.frame(
+    wd_s = wd_seq_df_ang$wd_s,
+    wd = wd_seq_df_ang$wd,
+    value = if (param_name == "log_a") {
+      exp(median_intercept + median_slope * wd_seq_df_ang$wd_s)
+    } else {
+      median_intercept + median_slope * wd_seq_df_ang$wd_s
+    }
+  )
+
+  ci_ribbon <- lines_data |>
+    group_by(wd) |>
+    summarize(
+      lower = quantile(value, 0.025, na.rm = TRUE),
+      upper = quantile(value, 0.975, na.rm = TRUE),
+      .groups = "drop"
+    )
+
+  fit_with_ci <- left_join(fit_line, ci_ribbon, by = "wd")
+
+  if (param_name == "log_a") {
+    summary_stats <- summary_stats |>
+      mutate(median = exp(median), lower = exp(lower), upper = exp(upper))
+  }
+
+  # Create plot with the selected colors
+  plot <- ggplot() +
+    geom_errorbar(data = summary_stats |> filter(parameter == param_name),
+                  aes(x = wd, ymin = lower, ymax = upper), 
+                  width = 0, linewidth = 0.2, color = color_ribbon) +
+    geom_point(data = summary_stats |> filter(parameter == param_name), 
+                aes(x = wd, y = median), color = color_point, size = 0.5) +
+    geom_line(data = fit_line, aes(x = wd, y = value), 
+              color = line_color, linewidth = 0.6) +
+    theme_minimal() +
+    labs(x = "Wood Density (g cm⁻³)", y = ifelse(param_name == "log_a", "Amplitude (a)", "Scale (b)")) +
+    theme(plot.title = element_text(hjust = 0.5), axis.title.x = element_text(size = 9), axis.title.y = element_text(size = 9))
+
+  if (show_ribbon) {
+    plot <- plot + geom_ribbon(data = fit_with_ci, aes(x = wd, ymin = lower, ymax = upper), alpha = 0.5, fill = color_ribbon)
+  }
+
+  return(plot)
+}
+
+```
+
+
+
+```{r}
+# Generate plots using the custom colors for log_a and b
+p1 <- prepare_and_plot_parameter(fit_wd_ang_cr_data, fit_wd_ang_cr_draws_pl_wd, wd_df_ang, "log_a", "#9e9ac8", "#cbc9e2", "#6a51a3", show_ribbon = TRUE)
+p2 <- prepare_and_plot_parameter(fit_wd_ang_cr_data, fit_wd_ang_cr_draws_pl_wd, wd_df_ang, "b", "#74c476", "#bae4b3", "#238b45", show_ribbon = TRUE)
+
+# Combine the plots into one layout
+p <- (p1 + labs(tag = "(a)", x = NULL) + theme(axis.text.x = element_blank()) |
+      p2 + labs(tag = "(b)", x = expression("Wood Density (g cm"^"-3"~")"))) +
+  plot_layout(ncol = 1, nrow = 2) +
+  plot_annotation(tag_levels = list(c("(a)", "(b)"))) &
+  theme(
+    plot.tag = element_text(face = "bold", size = 10),
+    axis.title = element_text(size = 10),
+    axis.text = element_text(size = 9),
+    plot.margin = margin(5, 5, 5, 5)
+  )
+
+# Add a label for Angiosperm
+p <- ggdraw() +
+  draw_plot(p, x = 0, y = 0, width = 1, height = 0.9) +  
+  draw_label("Angiosperm", x = 0.75, y = 0.91, fontface = 'bold', size = 10)
+
+
+```

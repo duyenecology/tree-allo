@@ -1,0 +1,337 @@
+---
+title: "Example for Power-law DBH-CR"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: coderpro
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r global_options, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+```
+
+# Load necessary libraries
+```{r}
+library(targets)
+library(ggplot2)
+library(dplyr)
+library(stringr)
+library(reshape2)
+library(gridExtra)
+library(readr)
+```
+
+# Data preparation
+```{r}
+# Load MCMC results and Stan data
+pl_cr <- tar_read(fit_lr_mcmc_power_law_cr)
+stan_lr_data_cr <- tar_read(stan_data_lr_cr)
+str(stan_lr_data_cr)
+
+```
+
+# Extract relevant data
+```{r}
+log_y <- stan_lr_data_cr$log_y
+log_x <- stan_lr_data_cr$log_x
+sp <- as.factor(stan_lr_data_cr$jj)
+
+str(log_x)
+head(log_x) # Use log_x[, 2] for the fitted values
+summary(exp(log_y))
+summary(exp(log_x))
+
+# Extract beta parameters
+beta <- pl_cr$summary(variable = "beta")
+beta 
+
+# Extract the mean values of beta parameters for each species
+log_a1 <- beta |> filter(str_detect(variable, "beta\\[1,\\d+\\]")) |> pull(mean)
+b1 <- beta |> filter(str_detect(variable, "beta\\[2,\\d+\\]")) |> pull(mean)
+
+# Verify the lengths of the extracted parameters
+print(length(log_a1))
+print(length(b1))
+print(length(sp))
+
+# Compute fitted values for CR using the power law formula
+fitted_log_y_cr <- sapply(1:length(log_a1), function(i) {
+  log_a1[i] + b1[i] * log_x[, 2]  
+})
+
+# Calculate community-level fitted line by averaging the species-level coefficients
+community_log_a1 <- mean(log_a1)
+community_b1 <- mean(b1)
+community_fitted_log_y_cr <- community_log_a1 + community_b1 * log_x[, 2]
+community_fitted_CR <- exp(community_fitted_log_y_cr)
+
+# Create a data frame for plotting
+data_cr <- data.frame(CR = exp(log_y), DBH = exp(log_x[, 2]), sp = sp)
+head(data_cr)
+summary(data_cr)
+
+# Add species-specific fitted values to the data frame
+for (i in 1:length(log_a1)) {
+  data_cr[[paste0("fitted_CR_sp_", i)]] <- exp(fitted_log_y_cr[, i])
+}
+
+data_long <- melt(data_cr, id.vars = c("CR", "DBH", "sp"), measure.vars = grep("fitted_CR_sp_", names(data_cr), value = TRUE))
+
+head(data_long)
+summary(data_long)
+str(data_long)
+str(data_cr)
+
+```
+
+# Plot observed CR vs DBH with fitted lines for each species and community-level line
+```{r}
+pl_cr_plot <- ggplot(data_cr, aes(x = DBH, y = CR)) +
+  geom_point(alpha = 0.5, color = "grey") +
+  geom_line(data = data_long, aes(x = DBH, y = value, group = variable), color = "#4682B4", alpha = 0.3) + # SteelBlue color for species fits
+  geom_line(aes(y = community_fitted_CR), color = "white", linewidth = 1.2) +
+  labs(title = "Scatter Plot of CR vs DBH with Fitted Lines for Each Species and Community-Level Line",
+       x = "DBH (cm)",
+       y = "CR (m)") +
+  scale_x_log10(labels = scales::comma) +
+  scale_y_log10(labels = scales::comma) +
+  theme_minimal()
+
+# Save the plot
+ggsave("figs/plot_CR_vs_DBH.png", plot = pl_cr_plot, width = 8, height = 6, units = "in", dpi = 300, bg = "white")
+
+# Display the plot
+print(pl_cr_plot)
+
+```
+
+```{r}
+pl_cr_plot1 <- ggplot(data_cr, aes(x = DBH, y = CR)) +
+  geom_point(alpha = 0.5, color = "grey") +
+  geom_line(data = data_long, aes(x = DBH, y = value, group = variable), color = "#4682B4", alpha = 0.3) + # SteelBlue color for species fits
+  geom_line(aes(y = community_fitted_CR), color = "white", linewidth = 1.2) +
+  labs(title = "Scatter Plot of CR vs DBH with Fitted Lines for Each Species and Community-Level Line",
+       x = "DBH (cm)",
+       y = "CR (m)") +
+  scale_x_continuous(trans = "log10", breaks = scales::trans_breaks("log10", function(x) 10^x),
+                     labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+  scale_y_continuous(trans = "log10", breaks = scales::trans_breaks("log10", function(x) 10^x),
+                     labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+  theme_minimal()
+
+# Save the plot
+ggsave("figs/plot1_CR_vs_DBH.png", plot = pl_cr_plot1, width = 8, height = 6, units = "in", dpi = 300, bg = "white")
+
+# Display the plot
+print(pl_cr_plot1)
+```
+
+
+```{r}
+library(scales)
+
+# Plot observed CR vs DBH with fitted lines for each species and community-level line
+pl_cr_plot5 <- ggplot(data_cr, aes(x = DBH, y = CR)) +
+  geom_point(alpha = 0.5, color = "grey") +
+  geom_line(data = data_long, aes(x = DBH, y = value, group = variable), color = "#4682B4", alpha = 0.3) + # SteelBlue color for species fits
+  geom_line(aes(y = community_fitted_CR), color = "white", linewidth = 1.2) +
+  labs(title = "Scatter Plot of CR vs DBH with Fitted Lines for Each Species and Community-Level Line",
+       x = "DBH (cm)",
+       y = "CR (m)") +
+  scale_x_log10(labels = comma) +
+  scale_y_log10(labels = comma) +
+  theme_minimal()
+
+# Save the plot
+ggsave("figs/plot5_CR_vs_DBH.png", plot = pl_cr_plot5, width = 8, height = 6, units = "in", dpi = 300, bg = "white")
+
+```
+
+# Plot for some sp
+
+```{r}
+# Identify the top 5 species with the most observations
+top_5_species <- data_cr |>
+  count(sp, sort = TRUE) |>
+  top_n(5, n) |>
+  pull(sp)
+top_5_species
+# Create and save plots for the top 5 species
+output_dir <- "figs/top_5_species_plots"
+
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir, recursive = TRUE)
+}
+
+for (species in top_5_species) {
+  species_data_cr <- data_cr %>% filter(sp == species)
+  species_data_long <- data_long %>% filter(sp == species)
+  
+  species_plot <- ggplot(species_data_cr, aes(x = DBH, y = CR)) +
+    geom_point(alpha = 0.5, color = "grey") +
+    geom_line(data = species_data_long, aes(x = DBH, y = value, group = variable), color = "#4682B4", alpha = 0.3) +
+    geom_line(aes(y = community_fitted_CR), color = "white", linewidth = 1.2) +
+    labs(title = paste("Scatter Plot of CR vs DBH for Species", species),
+         x = "DBH (cm)",
+         y = "CR (m)") +
+    scale_x_log10(labels = scales::comma, limits = c(1, 150)) +
+    scale_y_log10(labels = scales::comma) +
+    theme_minimal()
+  
+  plot_filename <- file.path(output_dir, paste0("plot_CR_vs_DBH_species_", species, ".png"))
+  ggsave(plot_filename, plot = species_plot, width = 8, height = 6, units = "in", dpi = 300, bg = "white")
+    print(species_plot)
+}
+```
+
+# How wood density effect tree architecture differentiation
+
+```{r}
+library(dplyr)
+str(stan_lr_data_cr)
+u <- stan_lr_data_cr$u[2, ]
+
+# # Load the tallo_wf_df_200 dataset
+# tallo_wf_df_200 <- read_csv("data/tallo_wd_200.csv")
+
+# # Calculate mean wd for each species and filter species with at least 5 observations
+# wd_df <- tallo_wf_df_200 |>
+#   group_by(sp) |>
+#   filter(n() >= 5) |>
+#   select(sp, mean_wd)
+
+
+# Create a data frame for plotting
+data_wd_plot <- data.frame(
+  a1 = exp(log_a1),
+  b1 = b1,
+  wd = u
+)
+
+head(data_wd_plot)
+summary(data_wd_plot)
+
+# Plot for intercepts (a)
+plot_a <- ggplot(data_wd_plot, aes(x = wd, y = a1)) +
+  geom_point(color = "grey", alpha = 0.5) +
+  geom_smooth(method = "lm", color = "black", fill = "grey") +
+  labs(title = "(a)", x = "WD_s", y = "Intercept a") +
+  theme_minimal()
+
+plot_a
+
+# Plot for exponents (b)
+plot_b <- ggplot(data_wd_plot, aes(x = wd, y = b1)) +
+  geom_point(color = "orange", alpha = 0.5) +
+  geom_smooth(method = "lm", color = "black", fill = "orange") +
+  labs(title = "(b)", x = "WD_s", y = "Exponent b") +
+  theme_minimal()
+
+plot_b
+
+# Arrange the plots vertically
+combined_plot <- grid.arrange(plot_a, plot_b, ncol = 1)
+
+# Save the plot
+ggsave("figs/intercept_exponent_plot.png", plot = combined_plot, width = 8, height = 10, units = "in", dpi = 300, bg = "white")
+
+# Display the plot
+print(combined_plot)
+```
+
+
+```{r}
+pl_cr_plot2 <- ggplot(data_cr, aes(x = DBH, y = CR)) +
+  geom_point(alpha = 0.5, color = "grey") +
+  geom_line(data = data_long, aes(x = DBH, y = value, group = variable), color = "#4682B4", alpha = 0.3) + # SteelBlue color for species fits
+  geom_line(aes(y = community_fitted_CR), color = "white", linewidth = 1.2) +
+  labs(title = "Scatter Plot of CR vs DBH with Fitted Lines for Each Species and Community-Level Line",
+       x = "DBH (cm)",
+       y = "CR (m)") +
+  scale_x_log10() +
+  scale_y_log10() +
+  theme_minimal()
+
+# Save the plot
+ggsave("figs/plot2_CR_vs_DBH.png", plot = pl_cr_plot2, width = 8, height = 6, units = "in", dpi = 300, bg = "white")
+
+# Display the plot
+print(pl_cr_plot2)
+```
+
+```{r}
+# Plot observed CR vs DBH with fitted lines for each species and community-level line
+pl_cr_plot3 <- ggplot(data_cr, aes(x = DBH, y = CR)) +
+  geom_point(alpha = 0.5, color = "grey") +
+  geom_line(data = data_long, aes(x = DBH, y = value, group = variable), color = "#4682B4", alpha = 0.3) + # SteelBlue color for species fits
+  geom_line(aes(y = community_fitted_CR), color = "white", linewidth = 1.2) +
+  labs(title = "Scatter Plot of Crown Radius vs Diameter with Fitted Lines for Each Species and Community-Level Line",
+       x = "Diameter at Breast Height (cm)",
+       y = "Crown Radius (m)") +
+  scale_x_log10(labels = scales::comma) +
+  scale_y_log10(labels = scales::comma) +
+  annotation_logticks(sides = "bl") +  # Add logarithmic ticks on both axes
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(size = 12)
+  )
+
+# Save the plot
+ggsave("figs/plot3_CR_vs_DBH.png", plot = pl_cr_plot3, width = 8, height = 6, units = "in", dpi = 300, bg = "white")
+
+pl_cr_plot3
+```
+
+
+# Comparison of pl_cr and pl_nou_cr
+
+```{r}
+# Load necessary libraries
+library(targets)
+library(cmdstanr)
+library(posterior)
+library(loo)
+```
+```{r}
+pl_cr <- tar_read(fit_lr2_mcmc_power_law_cr)
+pl_nou_cr <- tar_read(fit_lr2_mcmc_power_law_nou_cr)
+```
+
+```{r}
+# Extract log-likelihood for both models
+log_lik_cr <- pl_cr$draws(variables = "log_lik", format = "draws_matrix")
+log_lik_cr_matrix <- as_draws_matrix(log_lik_cr)
+
+log_lik_nou_cr <- pl_nou_cr$draws(variables = "log_lik", format = "draws_matrix")
+log_lik_nou_cr_matrix <- as_draws_matrix(log_lik_nou_cr)
+
+# Calculate LOO for both models
+loo_cr <- loo(log_lik_cr_matrix, reloo = TRUE, save_psis = TRUE)
+loo_nou_cr <- loo(log_lik_nou_cr_matrix, reloo = TRUE, save_psis = TRUE)
+
+# Print LOO results
+print(loo_cr)
+print(loo_nou_cr)
+
+# Compare models
+model_comparison <- loo_compare(loo_cr, loo_nou_cr)
+print(model_comparison)
+```

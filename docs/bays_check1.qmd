@@ -1,0 +1,323 @@
+---
+title: "Diagnostics for MCMC"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    fig_caption: yes
+    theme: spacelab #readable #sandstone #spacelab #flatly
+    highlight: pygments #tango #kate
+    toc: TRUE
+    toc_depth: 2
+    number_sections: TRUE
+    toc_float:
+     collapsed: TRUE
+     smooth_scroll: TRUE
+     toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/workspaces/tree-allometry")
+```
+
+```{r global_options, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+```
+
+# Load necessary libraries
+
+```{r}
+library(targets)
+library(dplyr)
+```
+
+# Models
+
+```{r}
+loo_tbl <- tar_read(loo_tbl)
+loo_tbl
+print(loo_tbl , n = Inf)
+
+#gMM1, PL1, and Weibull1 models
+loo_tbl <- loo_tbl |>
+  filter(grepl("gmm1|power_law1|weibull1", model))
+print(loo_tbl)
+```
+
+8 models to predict DBH:
+
+- DBH: DBH = a.(CR^b).(H^c)
+
+- DBH1: DBH = a.(CR.H)^b
+
+- DBH2: DBH = a.CR^b
+
+- DBH3: DBH = a.H^b
+
+6 models to predic CR:
+
+- CR ~ DBH (pl1, gMM1, Weibull1)
+
+6 models to predic H:
+
+- H ~ DBH (pl1, gMM1, Weibull1)
+
+Species-level Predictor: With and Without Wood density
+
+# Convergence
+
+I consider the ESS < 300 | Rhat >1.1 to indicate the convergence issue.
+
+```{r}
+options(width = 150)
+pl1_cr <- tar_read(fit_lr2_summary_power_law1_cr)
+pl1_h <- tar_read(fit_lr2_summary_power_law1_h)
+pl1_dbh <- tar_read(fit_lr2_summary_power_law1_dbh)
+pl1_dbh1 <- tar_read(fit_lr2_summary_power_law1_dbh1)
+pl1_dbh2 <- tar_read(fit_lr2_summary_power_law1_dbh2)
+pl1_dbh3 <- tar_read(fit_lr2_summary_power_law1_dbh3)
+pl1_nou_cr <- tar_read(fit_lr2_summary_power_law1_nou_cr)
+pl1_nou_h <- tar_read(fit_lr2_summary_power_law1_nou_h)
+pl1_nou_dbh <- tar_read(fit_lr2_summary_power_law1_nou_dbh)
+pl1_nou_dbh1 <- tar_read(fit_lr2_summary_power_law1_nou_dbh1)
+pl1_nou_dbh2 <- tar_read(fit_lr2_summary_power_law1_nou_dbh2)
+pl1_nou_dbh3 <- tar_read(fit_lr2_summary_power_law1_nou_dbh3)
+
+gmm1_cr <- tar_read(fit_nlr_summary_gmm1_cr)
+gmm1_h <- tar_read(fit_nlr_summary_gmm1_h)
+gmm1_nou_cr <- tar_read(fit_nlr_summary_gmm1_nou_cr)
+gmm1_nou_h <- tar_read(fit_nlr_summary_gmm1_nou_h)
+weibull1_cr <- tar_read(fit_nlr_summary_weibull1_cr)
+weibull1_h <- tar_read(fit_nlr_summary_weibull1_h)
+weibull1_nou_cr <- tar_read(fit_nlr_summary_weibull1_nou_cr)
+weibull1_nou_h <- tar_read(fit_nlr_summary_weibull1_nou_h)
+```
+```{r}
+pl1_cr
+pl1_h
+pl1_dbh
+pl1_dbh1
+pl1_dbh2
+pl1_dbh3
+pl1_nou_cr
+pl1_nou_h
+pl1_nou_dbh
+pl1_nou_dbh1
+pl1_nou_dbh2
+pl1_nou_dbh3
+gmm1_cr
+gmm1_h
+gmm1_nou_cr
+gmm1_nou_h
+weibull1_cr
+weibull1_h
+weibull1_nou_cr
+weibull1_nou_h
+```
+
+```{r}
+check_div <- function(model_data) {
+  model_data |>
+    filter((grepl("^beta", variable) | grepl("^gamma", variable)) & (rhat > 1.1 | ess_bulk < 300))
+}
+
+div_pl1_cr <- check_div(pl1_cr)
+div_pl1_h <- check_div(pl1_h)
+div_pl1_dbh <- check_div(pl1_dbh)
+div_pl1_dbh1 <- check_div(pl1_dbh1)
+div_pl1_dbh2 <- check_div(pl1_dbh2)
+div_pl1_dbh3 <- check_div(pl1_dbh3)
+div_pl1_nou_cr <- check_div(pl1_nou_cr)
+div_pl1_nou_h <- check_div(pl1_nou_h)
+div_pl1_nou_dbh <- check_div(pl1_nou_dbh)
+div_pl1_nou_dbh1 <- check_div(pl1_nou_dbh1)
+div_pl1_nou_dbh2 <- check_div(pl1_nou_dbh2)
+div_pl1_nou_dbh3 <- check_div(pl1_nou_dbh3)
+div_gmm1_cr <- check_div(gmm1_cr)
+div_gmm1_h <- check_div(gmm1_h)
+div_gmm1_nou_cr <- check_div(gmm1_nou_cr)
+div_gmm1_nou_h <- check_div(gmm1_nou_h)
+div_weibull1_cr <- check_div(weibull1_cr)
+div_weibull1_h <- check_div(weibull1_h)
+div_weibull1_nou_cr <- check_div(weibull1_nou_cr)
+div_weibull1_nou_h <- check_div(weibull1_nou_h)
+```
+
+```{r}
+div_pl1_cr
+div_pl1_h
+div_pl1_dbh
+div_pl1_dbh1
+div_pl1_dbh2
+div_pl1_dbh3
+div_pl1_nou_cr
+div_pl1_nou_h
+div_pl1_nou_dbh
+div_pl1_nou_dbh1
+div_pl1_nou_dbh2
+div_pl1_nou_dbh3
+div_gmm1_cr
+div_gmm1_h
+div_gmm1_nou_cr
+div_gmm1_nou_h
+div_weibull1_cr
+div_weibull1_h
+div_weibull1_nou_cr
+div_weibull1_nou_h
+```
+
+## Checking the problematic species
+```{r}
+sp_ids <- function(div_data) {
+  div_data |>
+    filter(grepl("^beta_hat\\[", variable)) |>
+    mutate(sp_id = as.numeric(sub("beta_hat\\[([0-9]+),.*\\]", "\\1", variable))) |>
+    pull(sp_id) |>
+    unique()
+}
+
+
+sp_ids_gmm1_cr <- sp_ids(div_gmm1_cr)
+sp_ids_gmm1_h <- sp_ids(div_gmm1_h)
+sp_ids_gmm1_nou_cr <- sp_ids(div_gmm1_nou_cr)
+sp_ids_gmm1_nou_h <- sp_ids(div_gmm1_nou_h)
+sp_ids_weibull1_cr <- sp_ids(div_weibull1_cr)
+sp_ids_weibull1_h <- sp_ids(div_weibull1_h)
+sp_ids_weibull1_nou_cr <- sp_ids(div_weibull1_nou_cr)
+sp_ids_weibull1_nou_h <- sp_ids(div_weibull1_nou_h)
+
+## Print the unique sp_ids for each model
+print(sp_ids_gmm1_cr)
+print(sp_ids_gmm1_h)
+print(sp_ids_gmm1_nou_cr)
+print(sp_ids_gmm1_nou_h)
+print(sp_ids_weibull1_cr)
+print(sp_ids_weibull1_h)
+print(sp_ids_weibull1_nou_cr)
+print(sp_ids_weibull1_nou_h)
+
+```
+
+Rhat are good, mostly close to 1 (but sp_id 593 is another case).
+Model 1-12: mostly have convergent problems in gamma parameter with low ESS.
+Non-linear models, in general, have many problematic species with low ESS.
+We should increase MCMC iterations, adapt_delta.
+
+# Comparing models
+```{r}
+loo_tbl
+
+# CR models
+cr_models <- loo_tbl |>
+  filter(grepl("_cr", model)) |>
+  arrange(looic)
+
+print(cr_models)
+
+# H models
+h_models <- loo_tbl |>
+  filter(grepl("_h", model)) |>
+  arrange(looic)
+
+print(h_models)
+
+# DBH models
+dbh_models <- loo_tbl |>
+  filter(grepl("dbh|dbh1|dbh2|dbh3", model)) |>
+  arrange(looic)
+
+# Print the filtered and sorted models
+print(dbh_models)
+```
+
+- CR models: Weibull incorporating WD is the best model 
+- H models: Weibull incorporating WD is the best model 
+- DBH: Incorporating CR and H improved DBH estimation accuracy.
+- WD slightly effects tree architecture differentiation.
+
+<!-- 
+# Table
+```{r}
+calculate_delta_looic <- function(df) {
+  df <- df |>
+    arrange(looic) |>
+    mutate(ΔLOOIC = looic - min(looic))
+  return(df)
+}
+
+# Calculate ΔLOOIC for CR models
+cr_models_tbl <- loo_tbl |>
+  filter(grepl("_cr", model)) |>
+  mutate(Wood_Density = ifelse(grepl("nou", model), "Without", "With")) |>
+  select(model, Wood_Density, elpd, p_loo, looic) |>
+  calculate_delta_looic()
+
+# Print the CR models table with ΔLOOIC
+print(cr_models_tbl)
+
+# Calculate ΔLOOIC for H models
+h_models_tbl <- loo_tbl |>
+  filter(grepl("_h", model)) |>
+  mutate(Wood_Density = ifelse(grepl("nou", model), "Without", "With")) |>
+  select(model, Wood_Density, elpd, p_loo, looic) |>
+  calculate_delta_looic()
+
+# Print the H models table with ΔLOOIC
+print(h_models_tbl)
+
+# Calculate ΔLOOIC for DBH models
+dbh_models_tbl <- loo_tbl |>
+  filter(grepl("dbh|dbh1|dbh2|dbh3", model)) |>
+  mutate(Wood_Density = ifelse(grepl("nou", model), "Without", "With")) |>
+  select(model, Wood_Density, elpd, p_loo, looic) |>
+  calculate_delta_looic()
+
+# Print the DBH models table with ΔLOOIC
+print(dbh_models_tbl)
+```
+
+```{r}
+# Define the custom format function for tables
+format_table <- function(df, title) {
+  formatted_df <- df |>
+    rename(
+      "Model" = model,
+      "Wood Density" = Wood_Density,
+      "ELPD" = elpd,
+      "pLOO" = p_loo,
+      "LOOIC" = looic,
+      "ΔLOOIC" = ΔLOOIC
+    ) |>
+    mutate(across(c(ELPD, pLOO, LOOIC, `ΔLOOIC`), \(x) round(x, 2))) |>
+    select(Model, `Wood Density`, ELPD, pLOO, LOOIC, `ΔLOOIC`) |>
+    as.data.frame()
+  
+  # Print the table with a title
+  print(paste0(title, "\n"))
+  print(formatted_df)
+  
+  # Return the formatted dataframe
+  return(formatted_df)
+}
+
+# Applying the function to CR, H, and DBH models
+cr_models_tbl_formatted <- format_table(cr_models_tbl, "Crown Radius Models")
+h_models_tbl_formatted <- format_table(h_models_tbl, "Height Models")
+dbh_models_tbl_formatted <- format_table(dbh_models_tbl, "DBH Models")
+```
+ -->
+
+
+
+
+
+
+

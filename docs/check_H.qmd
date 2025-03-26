@@ -1,0 +1,662 @@
+---
+title: "Checking H-DBH allometry for angiosperms"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: coderpro
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = TRUE, message = TRUE)
+knitr::opts_knit$set(root.dir = here::here())
+```
+
+```{r, include=FALSE}
+library(targets)
+library(here)
+library(tidyverse)
+library(scales)
+options(width=150)
+source("R/figs.R")
+```
+
+# Species ID
+
+```{r}
+tallo_reduced_lr_df_ang_h <- tar_read(tallo_reduced_lr_df_ang_h)
+tallo_reduced_lr_df_ang_h
+ang_data_h <- tallo_reduced_lr_df_ang_h |> 
+  filter(division == "Angiosperm") |>
+  filter(!is.na(h)) |>
+
+ang_data_h
+
+wd_df <- ang_data_h |>
+  group_by(sp) |>
+  summarize(wd = mean(wd)) |>
+  mutate(sp_id = 1:n()) |>
+  mutate(wd_s = scale(wd) |> as.numeric()) |>
+  dplyr::select(sp_id, sp, wd, wd_s)
+head(wd_df)
+str(wd_df)
+summary(wd_df)
+
+
+stan_data_nlr_ang_h <- tar_read(stan_data_nlr_ang_h)
+str(stan_data_nlr_ang_h)
+
+h_stan_ang <- data.frame(
+  sp_id = as.factor(stan_data_nlr_ang_h$jj),
+  # dbh = stan_data_nlr_ang_h$x,
+  wd_s = stan_data_nlr_ang_h$u[stan_data_nlr_ang_h$jj, 2]) 
+
+head(h_stan_ang)
+# id_66 <- wd_df |> filter(wd_df$sp_id == "66")
+# id_66
+
+h_stan_ang <- h_stan_ang |>
+  group_by(sp_id, wd_s) |>
+  summarise(tree_count = n(), .groups = "drop")
+
+head(h_stan_ang)
+str(h_stan_ang)
+# id_66_stan <- h_stan_ang |> filter(h_stan_ang$sp_id == "66")
+# id_66_stan
+
+
+h_ang <- h_stan_ang |>
+  mutate(sp_id = as.integer(as.character(sp_id))) |>
+  left_join(wd_df |> mutate(sp_id = as.integer(sp_id)) |> select(sp_id, sp), by = "sp_id")
+head(h_ang)
+str(h_ang)
+
+```
+
+# Extracting sp-specific parameter
+
+```{r}
+fit_nlr_nou_summary_weibull_ang_h <- tar_read(fit_nlr_nou_summary_weibull_ang_h)
+fit_nlr_nou_summary_weibull_ang_h
+
+create_species_model_df <- function(beta_data, dependent_variable, functional_form, sp_list) {
+  if (functional_form == "Weibull" || functional_form == "gMM") {
+    a_median <- exp(beta_data |> filter(str_detect(variable, "beta\\[\\d+,1\\]")) |> pull(q50))
+    a_upper <- exp(beta_data |> filter(str_detect(variable, "beta\\[\\d+,1\\]")) |> pull(q97.5))
+    a_lower <- exp(beta_data |> filter(str_detect(variable, "beta\\[\\d+,1\\]")) |> pull(q2.5))
+
+    b_median <- beta_data |> filter(str_detect(variable, "beta\\[\\d+,2\\]")) |> pull(q50)
+    b_upper <- beta_data |> filter(str_detect(variable, "beta\\[\\d+,2\\]")) |> pull(q97.5)
+    b_lower <- beta_data |> filter(str_detect(variable, "beta\\[\\d+,2\\]")) |> pull(q2.5)
+
+    k_median <- beta_data |> filter(str_detect(variable, "beta\\[\\d+,3\\]")) |> pull(q50)
+    k_upper <- beta_data |> filter(str_detect(variable, "beta\\[\\d+,3\\]")) |> pull(q97.5)
+    k_lower <- beta_data |> filter(str_detect(variable, "beta\\[\\d+,3\\]")) |> pull(q2.5)
+
+    ci_95 <- data.frame(
+      sp = sp_list,
+      a = paste0(round(a_median, 2), " (", round(a_lower, 2), ", ", round(a_upper, 2), ")"),
+      b = paste0(round(b_median, 2), " (", round(b_lower, 2), ", ", round(b_upper, 2), ")"),
+      k = paste0(round(k_median, 2), " (", round(k_lower, 2), ", ", round(k_upper, 2), ")"),
+      Dependent_variable = dependent_variable,
+      stringsAsFactors = FALSE
+    )
+  } else if (functional_form == "Power-Law") {
+    a_median <- exp(beta_data |> filter(str_detect(variable, "beta\\[1,\\d+\\]")) |> pull(q50))
+    a_upper <- exp(beta_data |> filter(str_detect(variable, "beta\\[1,\\d+\\]")) |> pull(q97.5))
+    a_lower <- exp(beta_data |> filter(str_detect(variable, "beta\\[1,\\d+\\]")) |> pull(q2.5))
+
+    b_median <- beta_data |> filter(str_detect(variable, "beta\\[2,\\d+\\]")) |> pull(q50)
+    b_upper <- beta_data |> filter(str_detect(variable, "beta\\[2,\\d+\\]")) |> pull(q97.5)
+    b_lower <- beta_data |> filter(str_detect(variable, "beta\\[2,\\d+\\]")) |> pull(q2.5)
+
+    c_median <- beta_data |> filter(str_detect(variable, "beta\\[3,\\d+\\]")) |> pull(q50)
+    c_upper <- beta_data |> filter(str_detect(variable, "beta\\[3,\\d+\\]")) |> pull(q97.5)
+    c_lower <- beta_data |> filter(str_detect(variable, "beta\\[3,\\d+\\]")) |> pull(q2.5)
+
+    ci_95 <- data.frame(
+      sp = sp_list,
+      a = paste0(round(a_median, 2), " (", round(a_lower, 2), ", ", round(a_upper, 2), ")"),
+      b = paste0(round(b_median, 2), " (", round(b_lower, 2), ", ", round(b_upper, 2), ")"),
+      c = paste0(round(c_median, 2), " (", round(c_lower, 2), ", ", round(c_upper, 2), ")"),
+      Dependent_variable = dependent_variable,
+      stringsAsFactors = FALSE
+    )
+  }
+
+  return(ci_95)
+}
+
+h_posterior_df <- create_species_model_df(fit_nlr_nou_summary_weibull_ang_h, "Tree Height", "Weibull", h_ang)
+
+head(h_posterior_df)
+
+h_posterior_df <- h_posterior_df |>
+  rename(sp = sp.sp)
+
+head(h_posterior_df)
+
+head(h_posterior_df)
+ang_data_h <- tallo_reduced_lr_df_ang_h |> filter(division == "Angiosperm")
+ang_data_h
+summary(ang_data_h)
+
+
+large_tree_species <- ang_data_h |>
+  group_by(sp) |>
+  filter(any(dbh > 150)) |>
+  ungroup()
+
+large_tree_summary <- large_tree_species |>
+  group_by(sp) |>
+  summarize(
+    min_dbh = min(dbh, na.rm = TRUE),
+    max_dbh = max(dbh, na.rm = TRUE),
+    mean_dbh = mean(dbh, na.rm = TRUE),
+    count = n()
+  ) |>
+  arrange(desc(max_dbh))
+
+top_30_species <- large_tree_summary |>
+  slice(1:30)
+
+top_30_species
+
+top_30_data <- ang_data_h |>
+  filter(sp %in% top_30_species$sp) |>
+  select(tree_id, sp, dbh, h)
+
+sub_datasets <- top_30_data |>
+  group_split(sp)
+
+names(sub_datasets) <- unique(top_30_data$sp)
+```
+
+# Function
+```{r}
+generate_plot <- function(sub_datasets, h_posterior_df) {
+  combined_data <- data.frame()
+  
+  for (i in seq_along(sub_datasets)) {
+    species_data <- sub_datasets[[i]]
+    species_name <- names(sub_datasets)[i]
+    
+    # Get posterior parameters for the species
+    species_post <- h_posterior_df |>
+      filter(sp == species_name)
+    
+    if (nrow(species_post) == 0) {
+      warning(paste("No posterior data for species:", species_name))
+      next
+    }
+    
+    # Extract parameters
+    a <- as.numeric(sub(" \\(.*\\)", "", species_post$a))
+    log_a <- log(a)
+    b <- as.numeric(sub(" \\(.*\\)", "", species_post$b))
+    k <- as.numeric(sub(" \\(.*\\)", "", species_post$k))
+    
+    dbh <- species_data$dbh
+    
+    # Compute the fitted height values
+    fitted_log_y <- log_a + log(1 - exp(-b * (dbh ^ k)))
+    fitted_height <- exp(fitted_log_y)
+    
+    # Create a dataframe for the fitted curve
+    fitted_curve <- data.frame(
+      DBH = dbh,
+      H = fitted_height,
+      sp = species_name,
+      Source = "Fitted"
+    )
+    
+    # Combine observed and fitted data
+    combined_species_data <- species_data |>
+      mutate(sp = species_name, Source = "Observed") |>
+      select(DBH = dbh, H = h, sp, Source) |>
+      bind_rows(fitted_curve)
+    
+    # Append to the combined dataset
+    combined_data <- bind_rows(combined_data, combined_species_data)
+  }
+  
+  p <- ggplot(combined_data, aes(x = DBH, y = H, color = Source)) +
+    geom_point(data = combined_data |> filter(Source == "Observed"), alpha = 0.5, color = "gray") +
+    geom_line(data = combined_data |> filter(Source == "Fitted"), aes(group = sp), color = "#72b6e3", linewidth = 0.6) +
+    facet_wrap(~ sp, scales = "free", ncol = 4) +
+    labs(
+      x = "DBH (cm)",
+      y = "Tree Height (m)"
+    ) +
+    my_theme()
+  
+  return(p)
+}
+
+generate_plot_log <- function(sub_datasets, h_posterior_df) {
+  combined_data <- data.frame()
+  
+  for (i in seq_along(sub_datasets)) {
+    species_data <- sub_datasets[[i]]
+    species_name <- names(sub_datasets)[i]
+    
+    # Get posterior parameters for the species
+    species_post <- h_posterior_df |>
+      filter(sp == species_name)
+    
+    if (nrow(species_post) == 0) {
+      warning(paste("No posterior data for species:", species_name))
+      next
+    }
+    
+    # Extract parameters
+    a <- as.numeric(sub(" \\(.*\\)", "", species_post$a))
+    log_a <- log(a)
+    b <- as.numeric(sub(" \\(.*\\)", "", species_post$b))
+    k <- as.numeric(sub(" \\(.*\\)", "", species_post$k))
+    
+    dbh <- species_data$dbh
+    
+    # Compute the fitted height values
+    fitted_log_y <- log_a + log(1 - exp(-b * (dbh ^ k)))
+    fitted_height <- exp(fitted_log_y)
+    
+    # Create a dataframe for the fitted curve
+    fitted_curve <- data.frame(
+      DBH = dbh,
+      H = fitted_height,
+      sp = species_name,
+      Source = "Fitted"
+    )
+    
+    # Combine observed and fitted data
+    combined_species_data <- species_data |>
+      mutate(sp = species_name, Source = "Observed") |>
+       dplyr::select(DBH = dbh, H = h, sp, Source) |>
+      bind_rows(fitted_curve)
+    
+    # Append to the combined dataset
+    combined_data <- bind_rows(combined_data, combined_species_data)
+  }
+  
+  p <- ggplot(combined_data, aes(x = DBH, y = H, color = Source)) +
+    geom_point(data = combined_data |> filter(Source == "Observed"), alpha = 0.5, color = "gray") +
+    geom_line(data = combined_data |> filter(Source == "Fitted"), aes(group = sp), color = "#72b6e3", linewidth = 0.6) +
+    facet_wrap(~ sp, scales = "free", ncol = 4) +
+    labs(
+      x = "DBH (cm)",
+      y = "Tree Height (m)"
+    ) +
+    scale_x_log10() +
+    scale_y_log10() +
+    my_theme()
+  
+  return(p)
+}
+```
+
+# Plotting
+
+```{r, fig.width=14, fig.height=20}
+p <- generate_plot(sub_datasets, h_posterior_df)
+p
+
+p_log <- generate_plot_log(sub_datasets, h_posterior_df)
+p_log
+```
+
+# SPECIES POSTERIOR DATAFRAME
+
+```{r}
+fit_nlr_nou_summary_weibull_ang_h <- tar_read(fit_nlr_nou_summary_weibull_ang_h)
+fit_nlr_nou_summary_weibull_gym_h <- tar_read(fit_nlr_nou_summary_weibull_gym_h)
+fit_lr_nou_summary_pl_ang_cr <- tar_read(fit_lr_nou_summary_pl_ang_cr)
+fit_nlr_nou_summary_gmm_gym_cr <- tar_read(fit_nlr_nou_summary_gmm_gym_cr)
+fit_lr_nou_summary_pl_ang_dbh <- tar_read(fit_lr_nou_summary_pl_ang_dbh)
+fit_lr_nou_summary_pl_gym_dbh <- tar_read(fit_lr_nou_summary_pl_gym_dbh)
+tallo_reduced_lr_df_ang_h <- tar_read(tallo_reduced_lr_df_ang_h)
+tallo_reduced_lr_df_ang_cr <- tar_read(tallo_reduced_lr_df_ang_cr)
+tallo_reduced_lr_df_ang_dbh <- tar_read(tallo_reduced_lr_df_ang_dbh)
+stan_data_nlr_ang_h <- tar_read(stan_data_nlr_ang_h)
+stan_data_nlr_gym_h <- tar_read(stan_data_nlr_gym_h)
+stan_data_lr_ang_cr <- tar_read(stan_data_lr_ang_cr)
+stan_data_nlr_gym_cr <- tar_read(stan_data_nlr_gym_cr)
+stan_data_lr_ang_dbh <- tar_read(stan_data_lr_ang_dbh)
+stan_data_lr_gym_dbh <- tar_read(stan_data_lr_gym_dbh)
+```
+
+```{r}
+str(stan_data_nlr_ang_h)
+str(stan_data_nlr_gym_h)
+str(stan_data_lr_ang_cr)
+str(stan_data_nlr_gym_cr)
+str(stan_data_lr_ang_dbh)
+str(stan_data_lr_gym_dbh)
+
+  filter_species <- function(dataset, division) {
+    dataset |> 
+      filter(division == division, !is.na(dbh), !is.na(cr), !is.na(h)) |> 
+      group_by(sp) |> 
+      summarise(count = n()) |> 
+      filter(count >= 20) |> 
+      pull(sp)
+  }
+  create_species_model_df <- function(beta_data, dependent_variable, functional_form, sp_list) {
+    if (functional_form == "Weibull" || functional_form == "gMM") {
+      a_median <- exp(beta_data |> filter(str_detect(variable, "beta\\[\\d+,1\\]")) |> pull(q50))
+      a_upper <- exp(beta_data |> filter(str_detect(variable, "beta\\[\\d+,1\\]")) |> pull(q97.5))
+      a_lower <- exp(beta_data |> filter(str_detect(variable, "beta\\[\\d+,1\\]")) |> pull(q2.5))
+
+      b_median <- beta_data |> filter(str_detect(variable, "beta\\[\\d+,2\\]")) |> pull(q50)
+      b_upper <- beta_data |> filter(str_detect(variable, "beta\\[\\d+,2\\]")) |> pull(q97.5)
+      b_lower <- beta_data |> filter(str_detect(variable, "beta\\[\\d+,2\\]")) |> pull(q2.5)
+
+      k_median <- beta_data |> filter(str_detect(variable, "beta\\[\\d+,3\\]")) |> pull(q50)
+      k_upper <- beta_data |> filter(str_detect(variable, "beta\\[\\d+,3\\]")) |> pull(q97.5)
+      k_lower <- beta_data |> filter(str_detect(variable, "beta\\[\\d+,3\\]")) |> pull(q2.5)
+
+      ci_95 <- data.frame(
+        sp = sp_list,
+        a = paste0(round(a_median, 2), " (", round(a_lower, 2), ", ", round(a_upper, 2), ")"),
+        b = paste0(round(b_median, 2), " (", round(b_lower, 2), ", ", round(b_upper, 2), ")"),
+        k = paste0(round(k_median, 2), " (", round(k_lower, 2), ", ", round(k_upper, 2), ")"),
+        Dependent_variable = dependent_variable,
+        stringsAsFactors = FALSE
+      )
+    } else if (functional_form == "Power-Law") {
+      a_median <- exp(beta_data |> filter(str_detect(variable, "beta\\[1,\\d+\\]")) |> pull(q50))
+      a_upper <- exp(beta_data |> filter(str_detect(variable, "beta\\[1,\\d+\\]")) |> pull(q97.5))
+      a_lower <- exp(beta_data |> filter(str_detect(variable, "beta\\[1,\\d+\\]")) |> pull(q2.5))
+
+      b_median <- beta_data |> filter(str_detect(variable, "beta\\[2,\\d+\\]")) |> pull(q50)
+      b_upper <- beta_data |> filter(str_detect(variable, "beta\\[2,\\d+\\]")) |> pull(q97.5)
+      b_lower <- beta_data |> filter(str_detect(variable, "beta\\[2,\\d+\\]")) |> pull(q2.5)
+
+      c_median <- beta_data |> filter(str_detect(variable, "beta\\[3,\\d+\\]")) |> pull(q50)
+      c_upper <- beta_data |> filter(str_detect(variable, "beta\\[3,\\d+\\]")) |> pull(q97.5)
+      c_lower <- beta_data |> filter(str_detect(variable, "beta\\[3,\\d+\\]")) |> pull(q2.5)
+
+      ci_95 <- data.frame(
+        sp = sp_list,
+        a = paste0(round(a_median, 2), " (", round(a_lower, 2), ", ", round(a_upper, 2), ")"),
+        b = paste0(round(b_median, 2), " (", round(b_lower, 2), ", ", round(b_upper, 2), ")"),
+        c = paste0(round(c_median, 2), " (", round(c_lower, 2), ", ", round(c_upper, 2), ")"),
+        Dependent_variable = dependent_variable,
+        stringsAsFactors = FALSE
+      )
+    }
+
+    return(ci_95)
+  }
+  # Function to process datasets and align species IDs with Stan data
+ process_dataset <- function(dataset, stan_data, division_filter) {
+    # Filter the dataset by division
+    dataset <- dataset |> filter(division == division_filter)
+    
+    # Prepare species data
+    sp_data <- dataset |>
+      group_by(sp) |>
+      summarise(wd = mean(wd, na.rm = TRUE)) |>
+      arrange(sp) |>
+      mutate(sp_id = row_number()) |>
+      mutate(wd_s = scale(wd) |> as.numeric()) |>
+      select(sp_id, sp, wd, wd_s)
+    
+    # Verify Stan data structure
+    if (!all(c("jj", "u") %in% names(stan_data))) {
+      stop("Stan data must contain 'jj' and 'u'.")
+    }
+    
+    # Handle `nlr` structure: `u` has rows indexed by `jj`
+    if (nrow(stan_data$u) >= max(stan_data$jj, na.rm = TRUE)) {
+      stan_processed <- data.frame(
+        sp_id = as.factor(stan_data$jj),
+        wd_s = stan_data$u[stan_data$jj, 2]  # Extract `wd_s` for species indices
+      )
+    } 
+    # Handle `lr` structure: `u` has two rows (variables) and columns for species
+    else if (nrow(stan_data$u) == 2) {
+      stan_processed <- data.frame(
+        sp_id = 1:ncol(stan_data$u),
+        wd_s = stan_data$u[2, ]  # Use the second row for `wd_s`
+      )
+    } 
+    # Error handling for unexpected structures
+    else {
+      stop("Unexpected structure for 'u' in Stan data.")
+    }
+    
+    # Add species names and calculate tree counts
+    stan_processed <- stan_processed |>
+      group_by(sp_id, wd_s) |>
+      summarise(tree_count = n(), .groups = "drop") |>
+      mutate(sp_id = as.integer(as.character(sp_id))) |>
+      left_join(sp_data, by = "sp_id")
+    
+    return(list(sp_data = sp_data, stan_processed = stan_processed))
+  }
+
+```
+
+
+```{r}
+h_ang <- process_dataset(tallo_reduced_lr_df_ang_h, stan_data_nlr_ang_h, "Angiosperm")
+
+h_ang
+
+h_gym <- process_dataset(tallo_reduced_lr_df_ang_h, stan_data_nlr_gym_h, "Gymnosperm")
+h_gym
+
+cr_ang <- process_dataset(tallo_reduced_lr_df_ang_cr, stan_data_lr_ang_cr, "Angiosperm")
+
+cr_ang
+
+cr_gym <- process_dataset(tallo_reduced_lr_df_ang_cr, stan_data_nlr_gym_cr, "Gymnosperm")
+cr_gym
+
+# dbh_ang <- process_dataset(tallo_reduced_lr_df_ang_dbh, stan_data_lr_ang_dbh, "Angiosperm")
+# dbh_ang
+
+# dbh_gym <- process_dataset(tallo_reduced_lr_df_ang_dbh, stan_data_lr_gym_dbh, "Gymnosperm")
+# dbh_gym
+ang_dbh_species <- filter_species(tallo_reduced_lr_df_ang_dbh, "Angiosperm")
+gym_dbh_species <- filter_species(tallo_reduced_lr_df_ang_dbh, "Gymnosperm")
+
+dbh_ang <- process_dataset(tallo_reduced_lr_df_ang_dbh |> filter(sp %in% ang_dbh_species), stan_data_lr_ang_dbh, "Angiosperm")
+
+dbh_gym <- process_dataset(tallo_reduced_lr_df_ang_dbh |> filter(sp %in% gym_dbh_species), stan_data_lr_gym_dbh, "Gymnosperm")
+
+
+```
+
+
+```{r}
+h_df_ang <- create_species_model_df(fit_nlr_nou_summary_weibull_ang_h, "Tree Height", "Weibull", h_ang$sp)
+head(h_df_ang)
+
+h_df_gym <- create_species_model_df(fit_nlr_nou_summary_weibull_gym_h, "Tree Height", "Weibull", h_gym$sp)
+head(h_df_gym)
+
+cr_df_ang <- create_species_model_df(fit_lr_nou_summary_pl_ang_cr, "Crown Radius", "Power-Law", cr_ang$sp)
+head(cr_df_ang)
+
+cr_df_gym <- create_species_model_df(fit_nlr_nou_summary_gmm_gym_cr, "Crown Radius", "gMM", cr_gym$sp)
+head(cr_df_gym)
+
+dbh_df_ang <- create_species_model_df(fit_lr_nou_summary_pl_ang_dbh, "DBH", "Power-Law", dbh_ang$sp)
+head(dbh_df_ang)
+
+dbh_df_gym <- create_species_model_df(fit_lr_nou_summary_pl_gym_dbh, "DBH", "Power-Law", dbh_gym$sp)
+head(dbh_df_gym)  
+
+```
+
+```{r}
+sp_posterior_df <- bind_rows(
+  h_df_ang |> mutate(Division = "Angiosperm"),
+  h_df_gym |> mutate(Division = "Gymnosperm"),
+  cr_df_ang |> mutate(Division = "Angiosperm"),
+  cr_df_gym |> mutate(Division = "Gymnosperm"),
+  dbh_df_ang |> mutate(Division = "Angiosperm"),
+  dbh_df_gym |> mutate(Division = "Gymnosperm")
+)
+
+head(sp_posterior_df)
+```
+
+```{r}
+  filter_species <- function(dataset, division) {
+    dataset |> 
+      filter(division == division, !is.na(dbh), !is.na(cr), !is.na(h)) |> 
+      group_by(sp) |> 
+      summarise(count = n()) |> 
+      filter(count >= 20) |> 
+      pull(sp)
+  }
+  
+  # Helper function to extract posterior summaries and prepare species-specific output
+  create_species_model_df <- function(beta_data, dependent_variable, functional_form, sp_list) {
+    if (functional_form == "Weibull" || functional_form == "gMM") {
+      a_median <- exp(beta_data |> filter(str_detect(variable, "beta\\[\\d+,1\\]")) |> pull(q50))
+      a_upper <- exp(beta_data |> filter(str_detect(variable, "beta\\[\\d+,1\\]")) |> pull(q97.5))
+      a_lower <- exp(beta_data |> filter(str_detect(variable, "beta\\[\\d+,1\\]")) |> pull(q2.5))
+
+      b_median <- beta_data |> filter(str_detect(variable, "beta\\[\\d+,2\\]")) |> pull(q50)
+      b_upper <- beta_data |> filter(str_detect(variable, "beta\\[\\d+,2\\]")) |> pull(q97.5)
+      b_lower <- beta_data |> filter(str_detect(variable, "beta\\[\\d+,2\\]")) |> pull(q2.5)
+
+      k_median <- beta_data |> filter(str_detect(variable, "beta\\[\\d+,3\\]")) |> pull(q50)
+      k_upper <- beta_data |> filter(str_detect(variable, "beta\\[\\d+,3\\]")) |> pull(q97.5)
+      k_lower <- beta_data |> filter(str_detect(variable, "beta\\[\\d+,3\\]")) |> pull(q2.5)
+
+      # Ensure species list and parameters match
+      if (length(sp_list) != length(a_median)) {
+        stop("Mismatch in species list and parameter lengths.")
+      }
+
+      ci_95 <- data.frame(
+        sp = sp_list,
+        a = paste0(round(a_median, 2), " (", round(a_lower, 2), ", ", round(a_upper, 2), ")"),
+        b = paste0(round(b_median, 2), " (", round(b_lower, 2), ", ", round(b_upper, 2), ")"),
+        k = paste0(round(k_median, 2), " (", round(k_lower, 2), ", ", round(k_upper, 2), ")"),
+        Dependent_variable = dependent_variable,
+        stringsAsFactors = FALSE
+      )
+    } else if (functional_form == "Power-Law") {
+      a_median <- exp(beta_data |> filter(str_detect(variable, "beta\\[1,\\d+\\]")) |> pull(q50))
+      a_upper <- exp(beta_data |> filter(str_detect(variable, "beta\\[1,\\d+\\]")) |> pull(q97.5))
+      a_lower <- exp(beta_data |> filter(str_detect(variable, "beta\\[1,\\d+\\]")) |> pull(q2.5))
+
+      b_median <- beta_data |> filter(str_detect(variable, "beta\\[2,\\d+\\]")) |> pull(q50)
+      b_upper <- beta_data |> filter(str_detect(variable, "beta\\[2,\\d+\\]")) |> pull(q97.5)
+      b_lower <- beta_data |> filter(str_detect(variable, "beta\\[2,\\d+\\]")) |> pull(q2.5)
+
+      c_median <- beta_data |> filter(str_detect(variable, "beta\\[3,\\d+\\]")) |> pull(q50)
+      c_upper <- beta_data |> filter(str_detect(variable, "beta\\[3,\\d+\\]")) |> pull(q97.5)
+      c_lower <- beta_data |> filter(str_detect(variable, "beta\\[3,\\d+\\]")) |> pull(q2.5)
+
+      # Ensure species list and parameters match
+      if (length(sp_list) != length(a_median)) {
+        stop("Mismatch in species list and parameter lengths.")
+      }
+
+      ci_95 <- data.frame(
+        sp = sp_list,
+        a = paste0(round(a_median, 2), " (", round(a_lower, 2), ", ", round(a_upper, 2), ")"),
+        b = paste0(round(b_median, 2), " (", round(b_lower, 2), ", ", round(b_upper, 2), ")"),
+        c = paste0(round(c_median, 2), " (", round(c_lower, 2), ", ", round(c_upper, 2), ")"),
+        Dependent_variable = dependent_variable,
+        stringsAsFactors = FALSE
+      )
+    }
+
+    return(ci_95)
+  }
+
+  # Function to process datasets and align species IDs with Stan data
+  process_dataset <- function(dataset, stan_data, division_filter) {
+    # Filter the dataset by division
+    dataset <- dataset |> filter(division == division_filter)
+    
+    # Prepare species data
+    sp_data <- dataset |>
+      group_by(sp) |>
+      summarise(wd = mean(wd, na.rm = TRUE)) |>
+      arrange(sp) |>
+      mutate(sp_id = row_number()) |>
+      mutate(wd_s = scale(wd) |> as.numeric()) |>
+      select(sp_id, sp, wd, wd_s)
+    
+    # Verify Stan data structure
+    if (!all(c("jj", "u") %in% names(stan_data))) {
+      stop("Stan data must contain 'jj' and 'u'.")
+    }
+    
+    # Handle `nlr` structure: `u` has rows indexed by `jj`
+    if (nrow(stan_data$u) >= max(stan_data$jj, na.rm = TRUE)) {
+      stan_processed <- data.frame(
+        sp_id = as.factor(stan_data$jj),
+        wd_s = stan_data$u[stan_data$jj, 2]  # Extract `wd_s` for species indices
+      )
+    } else if (nrow(stan_data$u) == 2) {
+      stan_processed <- data.frame(
+        sp_id = 1:ncol(stan_data$u),
+        wd_s = stan_data$u[2, ]  # Use the second row for `wd_s`
+      )
+    } else {
+      stop("Unexpected structure for 'u' in Stan data.")
+    }
+    
+    # Add species names and calculate tree counts
+    stan_processed <- stan_processed |>
+      group_by(sp_id, wd_s) |>
+      summarise(tree_count = n(), .groups = "drop") |>
+      mutate(sp_id = as.integer(as.character(sp_id))) |>
+      left_join(sp_data, by = "sp_id")
+    
+    return(list(sp_data = sp_data, stan_processed = stan_processed))
+  }
+
+  # Filter species
+  ang_dbh_species <- filter_species(tallo_reduced_lr_df_ang_dbh, "Angiosperm")
+  gym_dbh_species <- filter_species(tallo_reduced_lr_df_ang_dbh, "Gymnosperm")
+  
+  # Process datasets for Angiosperms and Gymnosperms
+  h_ang <- process_dataset(tallo_reduced_lr_df_ang_h, stan_data_nlr_ang_h, "Angiosperm")
+  h_gym <- process_dataset(tallo_reduced_lr_df_ang_h, stan_data_nlr_gym_h, "Gymnosperm")
+  cr_ang <- process_dataset(tallo_reduced_lr_df_ang_cr, stan_data_lr_ang_cr, "Angiosperm")
+  cr_gym <- process_dataset(tallo_reduced_lr_df_ang_cr, stan_data_nlr_gym_cr, "Gymnosperm")
+  dbh_ang <- process_dataset(tallo_reduced_lr_df_ang_dbh |> filter(sp %in% ang_dbh_species), stan_data_lr_ang_dbh, "Angiosperm")
+  dbh_gym <- process_dataset(tallo_reduced_lr_df_ang_dbh |> filter(sp %in% gym_dbh_species), stan_data_lr_gym_dbh, "Gymnosperm")
+
+  # Generate posterior dataframes
+  h_df_ang <- create_species_model_df(fit_nlr_nou_summary_weibull_ang_h, "Tree Height", "Weibull", h_ang$sp)
+  h_df_gym <- create_species_model_df(fit_nlr_nou_summary_weibull_gym_h, "Tree Height", "Weibull", h_gym$sp)
+  cr_df_ang <- create_species_model_df(fit_lr_nou_summary_pl_ang_cr, "Crown Radius", "Power-Law", cr_ang$sp)
+  cr_df_gym <- create_species_model_df(fit_nlr_nou_summary_gmm_gym_cr, "Crown Radius", "gMM", cr_gym$sp)
+  dbh_df_ang <- create_species_model_df(fit_lr_nou_summary_pl_ang_dbh, "DBH", "Power-Law", dbh_ang$sp)
+  dbh_df_gym <- create_species_model_df(fit_lr_nou_summary_pl_gym_dbh, "DBH", "Power-Law", dbh_gym$sp)
+
+  # # Combine results
+  # sp_posterior_df <- bind_rows(
+  #   h_df_ang |> mutate(Division = "Angiosperm"),
+  #   h_df_gym |> mutate(Division = "Gymnosperm"),
+  #   cr_df_ang |> mutate(Division = "Angiosperm"),
+  #   cr_df_gym |> mutate(Division = "Gymnosperm"),
+  #   dbh_df_ang |> mutate(Division = "Angiosperm"),
+  #   dbh_df_gym |> mutate(Division = "Gymnosperm")
+  # )
+
+```
+
+
+```{r}
+
+```

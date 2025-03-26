@@ -1,0 +1,365 @@
+```{r}
+library(readr)
+library(tidyverse)
+library(here)
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(patchwork)
+```
+
+# data preparation
+ ```{r}
+allo <- read_csv("data/overlap.csv")
+head(allo, 6)
+allo2 <- head(allo, 300000)
+```
+
+- checking data
+```{r}
+hist_h <- ggplot(allo2, aes(x = h)) +
+  geom_histogram(fill = "lightblue", color = "black") +
+  labs(title = "Histogram of Tree Height", x = "Height (m)", y = "Frequency")
+
+hist_dbh <- ggplot(allo2, aes(x = dbh)) +
+  geom_histogram(fill = "lightgreen", color = "black") +
+  labs(title = "Histogram of DBH", x = "DBH (cm)", y = "Frequency")
+
+hist_cr <- ggplot(allo2, aes(x = cr)) +
+  geom_histogram(fill = "lightpink", color = "black") +
+  labs(title = "Histogram of CR", x = "CR", y = "Frequency")
+
+combined_plot <- grid.arrange(hist_h, hist_dbh, hist_cr, ncol = 3)
+ggsave("figs/combined_histograms.png", plot = combined_plot, width = 12, height = 6)
+```
+
+- tranformation of data
+```{r}
+allo2$dbh.ln <- log(allo2$dbh)
+allo2$h.ln <- log(allo2$h)
+allo2$cr.ln <- log(allo2$cr)
+```
+
+- checking again
+```{r}
+hist_h_ln <- ggplot(allo2, aes(x = h.ln)) +
+  geom_histogram(fill = "lightblue", color = "black") +
+  labs(title = "Histogram of Log(Height)", x = "Log(Height)", y = "Frequency")
+
+hist_dbh_ln <- ggplot(allo2, aes(x = dbh.ln)) +
+  geom_histogram(fill = "lightgreen", color = "black") +
+  labs(title = "Histogram of Log(DBH)", x = "Log(DBH)", y = "Frequency")
+
+hist_cr_ln <- ggplot(allo2, aes(x = cr.ln)) +
+  geom_histogram(fill = "lightpink", color = "black") +
+  labs(title = "Histogram of Log(CR)", x = "Log(CR)", y = "Frequency")
+
+combined_plot_ln <- grid.arrange(hist_h_ln, hist_dbh_ln, hist_cr_ln, ncol = 3)
+ggsave("figs/combined_histograms_ln.png", plot = combined_plot_ln, width = 12, height = 6)
+```
+
+- negative values in cr => transfer
+```{r}
+allo2$cr.ln <- log(allo2$cr + 1)
+allo3 <- allo2
+summary(allo3)
+```
+
+```{r}
+hist_h_ln <- ggplot(allo2, aes(x = h.ln)) +
+  geom_histogram(fill = "lightblue", color = "black") +
+  labs(title = "Histogram of Log(Height)", x = "Log(Height)", y = "Frequency")
+
+hist_dbh_ln <- ggplot(allo2, aes(x = dbh.ln)) +
+  geom_histogram(fill = "lightgreen", color = "black") +
+  labs(title = "Histogram of Log(DBH)", x = "Log(DBH)", y = "Frequency")
+
+hist_cr_ln <- ggplot(allo2, aes(x = cr.ln)) +
+  geom_histogram(fill = "lightpink", color = "black") +
+  labs(title = "Histogram of Log(CR)", x = "Log(CR)", y = "Frequency")
+
+combined_plot_ln <- grid.arrange(hist_h_ln, hist_dbh_ln, hist_cr_ln, ncol = 3)
+ggsave("figs/combined_histograms_ln_plus_1.png", plot = combined_plot_ln, width = 12, height = 6)
+```
+
+# fitting power law
+
+```{r}
+dhmod1 <- lm((dbh.ln ~ h.ln), data = allo3) 
+dcmod1 <- lm((dbh.ln ~ cr.ln), data = allo3)
+hdmod1 <- lm((h.ln ~ dbh.ln), data = allo3)
+cdmod1 <- lm((cr.ln ~ dbh.ln), data = allo3)
+dhcmod1 <- lm((dbh.ln ~ h.ln + cr.ln), data = allo3)
+```
+
+ - plotting models
+
+```{r}
+plot_dhmod1 <- ggplot(allo2, aes(x = h.ln, y = dbh.ln)) +
+  geom_point() + # Add data points
+  labs(title = "Scatter Plot: dbh.ln vs. h.ln", x = "h.ln", y = "dbh.ln")
+
+plot_dcmod1 <- ggplot(allo2, aes(x = cr.ln, y = dbh.ln)) +
+  geom_point() +
+  labs(title = "Scatter Plot: dbh.ln vs. cr.ln", x = "cr.ln", y = "dbh.ln")
+
+plot_hdmod1 <- ggplot(allo2, aes(x = dbh.ln, y = h.ln)) +
+  geom_point() +
+  labs(title = "Scatter Plot: h.ln vs. dbh.ln", x = "dbh.ln", y = "h.ln")
+
+plot_cdmod1 <- ggplot(allo2, aes(x = dbh.ln, y = cr.ln)) +
+  geom_point() +
+  labs(title = "Scatter Plot: cr.ln vs. dbh.ln", x = "dbh.ln", y = "cr.ln")
+
+plot_dhcmod1 <- ggplot(allo2, aes(x = h.ln + cr.ln, y = dbh.ln)) +
+  geom_point() +
+  labs(title = "Scatter Plot: dbh.ln vs. h.ln + cr.ln", x = "h.ln + cr.ln", y = "dbh.ln")
+
+# Arrange plots in one figure
+combined_plots <- grid.arrange(plot_dhmod1, plot_dcmod1, plot_hdmod1, plot_cdmod1, plot_dhcmod1,
+                               nrow = 2, ncol = 3)
+
+# Save the combined plot
+ggsave("figs/combined_plots.png", plot = combined_plots, width = 12, height = 8)             
+```
+
+```{r}
+summary(dhmod1)
+summary(dcmod1)
+summary(hdmod1)
+summary(cdmod1)
+summary(dhcmod1)
+```
+
+```{r}
+line_plot_allo2 <- ggplot(allo2) +
+  geom_line(aes(x = h.ln, y = dbh.ln, group = sp)) +
+  labs(title = "Log(DBH) vs. Log(Height) by Species",
+       x = "Log(Height)", y = "Log(DBH)")
+# Save the plot
+ggsave("figs/line_plot_allo2.png", plot = line_plot_allo2, width = 12, height = 8)
+```
+
+```{r}
+# Define the plot with points and linear regression lines
+line_plot_allo2 <- ggplot(allo2, aes(x = h.ln, y = dbh.ln, group = sp)) +
+  geom_point() +  # Add points
+  geom_smooth(method = "lm", se = FALSE, color = "black") +  # Add linear regression line
+  labs(title = "Log(DBH) vs. Log(Height) by Species",
+       x = "Log(Height)", y = "Log(DBH)")
+
+# Save the plot
+ggsave("figs/_scatter_plot_allo2_with_lm.png", plot = line_plot_allo2, width = 12, height = 8)
+```
+
+```{r}
+plot <- ggplot(data = allo2, aes(y = h.ln, x = dbh.ln, group = sp, group = sp, shape = sp)) +
+  geom_point(size = 5) +
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ x, size = 1) +
+  theme_minimal() +
+  labs(title = "Relationship between DBH and Height by Species",
+       subtitle = "Regression lines for each species, colored and shaped by species",
+       group = "sp", shape = "sp")
+ggsave("figs/_scatter_plot_allo2_with_lm.png", plot = plot, width = 12, height = 8)
+```
+
+work
+```{r}
+scatter_plot <- ggplot(allo3, aes(x = h.ln, y = dbh.ln)) +
+  geom_point() +  # Add points
+  geom_smooth(method = "lm", se = FALSE, color = "green") +  # Add linear regression line
+  labs(title = "Scatter Plot of Log(DBH) vs. Log(Height)",
+       x = "Log(Height)", y = "Log(DBH)")
+
+# Save the plot
+ggsave("figs/scatter_plot_dbh_vs_height.png", plot = scatter_plot, width = 12, height = 8)
+```
+
+- does not work 
+#```{r}
+scatter_plot <- ggplot(allo3, aes(x = h.ln, y = dbh.ln, color = sp)) +
+  geom_point() +  # Add points
+  geom_smooth(method = "lm", se = FALSE) +  # Add separate linear regression lines for each species
+  labs(title = "Scatter Plot of Log(DBH) vs. Log(Height) by Species",
+       x = "Log(Height)", y = "Log(DBH)")
+
+ggsave("figs/scatter_plot_dbh_vs_height_by_species.png", plot = scatter_plot, width = 12, height = 8)
+
+```
+
+- does not work
+```{r}
+scatter_plot <- ggplot(allo3, aes(x = h.ln, y = dbh.ln, color = sp)) +
+  geom_point() +  # Add points
+  geom_smooth(method = "lm", se = FALSE, aes(group = sp)) +  # Add separate linear regression lines for each species
+  labs(title = "Scatter Plot of Log(DBH) vs. Log(Height) by Species",
+       x = "Log(Height)", y = "Log(DBH)")
+
+# Save the plot
+ggsave("figs/scatter_plot_dbh_vs_height_by_species.png", plot = scatter_plot, width = 12, height = 8)
+```
+
+```{r}
+# Scatter plot with separate linear regression lines for each species
+scatter_plot <- ggplot(allo3, aes(x = h.ln, y = dbh.ln, color = sp)) +
+  geom_point() +  # Add points
+  geom_smooth(method = "lm", se = FALSE, aes(group = sp), color = "black") +  # Add separate linear regression lines for each species
+  labs(title = "Scatter Plot of Log(DBH) vs. Log(Height) by Species",
+       x = "Log(Height)", y = "Log(DBH)")
+
+# Save the plot
+ggsave("figs/scatter_plot_dbh_vs_height_by_species.png", plot = scatter_plot, width = 12, height = 8)
+```
+
+#```{r}
+plot_allo3 <- ggplot(allo3, aes(x = h.ln, y = dbh.ln, group = sp, color = sp)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +  # Add linear regression lines
+  labs(title = "Relationship between Log(DBH) and Log(Height) by Species",
+       x = "Log(Height)", y = "Log(DBH)")
+
+# Save the plot
+ggsave("figs/relationship_dbh_height_by_species.png", plot = plot_allo3, width = 12, height = 8)
+#```
+
+```{r}
+plot_dhmod1 <- ggplot(allo3, aes(x = h.ln, y = dbh.ln)) +
+  geom_point() + # Add data points
+  geom_smooth(method = "lm", se = FALSE, aes(group = sp)) + # Add linear regression lines for each species
+  labs(title = "Scatter Plot: dbh.ln vs. h.ln by Species", x = "h.ln", y = "dbh.ln")
+
+# Save the plot
+ggsave("figs/scatter_plot_species_lm_lines.png", plot = plot_dhmod1, width = 12, height = 8)
+```
+
+#```{r}
+plot_dhmod1 <- ggplot(allo3, aes(x = h.ln, y = dbh.ln)) +
+  geom_point() + # Add data points
+  geom_smooth(method = "lm", se = FALSE, aes(group = sp, colour = sp)) + # Add linear regression lines for each species
+  labs(title = "Scatter Plot: dbh.ln vs. h.ln by Species", x = "h.ln", y = "dbh.ln")
+
+# Save the plot
+ggsave("figs/scatter_plot_species_lm_color.png", plot = plot_dhmod1, width = 12, height = 8)
+```
+
+
+```{r}
+plot_dhmod1 <- ggplot(allo3, aes(x = h.ln, y = dbh.ln)) +
+  geom_point() + # Add data points
+  geom_smooth(method = "lm", se = FALSE, aes(colour = sp)) + # Add linear regression lines for each species
+  labs(title = "Scatter Plot: dbh.ln vs. h.ln by Species", x = "h.ln", y = "dbh.ln")
+
+# Save the plot
+ggsave("figs/scatter_plot_species_lm_colour.png", plot = plot_dhmod1, width = 12, height = 8)
+```
+
+```{r}
+scatter_plot <- ggplot( allo3, aes(x = h.ln, y = dbh.ln))+
+ geom_point()+
+ geom_smooth(method = "lm", se = FALSE, color ="blue") +
+ labs( title = "Plot of log(dbh) vs. log(h)"; x = "log(h)", y = "log(dbh)")
+ggsave("figs/scatter_plot_dbh_vs_h.png", plot = scatter_plot, width = 12, height = 8)
+```
+
+```{r}
+plot_dcmod1 <- ggplot(allo3, aes(x = cr.ln, y = dbh.ln)) +
+  geom_point() + # Add data points
+  geom_smooth(method = "lm", se = FALSE, aes(group = sp)) + # Add linear regression lines for each species
+  labs(title = "Scatter Plot: dbh.ln vs. cr.ln by Species", x = "cr.ln", y = "dbh.ln")
+
+# Save the plot
+ggsave("figs/dcmod1_scatter_plot_species_lm_lines.png", plot = plot_dcmod1, width = 12, height = 8)
+```
+
+
+```{r}
+# Scatter plot for dhmod1
+plot_dhmod1 <- ggplot(allo3, aes(x = h.ln, y = dbh.ln)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Scatter Plot: dbh.ln vs. h.ln", x = "h.ln", y = "dbh.ln")
+
+# Scatter plot for dcmod1
+plot_dcmod1 <- ggplot(allo3, aes(x = cr.ln, y = dbh.ln)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Scatter Plot: dbh.ln vs. cr.ln", x = "cr.ln", y = "dbh.ln")
+
+# Scatter plot for hdmod1
+plot_hdmod1 <- ggplot(allo3, aes(x = dbh.ln, y = h.ln)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Scatter Plot: h.ln vs. dbh.ln", x = "dbh.ln", y = "h.ln")
+
+# Scatter plot for cdmod1
+plot_cdmod1 <- ggplot(allo3, aes(x = dbh.ln, y = cr.ln)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Scatter Plot: cr.ln vs. dbh.ln", x = "dbh.ln", y = "cr.ln")
+
+# Scatter plot for dhcmod1
+plot_dhcmod1 <- ggplot(allo3, aes(x = h.ln, y = dbh.ln)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, aes(color = cr.ln)) +
+  labs(title = "Scatter Plot: dbh.ln vs. h.ln", x = "h.ln", y = "dbh.ln")
+
+# Combine all plots into one figure
+combined_plots <- grid.arrange(plot_dhmod1, plot_dcmod1, plot_hdmod1, plot_cdmod1, plot_dhcmod1,
+                               nrow = 2, ncol = 3, 
+                               top = textGrob("Scatter Plots with Fitted Regression Lines", 
+                                              gp = gpar(fontsize = 16, fontface = "bold")))
+
+# Save figure 
+ggsave("figs/power_combined_plots.png", combined_plots, width = 15, height = 10)
+```
+
+# fitting gMM (drm())
+```{r}
+library(drc)
+library(minpack.lm)
+
+```
+
+- Remove NaNs 
+
+```{r}
+allo4 <- allo3 %>% 
+  mutate(hcr = h.ln + cr.ln)
+head(allo4)
+```
+
+```{r}
+sum(is.na(allo4))
+allo4 <- na.omit(allo4)
+summary(allo4)
+```
+
+```{r}
+michaelis_menten <- function(x, a, b, k) {
+  a * x^b / (k + x^b)
+}
+dhmod2 <- nlsLM(dbh.ln ~ michaelis_menten(h.ln, a, b, k), data = allo4,
+                 start = list(a = 1, b = 5, k = 0.1), 
+                 control = nls.lm.control(maxiter = 100, maxfev = 500))
+
+dcmod2 <- nlsLM(dbh.ln ~ michaelis_menten(cr.ln, a, b, k), data = allo4,
+                start = list(a = 1, b = 1, k = 1))
+
+hdmod2 <- nlsLM(h.ln ~ michaelis_menten(dbh.ln, a, b, k), data = allo4,
+                start = list(a = 1, b = 1, k = 1))
+
+cdmod2 <- nlsLM(cr.ln ~ michaelis_menten(dbh.ln, a, b, k), 
+                data = allo4,
+                start = list(a = 1, b = 1, k = 1),
+                control = nls.lm.control(maxiter = 500, maxfev = 1000))
+
+dhcmod2 <- nlsLM(dbh.ln ~ michaelis_menten(hcr, a, b, k), data = allo4,
+                 start = list(a = 1, b = 1, k = 1),
+                 control = nls.lm.control(maxiter = 500, maxfev = 500))
+
+summary(dhmod2)
+summary(dcmod2)
+summary(hdmod2)
+summary(cdmod2)
+summary(dhcmod2)
+```

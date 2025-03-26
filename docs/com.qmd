@@ -1,0 +1,305 @@
+---
+title: "Model comparison figure"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: coderpro
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/workspaces/tree-allometry")
+```
+
+```{r global_options, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+```
+
+
+```{r, include=FALSE}
+# Required Libraries
+library(targets)
+library(tidyverse)
+library(scales)
+library(MASS)
+library(viridis)
+library(patchwork)
+library(ggplot2)
+source("R/figs.R")
+```
+
+# Read in data
+
+```{r}
+# Load Data for H-DBH
+stan_data_lr_h <- tar_read(stan_data_lr_h)
+stan_data_nlr_h <- tar_read(stan_data_nlr_h)
+gmm_summary_h <- tar_read(fit_nlr_summary_gmm1_h)
+wb_summary_h <- tar_read(fit_nlr_summary_weibull1_h)
+pl_summary_h <- tar_read(fit_lr2_summary_power_law1_h)
+
+# Load Data for CR-DBH
+stan_data_lr_cr <- tar_read(stan_data_lr_cr)
+stan_data_nlr_cr <- tar_read(stan_data_nlr_cr)
+gmm_summary_cr <- tar_read(fit_nlr_summary_gmm1_cr)
+wb_summary_cr <- tar_read(fit_nlr_summary_weibull1_cr)
+pl_summary_cr <- tar_read(fit_lr2_summary_power_law1_cr)
+```
+
+# Extract scaling parameters
+```{r}
+tallo_wd_df_200 <- tar_read(tallo_wd_df_200)
+
+data2 <- tallo_wd_df_200 |>
+  filter(!is.na(dbh), !is.na(h), !is.na(cr), !is.na(wd_s)) |>
+  mutate(log_dbh = log(dbh),
+         log_h = log(h),
+         log_cr = log(cr)) |>
+  mutate(log_dbh_s = scale(log_dbh) |> as.numeric(),
+         log_h_s = scale(log_h) |> as.numeric(),
+         log_cr_s = scale(log_cr) |> as.numeric()) |>
+  mutate(dbh_s = scale(dbh) |> as.numeric())
+
+# Extract scaling parameters for unscaling
+log_dbh_sd <- sd(data2$log_dbh)
+log_dbh_mean <- mean(data2$log_dbh)
+log_h_sd <- sd(data2$log_h)
+log_h_mean <- mean(data2$log_h)
+log_cr_sd <- sd(data2$log_cr)
+log_cr_mean <- mean(data2$log_cr)
+```
+
+
+# Function to Compute Fitted Values
+
+```{r}
+compute_fitted_values <- function(model_summary, x_seq, log_y_mean, log_y_sd, log_x_sd, log_x_mean, model_type, log_x_seq = NULL) {
+  gamma <- model_summary |> filter(str_detect(variable, "gamma"))
+  
+  if (model_type == "pl") {
+    # Power-Law model: use log_x_seq for predictions
+    log_a <- gamma |> filter(variable == "gamma[1,1]") |> pull(q50)
+    b <- gamma |> filter(variable == "gamma[2,1]") |> pull(q50)
+    log_y_pred_scaled <- log_a + b * log_x_seq
+    
+    # Unscale the predicted log-transformed y
+    log_y_pred <- log_y_pred_scaled * log_y_sd + log_y_mean
+    
+    # Unscale the x variable and back-transform to the original scale
+    log_x_unscaled <- (log_x_seq * log_x_sd) + log_x_mean
+    fitted_values <- tibble(y = exp(log_y_pred), x = exp(log_x_unscaled))
+    
+  } else if (model_type == "gmm") {
+    # Generalized Michaelis-Menten model
+    log_log_a <- gamma |> filter(variable == "gamma[1,1]") |> pull(q50)
+    b <- gamma |> filter(variable == "gamma[1,2]") |> pull(q50)
+    k <- gamma |> filter(variable == "gamma[1,3]") |> pull(q50)
+    
+    log_a <- exp(log_log_a)
+    b <- exp(b)
+    k <- exp(k)
+    
+    log_y_pred <- log_a + b * log(x_seq) - log(k + x_seq^b)
+    fitted_values <- tibble(y = exp(log_y_pred), x = x_seq)
+    
+  } else if (model_type == "weibull") {
+    # Weibull model
+    log_log_a <- gamma |> filter(variable == "gamma[1,1]") |> pull(q50)
+    b <- gamma |> filter(variable == "gamma[1,2]") |> pull(q50)
+    k <- gamma |> filter(variable == "gamma[1,3]") |> pull(q50)
+    
+    log_a <- exp(log_log_a)
+    b <- exp(b)
+    k <- exp(k)
+    
+    log_y_pred <- log_a + log(1 - exp(-b * (x_seq ^ k)))
+    fitted_values <- tibble(y = exp(log_y_pred), x = x_seq)
+    
+  } else {
+    stop("Invalid model type specified.")
+  }
+  
+  return(fitted_values)
+}
+```
+
+# Extract fitted values
+```{r}
+# Define sequences for Power-Law x variables (scaled log x)
+scaled_x_range_h <- stan_data_lr_h$log_x[, 2] |> range()
+log_x_seq_h <- seq(scaled_x_range_h[1], scaled_x_range_h[2], length.out = 100)
+
+scaled_x_range_cr <- stan_data_lr_cr$log_x[, 2] |> range()
+log_x_seq_cr <- seq(scaled_x_range_cr[1], scaled_x_range_cr[2], length.out = 100)
+
+# Define sequences for gMM and Weibull x variables (original x)
+x_nlr_h <- stan_data_nlr_h$x
+x_nlr_range_h <- range(x_nlr_h)
+x_nlr_seq_h <- seq(x_nlr_range_h[1], x_nlr_range_h[2], length.out = 100)
+
+x_nlr_cr <- stan_data_nlr_cr$x
+x_nlr_range_cr <- range(x_nlr_cr)
+x_nlr_seq_cr <- seq(x_nlr_range_cr[1], x_nlr_range_cr[2], length.out = 100)
+
+# Compute fitted values for Power-Law model (unscaled)
+df_pl_h <- compute_fitted_values(pl_summary_h, NULL, log_h_mean, log_h_sd, log_dbh_sd, log_dbh_mean, model_type = "pl", log_x_seq = log_x_seq_h)
+df_pl_cr <- compute_fitted_values(pl_summary_cr, NULL, log_cr_mean, log_cr_sd, log_dbh_sd, log_dbh_mean, model_type = "pl", log_x_seq = log_x_seq_cr)
+
+# Compute fitted values for gMM model (original x)
+df_gmm_h <- compute_fitted_values(gmm_summary_h, x_nlr_seq_h, log_h_mean, log_h_sd, log_dbh_sd, log_dbh_mean, model_type = "gmm")
+df_gmm_cr <- compute_fitted_values(gmm_summary_cr, x_nlr_seq_cr, log_cr_mean, log_cr_sd, log_dbh_sd, log_dbh_mean, model_type = "gmm")
+
+# Compute fitted values for Weibull model (original x)
+df_wb_h <- compute_fitted_values(wb_summary_h, x_nlr_seq_h, log_h_mean, log_h_sd, log_dbh_sd, log_dbh_mean, model_type = "weibull")
+df_wb_cr <- compute_fitted_values(wb_summary_cr, x_nlr_seq_cr, log_cr_mean, log_cr_sd, log_dbh_sd, log_dbh_mean, model_type = "weibull")
+```
+
+
+# Plotting
+
+## Plotting function
+```{r}
+# Plotting function
+plot_model_comparison <- function(data, df_pl, df_gmm, df_wb, x_var, y_var, x_label, y_label, log_scale = TRUE) {
+  # Compute density for the scatter plot
+  if (log_scale) {
+    # Log-scale density calculation
+    dens <- with(data, kde2d(log10(data[[x_var]]), log10(data[[y_var]]), n = 300))
+    ix <- findInterval(log10(data[[x_var]]), dens$x)
+    iy <- findInterval(log10(data[[y_var]]), dens$y)
+  } else {
+    # Linear-scale density calculation
+    dens <- with(data, kde2d(data[[x_var]], data[[y_var]], n = 300))
+    ix <- findInterval(data[[x_var]], dens$x)
+    iy <- findInterval(data[[y_var]], dens$y)
+  }
+  
+  data$density <- dens$z[cbind(ix, iy)]
+  
+  # Base plot
+  p <- ggplot(data, aes_string(x = x_var, y = y_var, color = "density")) +
+    geom_point(size = 0.5, alpha = 0.8) +
+    scale_color_gradientn(colors = c("black", "purple", "orange", "yellow"), name = "Density") +
+    labs(x = x_label, y = y_label) +
+    theme_minimal()
+
+  # Add model lines
+  p <- p +
+    geom_line(data = df_pl, aes(x = x, y = y), color = "green", size = 1) +
+    geom_line(data = df_gmm, aes(x = x, y = y), color = "blue", size = 1) +
+    geom_line(data = df_wb, aes(x = x, y = y), color = "red", size = 1)
+  
+  # Handle log scale if requested
+  if (log_scale) {
+    p <- p + scale_x_log10() + scale_y_log10()
+  }
+  
+  return(p)
+}
+```
+
+## Plot
+```{r}
+# Plot for H-DBH using Power-Law model type
+combined_plot_h <- plot_model_comparison(
+  data = data2,
+  df_pl = df_pl_h,
+  df_gmm = df_gmm_h,
+  df_wb = df_wb_h,
+  x_var = "dbh",
+  y_var = "h",
+  x_label = "DBH (cm)",
+  y_label = "Height (m)",
+  log_scale = TRUE    # or FALSE, depending on your preference
+)
+
+# Plot for CR-DBH using Power-Law model type
+combined_plot_cr <- plot_model_comparison(
+  data = data2,
+  df_pl = df_pl_cr,
+  df_gmm = df_gmm_cr,
+  df_wb = df_wb_cr,
+  x_var = "dbh",
+  y_var = "cr",
+  x_label = "DBH (cm)",
+  y_label = "Crown Radius (m)",
+  log_scale = TRUE    # or FALSE
+)
+
+```
+
+# Combining plots
+
+```{r}
+# Increase the size of axis titles
+combined_plot_h <- combined_plot_h + 
+  theme(
+    plot.title = element_text(hjust = 0, face = "bold"),  
+    axis.title.x = element_blank(),                       # Remove x-axis title from the top plot
+    axis.text.x = element_blank(),                        # Remove x-axis ticks from the top plot
+    axis.ticks.x = element_blank(),                       # Remove x-axis ticks from the top plot
+    axis.title.y = element_text(size = 16),               # Increase y-axis title size
+    plot.margin = margin(5, 5, 5, 5),                     # Adjust margins if needed
+    legend.position = "none"                              # Remove the legend from the top plot
+  ) + ggtitle("(a)")
+
+combined_plot_cr <- combined_plot_cr + 
+  theme(
+    plot.title = element_text(hjust = 0, face = "bold"),  # Left-align the title and make it bold
+    axis.title.x = element_text(size = 16),               # Increase x-axis title size
+    axis.title.y = element_text(size = 16),               # Increase y-axis title size
+    plot.margin = margin(5, 5, 5, 5)                      # Adjust margins if needed
+  ) + ggtitle("(b)")
+
+combined_plots <- combined_plot_h / combined_plot_cr + 
+  plot_layout(ncol = 1, heights = c(1, 1))
+
+ggsave("combined_plots_with_larger_labels.png", plot = combined_plots, width = 10, height = 12, dpi = 300)
+```
+
+
+```{r}
+# Plot for H-DBH using Power-Law model type
+combined_plot_h_non <- plot_model_comparison(
+  data = data2,
+  df_pl = df_pl_h,
+  df_gmm = df_gmm_h,
+  df_wb = df_wb_h,
+  x_var = "dbh",
+  y_var = "h",
+  x_label = "DBH (cm)",
+  y_label = "H (m)",
+  log_scale = FALSE    
+)
+
+# Plot for CR-DBH using Power-Law model type
+combined_plot_cr_non <- plot_model_comparison(
+  data = data2,
+  df_pl = df_pl_cr,
+  df_gmm = df_gmm_cr,
+  df_wb = df_wb_cr,
+  x_var = "dbh",
+  y_var = "cr",
+  x_label = "DBH (cm)",
+  y_label = "CR (m)",
+  log_scale = FALSE
+)
+
+print(combined_plot_h_non)
+print(combined_plot_cr_non)
+```

@@ -1,0 +1,935 @@
+Crown Radius:
+  Angiosperm:
+    Power-Law:
+      With:
+        a:
+          Intercept_CI:
+            Median: 0.3488703
+            Lower: 0.339558
+            Upper: 0.3586176
+          Slope_CI:
+            Median: 0.067951
+            Lower: 0.039503
+            Upper: 0.0969641
+          Tau_CI:
+            Median: 0.3314629
+            Lower: 0.3107583
+            Upper: 0.3537377
+        b:
+          Intercept_CI:
+            Median: 0.6262655
+            Lower: 0.6172469
+            Upper: 0.6347153
+          Slope_CI:
+            Median: -0.0110058
+            Lower: -0.0198803
+            Upper: -0.0025346
+          Tau_CI:
+            Median: 0.092148
+            Lower: 0.0844064
+            Upper: 0.100138
+      Without:
+        a:
+          Intercept_CI:
+            Median: 0.3490413
+            Lower: 0.3402774
+            Upper: 0.3588667
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.336417
+            Lower: 0.3155434
+            Upper: 0.3581202
+        b:
+          Intercept_CI:
+            Median: 0.625775
+            Lower: 0.6168636
+            Upper: 0.6345041
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.0928698
+            Lower: 0.0851886
+            Upper: 0.1013272
+    Weibull:
+      Without:
+        a:
+          Intercept_CI:
+            Median: 458.3852556
+            Lower: 174.8809576
+            Upper: 1761.336192
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.3114697
+            Lower: 0.25468
+            Upper: 0.3481488
+        b:
+          Intercept_CI:
+            Median: 0.0007647
+            Lower: 0.0001998
+            Upper: 0.002002
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 9.6665278e-05
+            Lower: 5.092834e-06
+            Upper: 0.0003193
+        k:
+          Intercept_CI:
+            Median: 0.6274785
+            Lower: 0.6188238
+            Upper: 0.6369641
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.093409
+            Lower: 0.0859434
+            Upper: 0.1014711
+    gMM:
+      Without:
+        a:
+          Intercept_CI:
+            Median: 1382.3704197
+            Lower: 625.381898
+            Upper: 2564.0171326
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.3356413
+            Lower: 0.3152089
+            Upper: 0.3566651
+        b:
+          Intercept_CI:
+            Median: 0.626705
+            Lower: 0.6176676
+            Upper: 0.6360833
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.0932256
+            Lower: 0.0857832
+            Upper: 0.101278
+        k:
+          Intercept_CI:
+            Median: 3974.91
+            Lower: 1807.158
+            Upper: 7385.7235
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 7.2415487
+            Lower: 0.0918771
+            Upper: 50.7255625
+  Gymnosperm:
+    Power-Law:
+      Without:
+        a:
+          Intercept_CI:
+            Median: 0.2977101
+            Lower: 0.2697054
+            Upper: 0.3287538
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.324386
+            Lower: 0.2511081
+            Upper: 0.4146215
+        b:
+          Intercept_CI:
+            Median: 0.6186945
+            Lower: 0.590613
+            Upper: 0.6467348
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.0861117
+            Lower: 0.0626951
+            Upper: 0.1137962
+    Weibull:
+      Without:
+        a:
+          Intercept_CI:
+            Median: 61.0186771
+            Lower: 21.5080116
+            Upper: 321.796787
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.2020884
+            Lower: 0.0145486
+            Upper: 0.4107147
+        b:
+          Intercept_CI:
+            Median: 0.0048701
+            Lower: 0.000906
+            Upper: 0.0139165
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.0015621
+            Lower: 5.166957e-05
+            Upper: 0.0045946
+        k:
+          Intercept_CI:
+            Median: 0.639739
+            Lower: 0.6060444
+            Upper: 0.6738143
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.102273
+            Lower: 0.0774724
+            Upper: 0.1331865
+    gMM:
+      With:
+        a:
+          Intercept_CI:
+            Median: 975.0024658
+            Lower: 311.8984799
+            Upper: 2010.2321663
+          Slope_CI:
+            Median: 0.9882617
+            Lower: 0.7659452
+            Upper: 1.2662997
+          Tau_CI:
+            Median: 0.36671
+            Lower: 0.2797766
+            Upper: 0.4735328
+        b:
+          Intercept_CI:
+            Median: 0.629287
+            Lower: 0.5992579
+            Upper: 0.658673
+          Slope_CI:
+            Median: 0.0344633
+            Lower: 0.0050658
+            Upper: 0.064245
+          Tau_CI:
+            Median: 0.0948957
+            Lower: 0.0691087
+            Upper: 0.1261102
+        k:
+          Intercept_CI:
+            Median: 3371.455
+            Lower: 1094.23225
+            Upper: 6977.7715
+          Slope_CI:
+            Median: 35.71465
+            Lower: -768.70475
+            Upper: 913.79515
+          Tau_CI:
+            Median: 9.3638547
+            Lower: 0.1002313
+            Upper: 52.3180125
+      Without:
+        a:
+          Intercept_CI:
+            Median: 769.4069321
+            Lower: 227.3453552
+            Upper: 1818.3058593
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.3673481
+            Lower: 0.2804399
+            Upper: 0.4651571
+        b:
+          Intercept_CI:
+            Median: 0.630821
+            Lower: 0.600423
+            Upper: 0.6625657
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.1012795
+            Lower: 0.0755377
+            Upper: 0.1309078
+        k:
+          Intercept_CI:
+            Median: 2657.085
+            Lower: 808.712975
+            Upper: 6274.33575
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 18.9842685
+            Lower: 0.1115827
+            Upper: 200.190725
+DBH:
+  Angiosperm:
+    Power-Law:
+      With:
+        a:
+          Intercept_CI:
+            Median: 0.9488732
+            Lower: 0.9282412
+            Upper: 0.9701155
+          Slope_CI:
+            Median: -0.0025411
+            Lower: -0.0264712
+            Upper: 0.0190158
+          Tau_CI:
+            Median: 0.3014467
+            Lower: 0.2842289
+            Upper: 0.3200543
+        b:
+          Intercept_CI:
+            Median: 0.3733935
+            Lower: 0.3611282
+            Upper: 0.3856923
+          Slope_CI:
+            Median: -0.003273
+            Lower: -0.0145984
+            Upper: 0.008915
+          Tau_CI:
+            Median: 0.1350893
+            Lower: 0.1251929
+            Upper: 0.1453574
+        c:
+          Intercept_CI:
+            Median: 0.589474
+            Lower: 0.5747945
+            Upper: 0.604623
+          Slope_CI:
+            Median: 0.0051074
+            Lower: -0.0095732
+            Upper: 0.0200068
+          Tau_CI:
+            Median: 0.1679594
+            Lower: 0.1564333
+            Upper: 0.1794579
+      Without:
+        a:
+          Intercept_CI:
+            Median: 0.9481858
+            Lower: 0.9273582
+            Upper: 0.9692058
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.3020887
+            Lower: 0.2843181
+            Upper: 0.3202176
+        b:
+          Intercept_CI:
+            Median: 0.373565
+            Lower: 0.3611363
+            Upper: 0.38552
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.1347499
+            Lower: 0.1253594
+            Upper: 0.1453105
+        c:
+          Intercept_CI:
+            Median: 0.589786
+            Lower: 0.5749327
+            Upper: 0.6047297
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.1681233
+            Lower: 0.1568789
+            Upper: 0.1802912
+  Gymnosperm:
+    Power-Law:
+      With:
+        a:
+          Intercept_CI:
+            Median: 0.9709438
+            Lower: 0.9002417
+            Upper: 1.0448171
+          Slope_CI:
+            Median: -0.0450684
+            Lower: -0.1196996
+            Upper: 0.0295395
+          Tau_CI:
+            Median: 0.2735741
+            Lower: 0.2249263
+            Upper: 0.3385021
+        b:
+          Intercept_CI:
+            Median: 0.408055
+            Lower: 0.3711376
+            Upper: 0.443653
+          Slope_CI:
+            Median: 0.0283955
+            Lower: -0.0077317
+            Upper: 0.0616446
+          Tau_CI:
+            Median: 0.1123094
+            Lower: 0.084516
+            Upper: 0.1480474
+        c:
+          Intercept_CI:
+            Median: 0.5880865
+            Lower: 0.538008
+            Upper: 0.6367162
+          Slope_CI:
+            Median: -0.0363728
+            Lower: -0.084109
+            Upper: 0.0139803
+          Tau_CI:
+            Median: 0.1647656
+            Lower: 0.1279929
+            Upper: 0.2091867
+      Without:
+        a:
+          Intercept_CI:
+            Median: 0.9723608
+            Lower: 0.9034299
+            Upper: 1.0510783
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.2727797
+            Lower: 0.2223882
+            Upper: 0.3356855
+        b:
+          Intercept_CI:
+            Median: 0.409878
+            Lower: 0.3725057
+            Upper: 0.4464991
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.1147951
+            Lower: 0.0861228
+            Upper: 0.1501794
+        c:
+          Intercept_CI:
+            Median: 0.587609
+            Lower: 0.5401983
+            Upper: 0.6382628
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.1652305
+            Lower: 0.1294575
+            Upper: 0.2094377
+DBH1:
+  Angiosperm:
+    Power-Law:
+      Without:
+        a:
+          Intercept_CI:
+            Median: 0.9553065
+            Lower: 0.9339896
+            Upper: 0.977693
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.3065816
+            Lower: 0.2908099
+            Upper: 0.3248432
+        b:
+          Intercept_CI:
+            Median: 0.8725675
+            Lower: 0.8591695
+            Upper: 0.8860359
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.1669426
+            Lower: 0.1561389
+            Upper: 0.1784404
+  Gymnosperm:
+    Power-Law:
+      Without:
+        a:
+          Intercept_CI:
+            Median: 0.9904668
+            Lower: 0.9195209
+            Upper: 1.0665595
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.282033
+            Lower: 0.2313123
+            Upper: 0.3473483
+        b:
+          Intercept_CI:
+            Median: 0.8946185
+            Lower: 0.8430325
+            Upper: 0.9422291
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.1820742
+            Lower: 0.147171
+            Upper: 0.2254021
+DBH2:
+  Angiosperm:
+    Power-Law:
+      Without:
+        a:
+          Intercept_CI:
+            Median: 0.9498887
+            Lower: 0.9171475
+            Upper: 0.982675
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.4240026
+            Lower: 0.4026349
+            Upper: 0.447044
+        b:
+          Intercept_CI:
+            Median: 0.7168725
+            Lower: 0.6985607
+            Upper: 0.7353315
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.2364435
+            Lower: 0.2225697
+            Upper: 0.2506358
+  Gymnosperm:
+    Power-Law:
+      Without:
+        a:
+          Intercept_CI:
+            Median: 0.9707636
+            Lower: 0.8867012
+            Upper: 1.0593133
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.3441309
+            Lower: 0.2802009
+            Upper: 0.419301
+        b:
+          Intercept_CI:
+            Median: 0.79129
+            Lower: 0.7121772
+            Upper: 0.8695034
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.2736417
+            Lower: 0.2213221
+            Upper: 0.3356197
+DBH3:
+  Angiosperm:
+    Power-Law:
+      Without:
+        a:
+          Intercept_CI:
+            Median: 0.9667227
+            Lower: 0.940852
+            Upper: 0.993148
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.3528554
+            Lower: 0.3340078
+            Upper: 0.3733982
+        b:
+          Intercept_CI:
+            Median: 0.8656325
+            Lower: 0.8492289
+            Upper: 0.8807873
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.2004648
+            Lower: 0.1883967
+            Upper: 0.2138394
+  Gymnosperm:
+    Power-Law:
+      Without:
+        a:
+          Intercept_CI:
+            Median: 0.9976754
+            Lower: 0.9009029
+            Upper: 1.0900584
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.3482507
+            Lower: 0.2872782
+            Upper: 0.426859
+        b:
+          Intercept_CI:
+            Median: 0.849083
+            Lower: 0.7869167
+            Upper: 0.9153185
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.2243296
+            Lower: 0.1794017
+            Upper: 0.2789469
+Tree Height:
+  Angiosperm:
+    Power-Law:
+      Without:
+        a:
+          Intercept_CI:
+            Median: 2.5478542
+            Lower: 2.498708
+            Upper: 2.5998026
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.3110386
+            Lower: 0.2962905
+            Upper: 0.3262061
+        b:
+          Intercept_CI:
+            Median: 0.537526
+            Lower: 0.5304702
+            Upper: 0.5444833
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.1084619
+            Lower: 0.1032475
+            Upper: 0.1139655
+    Weibull:
+      With:
+        a:
+          Intercept_CI:
+            Median: 50.0358626
+            Lower: 48.0185911
+            Upper: 52.2782022
+          Slope_CI:
+            Median: 1.0030358
+            Lower: 0.9662798
+            Upper: 1.0420488
+          Tau_CI:
+            Median: 0.1094081
+            Lower: 0.0850458
+            Upper: 0.1338677
+        b:
+          Intercept_CI:
+            Median: 0.0476521
+            Lower: 0.0456004
+            Upper: 0.0495411
+          Slope_CI:
+            Median: -0.0002497
+            Lower: -0.0018876
+            Upper: 0.0014161
+          Tau_CI:
+            Median: 0.0117626
+            Lower: 0.0108991
+            Upper: 0.012648
+        k:
+          Intercept_CI:
+            Median: 0.627988
+            Lower: 0.6179271
+            Upper: 0.638469
+          Slope_CI:
+            Median: -0.0155465
+            Lower: -0.0253645
+            Upper: -0.0059086
+          Tau_CI:
+            Median: 0.1413256
+            Lower: 0.1340132
+            Upper: 0.148615
+      Without:
+        a:
+          Intercept_CI:
+            Median: 49.9866015
+            Lower: 48.0397359
+            Upper: 52.1676072
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.1086238
+            Lower: 0.0846993
+            Upper: 0.1325948
+        b:
+          Intercept_CI:
+            Median: 0.0476184
+            Lower: 0.0457884
+            Upper: 0.0495194
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.0117794
+            Lower: 0.0109648
+            Upper: 0.01263
+        k:
+          Intercept_CI:
+            Median: 0.628505
+            Lower: 0.6180638
+            Upper: 0.638719
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.1420124
+            Lower: 0.1350376
+            Upper: 0.1493971
+    gMM:
+      Without:
+        a:
+          Intercept_CI:
+            Median: 77.9003153
+            Lower: 73.8148182
+            Upper: 82.5011514
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.1400804
+            Lower: 0.1148401
+            Upper: 0.1637655
+        b:
+          Intercept_CI:
+            Median: 0.639772
+            Lower: 0.628705
+            Upper: 0.6509073
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.1478293
+            Lower: 0.1404398
+            Upper: 0.1556341
+        k:
+          Intercept_CI:
+            Median: 34.9516
+            Lower: 33.237095
+            Upper: 36.857915
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 8.9539421
+            Lower: 8.2257845
+            Upper: 9.6611798
+  Gymnosperm:
+    Power-Law:
+      Without:
+        a:
+          Intercept_CI:
+            Median: 1.4286472
+            Lower: 1.3018559
+            Upper: 1.5618263
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.370695
+            Lower: 0.3025552
+            Upper: 0.4467946
+        b:
+          Intercept_CI:
+            Median: 0.7039435
+            Lower: 0.6749215
+            Upper: 0.7321869
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.112986
+            Lower: 0.0926998
+            Upper: 0.1366786
+    Weibull:
+      With:
+        a:
+          Intercept_CI:
+            Median: 114.3924408
+            Lower: 85.1394074
+            Upper: 170.3998101
+          Slope_CI:
+            Median: 0.9736697
+            Lower: 0.7757092
+            Upper: 1.2127284
+          Tau_CI:
+            Median: 0.0976113
+            Lower: 0.0046574
+            Upper: 0.256888
+        b:
+          Intercept_CI:
+            Median: 0.0122652
+            Lower: 0.0083556
+            Upper: 0.0162737
+          Slope_CI:
+            Median: 0.0006333
+            Lower: -0.0018788
+            Upper: 0.0034216
+          Tau_CI:
+            Median: 0.0038228
+            Lower: 0.0022539
+            Upper: 0.0055258
+        k:
+          Intercept_CI:
+            Median: 0.75131
+            Lower: 0.7207623
+            Upper: 0.7839223
+          Slope_CI:
+            Median: -0.0223577
+            Lower: -0.0537525
+            Upper: 0.0076208
+          Tau_CI:
+            Median: 0.1129026
+            Lower: 0.0904752
+            Upper: 0.139777
+      Without:
+        a:
+          Intercept_CI:
+            Median: 117.4109296
+            Lower: 89.2163885
+            Upper: 175.1287206
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.091213
+            Lower: 0.0035725
+            Upper: 0.2292083
+        b:
+          Intercept_CI:
+            Median: 0.0118986
+            Lower: 0.0080648
+            Upper: 0.0155006
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.0037092
+            Lower: 0.0023025
+            Upper: 0.0052504
+        k:
+          Intercept_CI:
+            Median: 0.750261
+            Lower: 0.7189034
+            Upper: 0.7840528
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.1139279
+            Lower: 0.0919335
+            Upper: 0.1394923
+    gMM:
+      Without:
+        a:
+          Intercept_CI:
+            Median: 2004.6504793
+            Lower: 386.1464687
+            Upper: 7618.1950459
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.3596708
+            Lower: 0.2978679
+            Upper: 0.4338147
+        b:
+          Intercept_CI:
+            Median: 0.715509
+            Lower: 0.6868761
+            Upper: 0.7459299
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 0.1123645
+            Lower: 0.0908325
+            Upper: 0.1378744
+        k:
+          Intercept_CI:
+            Median: 1427.0
+            Lower: 287.32655
+            Upper: 5308.3415
+          Slope_CI:
+            Median: '-'
+            Lower: '-'
+            Upper: '-'
+          Tau_CI:
+            Median: 5.9004793
+            Lower: 0.0814171
+            Upper: 32.2448075

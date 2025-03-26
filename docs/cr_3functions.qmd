@@ -1,0 +1,304 @@
+---
+title: "CR models - plotting 3 community-lines (pl, wd, gMM in a single panel)"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: coderpro
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/workspaces/tree-allometry")
+```
+
+```{r global_options, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+```
+
+# Load necessary libraries
+
+```{r}
+library(targets)
+library(cmdstanr)
+library(posterior)
+library(loo)
+library(dplyr)
+library(ggplot2)
+library(stringr)
+library(reshape2)
+library(scales)
+
+# Define and run the targets pipeline
+# tar_make()
+```
+
+# Unscale power-law's parameters
+
+```{r}
+tallo_wd_df_200 <- tar_read(tallo_wd_df_200)
+tallo_wd_df_200
+
+data2 <- tallo_wd_df_200 |>
+    filter(!is.na(dbh)) |>
+    filter(!is.na(cr)) |>
+    filter(!is.na(h)) |>
+    filter(!is.na(wd_s))
+
+data2 <- data2 |>
+    mutate(log_dbh = log(dbh),
+           log_h = log(h),
+           log_cr = log(cr)) |>
+    mutate(log_dbh_s = scale(log_dbh) |> as.numeric(),
+           log_h_s = scale(log_h) |> as.numeric(),
+           log_cr_s = scale(log_cr) |> as.numeric()) |>
+    mutate(dbh_s = scale(dbh) |> as.numeric())
+
+
+data2
+
+# Extract scaling parameters for unscaling
+scaling_params <- data2 |>
+    summarise(mean_log_dbh = mean(log_dbh), sd_log_dbh = sd(log_dbh),
+              mean_log_cr = mean(log_cr), sd_log_cr = sd(log_cr))
+
+
+scaling_params
+```
+
+# Plotting 3 community-lines (pl, wd, gMM in a single panel)
+
+```{r}
+# Read in the data (pl)
+stan_data_lr_cr <- tar_read(stan_data_lr_cr)
+str(stan_data_lr_cr)
+
+# Extract relevant data from stan_data_lr_cr (log_y, x, jj)
+log_y_lr <- stan_data_lr_cr$log_y
+log_x_lr <- stan_data_lr_cr$log_x[, 2]
+sp_lr <- as.factor(stan_data_lr_cr$jj)
+
+unscaled_dbh_pl <- exp((log_x_lr * scaling_params$sd_log_dbh) + scaling_params$mean_log_dbh)
+unscaled_cr_pl <- exp((log_y_lr * scaling_params$sd_log_cr) + scaling_params$mean_log_cr)
+
+
+# Read in the data (gMM, wb)
+stan_data_nlr_cr <- tar_read(stan_data_nlr_cr)
+str(stan_data_nlr_cr)
+
+# Extract relevant data from stan_data_nlr_cr (log_y, x, jj)
+log_y_nlr <- stan_data_nlr_cr$log_y
+x_nlr <- stan_data_nlr_cr$x
+sp_nlr <- as.factor(stan_data_nlr_cr$jj)
+
+
+# Read in the model summaries for generalized Michaelis-Menten (gMM), Weibull (wb), and power-law (pl)
+gmm_summary <- tar_read(fit_nlr_summary_gmm1_cr)
+wb_summary <- tar_read(fit_nlr_summary_weibull1_cr)
+pl_summary <- tar_read(fit_lr2_summary_power_law1_cr)
+
+gmm_summary
+wb_summary
+pl_summary
+
+# Extract beta parameters for power-law model
+beta_pl <- pl_summary |>
+  filter(grepl("beta\\[", variable))
+
+beta_pl
+
+# Extract log_a (beta[1, ]) and b (beta[2, ])
+log_a_pl <- beta_pl |>
+  filter(str_detect(variable, "beta\\[1,\\d+\\]")) |>
+  pull(mean)
+
+b_pl <- beta_pl |>
+  filter(str_detect(variable, "beta\\[2,\\d+\\]")) |>
+  pull(mean)
+
+# Print extracted values to verify
+head(log_a_pl)
+head(b_pl)
+
+# Extract beta parameters for gMM model
+beta_gmm <- gmm_summary |>
+  filter(grepl("beta\\[", variable))
+
+beta_gmm
+
+# Extract log_a, b, k from beta_gmm
+log_a_gmm <- beta_gmm |>
+  filter(str_detect(variable, "beta\\[\\d+,1\\]")) |>
+  pull(mean)
+
+b_gmm <- beta_gmm |>
+  filter(str_detect(variable, "beta\\[\\d+,2\\]")) |>
+  pull(mean)
+
+k_gmm <- beta_gmm |>
+  filter(str_detect(variable, "beta\\[\\d+,3\\]")) |>
+  pull(mean)
+
+head(log_a_gmm)
+head(b_gmm)
+head(k_gmm)
+
+# Extract beta parameters for Weibull model
+beta_wb <- wb_summary |>
+  filter(grepl("beta\\[", variable))
+
+beta_wb
+
+# Extract log_a, b, k from beta_wb
+log_a_wb <- beta_wb |>
+  filter(str_detect(variable, "beta\\[\\d+,1\\]")) |>
+  pull(mean)
+
+b_wb <- beta_wb |>
+  filter(str_detect(variable, "beta\\[\\d+,2\\]")) |>
+  pull(mean)
+
+k_wb <- beta_wb |>
+  filter(str_detect(variable, "beta\\[\\d+,3\\]")) |>
+  pull(mean)
+
+head(log_a_wb)
+head(b_wb)
+head(k_wb)
+
+```
+
+# Extract community-level parameters of each function
+(I will change by median later)
+```{r}
+##pl
+pl_summary
+gamma_pl <- pl_summary |> filter(grepl("gamma", variable))
+gamma_pl
+
+community_log_a_hat_pl <- gamma_pl |> filter(variable == "gamma[1,1]") |> pull(mean)
+community_b_hat_pl <- gamma_pl |> filter(variable == "gamma[2,1]") |> pull(mean)
+
+community_log_a_pl <- exp(community_log_a_hat_pl)
+community_b_pl <- exp(community_b_hat_pl) 
+
+community_log_a_pl
+community_b_pl
+
+## gMM
+gmm_summary
+gamma_gmm <- gmm_summary |> filter(grepl("gamma", variable))
+gamma_gmm
+community_log_a_hat_gmm <- gamma_gmm |> filter(variable == "gamma[1,1]") |> pull(mean)
+community_b_hat_gmm <- gamma_gmm |> filter(variable == "gamma[1,2]") |> pull(mean)
+community_k_hat_gmm <- gamma_gmm |> filter(variable == "gamma[1,3]") |> pull(mean)
+
+community_log_a_gmm <- exp(community_log_a_hat_gmm)
+community_b_gmm <- exp(community_b_hat_gmm) 
+community_k_gmm <- exp(community_k_hat_gmm)
+
+community_log_a_gmm
+community_b_gmm
+community_k_gmm
+
+# Weibull
+wb_summary
+gamma_wb <- wb_summary |> filter(grepl("gamma", variable))
+gamma_wb
+community_log_a_hat_wb <- gamma_wb |> filter(variable == "gamma[1,1]") |> pull(mean)
+community_b_hat_wb <- gamma_wb |> filter(variable == "gamma[1,2]") |> pull(mean)
+community_k_hat_wb <- gamma_wb |> filter(variable == "gamma[1,3]") |> pull(mean)
+
+community_log_a_wb <- exp(community_log_a_hat_wb)
+community_b_wb <- exp(community_b_hat_wb) 
+community_k_wb <- exp(community_k_hat_wb)
+
+community_log_a_wb
+community_b_wb
+community_b_wb
+
+
+# Computing Fitted Values for Community-level Parameters
+#pl
+community_fitted_log_y_cr_pl <- community_log_a_pl + community_b_pl * log_x_lr
+community_fitted_cr_pl <- exp(community_fitted_log_y_cr_pl)
+
+head(community_fitted_cr_pl)
+
+#gMM 
+
+community_fitted_log_y_cr_gmm <- community_log_a_gmm + community_b_gmm * log(x_nlr) - log(community_k_gmm + x_nlr^community_b_gmm)
+community_fitted_cr_gmm <- exp(community_fitted_log_y_cr_gmm)
+
+head(community_fitted_cr_gmm)
+
+# wb
+
+community_fitted_log_y_cr_wb <- community_log_a_wb + log(1 - exp(-community_b_wb * (x_nlr ^ community_k_wb)))
+community_fitted_cr_wb <- exp(community_fitted_log_y_cr_wb)
+
+head(community_fitted_cr_wb)
+
+# Create a data frame for plotting
+data_cr_pl_unscaled <- data.frame(CR = unscaled_cr_pl, DBH = unscaled_dbh_pl, sp = as.factor(stan_data_lr_cr$jj), community_fitted_CR_pl = community_fitted_cr_pl)
+
+head(data_cr_pl_unscaled)
+
+data_cr_gb <- data.frame(CR = exp(log_y_nlr), DBH = x_nlr, sp = sp_nlr)
+head(data_cr_gb)
+
+data_cr_gb$community_fitted_CR_gmm <- community_fitted_cr_gmm
+data_cr_gb$community_fitted_CR_wb <- community_fitted_cr_wb
+
+head(data_cr_pl_unscaled)
+head(data_cr_gb)
+
+# Combine the data frames
+data_combined <- merge(data_cr_pl_unscaled, data_cr_gb, by = "sp", all = TRUE)
+head(data_combined)
+
+# Separate the community-fitted values for plotting
+data_community_pl <- data_combined |> select(DBH.x, community_fitted_CR_pl) |> distinct()
+data_community_gmm <- data_combined |> select(DBH.y, community_fitted_CR_gmm) |> distinct()
+data_community_wb <- data_combined |> select(DBH.y, community_fitted_CR_wb) |> distinct()
+
+head(data_community_pl)
+head(data_community_gmm)
+head(data_community_wb)
+```
+
+# Plot the results
+```{r}
+combined_plot <- ggplot(data_combined) +
+  geom_point(aes(x = DBH.x, y = CR.x), alpha = 0.5, color = "grey") +
+  geom_point(aes(x = DBH.y, y = CR.y), alpha = 0.5, color = "grey") +
+  geom_line(data = data_community_pl, aes(x = DBH.x, y = community_fitted_CR_pl, color = "Power-law"), size = 1) +
+  geom_line(data = data_community_gmm, aes(x = DBH.y, y = community_fitted_CR_gmm, color = "gMM"), size = 1) +
+  geom_line(data = data_community_wb, aes(x = DBH.y, y = community_fitted_CR_wb, color = "Weibull"), size = 1) +
+  labs(title = "Community-level Model Fits for Power-law, gMM, and Weibull Models",
+       x = "DBH (cm)",
+       y = "CR (m)") +
+  scale_x_log10() +
+  scale_y_log10() +
+  theme_minimal() +
+  scale_color_manual(name = "Model", values = c("Power-law" = "blue", "gMM" = "red", "Weibull" = "green"))
+
+# Save the plot
+ggsave(filename = "figs/cr/DBH_CR_community_combined.png", plot = combined_plot, width = 12, height = 8, dpi = 300, bg = "white")
+
+print(combined_plot)
+```

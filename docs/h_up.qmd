@@ -1,0 +1,451 @@
+---
+title: "Comparing H models"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: coderpro
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/workspaces/tree-allometry")
+```
+
+```{r global_options, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+```
+
+```{r, include=FALSE}
+library(targets)
+library(tidyverse)
+library(scales)
+library(MASS)
+```
+
+# Read in data
+
+```{r}
+# Read in the data (pl)
+stan_data_lr_h <- tar_read(stan_data_lr_h)
+str(stan_data_lr_h)
+
+# Read in the data (gMM, wb)
+stan_data_nlr_h <- tar_read(stan_data_nlr_h)
+str(stan_data_nlr_h)
+
+# Extract relevant data from stan_data_nlr_h (log_y, x, jj)
+x_nlr <- stan_data_nlr_h$x
+
+# Read in the model summaries for generalized Michaelis-Menten (gMM), Weibull (wb), and power-law (pl)
+gmm_summary <- tar_read(fit_nlr_summary_gmm1_h)
+wb_summary <- tar_read(fit_nlr_summary_weibull1_h)
+pl_summary <- tar_read(fit_lr2_summary_power_law1_h)
+
+gmm_summary
+wb_summary
+pl_summary
+```
+
+# Extract community-level parameters of each function
+
+## Power-law
+
+### Extract scaling parameters
+```{r}
+tallo_wd_df_200 <- tar_read(tallo_wd_df_200)
+tallo_wd_df_200
+
+data2 <- tallo_wd_df_200 |>
+    filter(!is.na(dbh)) |>
+    filter(!is.na(h)) |>
+    filter(!is.na(cr)) |>
+    filter(!is.na(wd_s))
+
+data2 <- data2 |>
+    mutate(log_dbh = log(dbh),
+           log_h = log(h),
+           log_cr = log(cr)) |>
+    mutate(log_dbh_s = scale(log_dbh) |> as.numeric(),
+           log_h_s = scale(log_h) |> as.numeric(),
+           log_cr_s = scale(log_cr) |> as.numeric()) |>
+    mutate(dbh_s = scale(dbh) |> as.numeric())
+
+
+data2
+
+# Extract scaling parameters for unscaling
+log_dbh_sd <- sd(data2$log_dbh)
+log_dbh_mean <- mean(data2$log_dbh)
+
+log_h_sd <- sd(data2$log_h)
+log_h_mean <- mean(data2$log_h)
+```
+
+### Computing Fitted Values
+```{r}
+pl_summary
+gamma_pl <- pl_summary |> filter(grepl("gamma", variable))
+gamma_pl
+
+community_log_a_pl <- gamma_pl |> filter(variable == "gamma[1,1]") |> pull(q50)
+community_b_pl <- gamma_pl |> filter(variable == "gamma[2,1]") |> pull(q50)
+community_log_a_pl
+community_b_pl
+
+
+## Computing Fitted Values
+scaled_x_range <- stan_data_lr_h$log_x[, 2] |> range()
+log_x_seq <- seq(scaled_x_range[1], scaled_x_range[2], length.out = 100)
+log_xx <- (log_x_seq * log_dbh_sd) + log_dbh_mean
+
+# use scaled values to predict scaled values
+log_y_pred_scaled <- community_log_a_pl + community_b_pl * log_x_seq
+# unscaled
+log_y_pred <- log_y_pred_scaled * log_h_sd + log_h_mean
+community_fitted_h_pl <- exp(log_y_pred)
+
+df_pl <- tibble(y = community_fitted_h_pl, x = exp(log_xx))
+head(df_pl)
+```
+
+## gMM
+```{r}
+gmm_summary
+gamma_gmm <- gmm_summary |> filter(grepl("gamma", variable))
+gamma_gmm
+community_log_a_hat_gmm <- gamma_gmm |> filter(variable == "gamma[1,1]") |> pull(q50)
+community_b_hat_gmm <- gamma_gmm |> filter(variable == "gamma[1,2]") |> pull(q50)
+community_k_hat_gmm <- gamma_gmm |> filter(variable == "gamma[1,3]") |> pull(q50)
+
+community_log_a_gmm <- exp(community_log_a_hat_gmm)
+community_b_gmm <- exp(community_b_hat_gmm) 
+community_k_gmm <- exp(community_k_hat_gmm)
+
+community_log_a_gmm
+community_b_gmm
+community_k_gmm
+
+## Computing Fitted Values
+x_nlr_range <- range(x_nlr)
+x_nlr_seq <- seq(x_nlr_range[1], x_nlr_range[2], length.out = 100)
+
+# Compute the fitted values using the sequence of x-values
+community_fitted_log_y_h_gmm_seq <- community_log_a_gmm + community_b_gmm * log(x_nlr_seq) - log(community_k_gmm + x_nlr_seq^community_b_gmm)
+community_fitted_h_gmm_seq <- exp(community_fitted_log_y_h_gmm_seq)
+
+
+df_gmm <- tibble(y = community_fitted_h_gmm_seq, x = x_nlr_seq)
+head(df_gmm)
+```
+
+## Weibull
+```{r}
+wb_summary
+gamma_wb <- wb_summary |> filter(grepl("gamma", variable))
+gamma_wb
+community_log_a_hat_wb <- gamma_wb |> filter(variable == "gamma[1,1]") |> pull(q50)
+community_b_hat_wb <- gamma_wb |> filter(variable == "gamma[1,2]") |> pull(q50)
+community_k_hat_wb <- gamma_wb |> filter(variable == "gamma[1,3]") |> pull(q50)
+
+community_log_a_wb <- exp(community_log_a_hat_wb)
+community_b_wb <- exp(community_b_hat_wb) 
+community_k_wb <- exp(community_k_hat_wb)
+
+community_log_a_wb
+community_b_wb
+community_b_wb
+
+# Compute the fitted values using the sequence of x-values
+community_fitted_log_y_h_wb_seq <- community_log_a_wb + log(1 - exp(-community_b_wb * (x_nlr_seq ^ community_k_wb)))
+community_fitted_h_wb_seq <- exp(community_fitted_log_y_h_wb_seq)
+
+
+df_wb <- tibble(y = community_fitted_h_wb_seq, x = x_nlr_seq)
+head(df_wb)
+```
+
+# Plot
+
+## Power-law
+```{r}
+head(data2)
+head(df_pl)
+
+ggplot() +
+  geom_bin2d(data = data2, aes(x = dbh, y = h), bins = 200)  +
+  scale_fill_viridis_c(option = "D") +
+  geom_line(data = df_pl, aes(x = x, y = y), color = "#fc8d62" )
+
+```
+
+## gMM
+```{r}
+head(df_gmm)
+
+ggplot() +
+  geom_bin2d(data = data2, aes(x = dbh, y = h), bins = 200)  +
+  scale_fill_viridis_c(option = "D") +
+  geom_line(data = df_gmm, aes(x = x, y = y), color = "#80b1d3" )
+
+```
+
+## Weibull
+
+```{r}
+head(df_wb)
+
+ggplot() +
+  geom_bin2d(data = data2, aes(x = dbh, y = h), bins = 200)  +
+  scale_fill_viridis_c(option = "D") +
+  geom_line(data = df_wb, aes(x = x, y = y), color = "#1b9e77" )
+
+```
+
+
+## 3 functions in 1 panel: Log-scale
+```{r}
+combined_plot <- ggplot(data2) +
+  geom_bin2d(data = data2, aes(x = dbh, y = h), bins = 200)  +
+  scale_fill_viridis_c(option = "D") +
+  geom_line(data = df_pl, aes(x = x, y = y, color = "Power-law"), size = 0.8) +
+  geom_line(data = df_gmm, aes(x = x, y = y, color = "gMM"), size = 0.8) +
+  geom_line(data = df_wb, aes(x = x, y = y, color = "Weibull"), size = 0.8) +
+  labs(title = "Community-level Model Fits for Power-law, gMM, and Weibull Models",
+       x = "DBH (cm)",
+       y = "H (m)") +
+  scale_x_log10() +
+  scale_y_log10() +
+  theme_minimal() +
+  scale_color_manual(name = "Model", values = c("Power-law" = "#fc8d62", "gMM" = "#80b1d3", "Weibull" = "#1b9e77"))
+
+combined_plot
+```
+
+## 3 functions in 1 panel: Non-log scale
+```{r}
+combined_plot_non <- ggplot(data2) +
+  geom_bin2d(data = data2, aes(x = dbh, y = h), bins = 200)  +
+  scale_fill_viridis_c(option = "D") +
+  geom_line(data = df_pl, aes(x = x, y = y, color = "Power-law"), size = 0.8) +
+  geom_line(data = df_gmm, aes(x = x, y = y, color = "gMM"), size = 0.8) +
+  geom_line(data = df_wb, aes(x = x, y = y, color = "Weibull"), size = 0.8) +
+  labs(title = "Community-level Model Fits for Power-law, gMM, and Weibull Models",
+       x = "DBH (cm)",
+       y = "H (m)") +
+  theme_minimal() +
+  scale_color_manual(name = "Model", values = c("Power-law" = "blue", "gMM" = "green", "Weibull" = "red"))
+
+combined_plot_non
+```
+
+# Plotting with density-based coloring
+
+## Log scale
+```{r}
+dens <- with(data2, kde2d(log10(dbh), log10(h), n = 300))
+ix <- findInterval(log10(data2$dbh), dens$x)
+iy <- findInterval(log10(data2$h), dens$y)
+data2$density <- dens$z[cbind(ix, iy)]
+head(data2)
+
+combined_plot <- ggplot(data = data2, aes(x = dbh, y = h, color = density)) +
+  geom_point(size = 0.5, alpha = 0.8) +
+  scale_color_gradientn(colors = c("black", "purple", "orange", "yellow"), name = "Density") +
+  geom_line(data = df_pl, aes(x = x, y = y), color = "#FF5733", size = 0.8) +
+  geom_line(data = df_gmm, aes(x = x, y = y), color = "#2ECC71", size = 0.8) +
+  geom_line(data = df_wb, aes(x = x, y = y), color = "#0f92e9", size = 0.8) +
+  labs(
+       x = "DBH (cm)",
+       y = "H (m)") +
+  scale_x_log10() +
+  scale_y_log10() +
+  theme_minimal() +
+  theme(axis.title.x = element_text(size = 20),   
+        axis.title.y = element_text(size = 20),
+        axis.text.x = element_text(size = 16),    
+        axis.text.y = element_text(size = 16))
+
+
+combined_plot
+ggsave("h_plot.png", plot = combined_plot, width = 8, height = 6, dpi = 300, bg= "white")
+
+combined_plot <- ggplot(data = data2, aes(x = dbh, y = h, color = density)) +
+  geom_point(size = 0.5, alpha = 0.8) +
+  scale_color_gradientn(colors = c("black", "purple", "orange", "yellow"), name = "Density") +
+  geom_line(data = df_pl, aes(x = x, y = y), color = "#FF5733", size = 0.8) +
+  geom_line(data = df_gmm, aes(x = x, y = y), color = "#2ECC71", size = 0.8) +
+  geom_line(data = df_wb, aes(x = x, y = y), color = "#0f92e9", size = 0.8) +
+  labs(
+       x = "DBH (cm)",
+       y = "H (m)") +
+  scale_x_log10() +
+  scale_y_log10() +
+  theme_minimal() +
+  theme(axis.title.x = element_text(size = 20),   
+        axis.title.y = element_text(size = 20),
+        axis.text.x = element_text(size = 16),    
+        axis.text.y = element_text(size = 16),
+        legend.position = "none") +  # Remove default legend
+  
+    # Manually add lines and descriptions for the three models in the upper-right corner
+    annotate("segment", x = 100, xend = 130, y = 1.0, yend = 1.0, color = "#FF5733", size = 1) +  # Power-Law line
+    annotate("text", x = 135, y = 1.0, label = "Power-Law", size = 5, hjust = 0) +  # Power-Law text
+    
+    annotate("segment", x = 100, xend = 130, y = 0.8, yend = 0.8, color = "#2ECC71", size = 1) +  # GMM line
+    annotate("text", x = 135, y = 0.8, label = "gMM", size = 5, hjust = 0) +  # GMM text
+    
+    annotate("segment", x = 100, xend = 130, y = 0.6, yend = 0.6, color = "#0f92e9", size = 1) +  # Weibull line
+    annotate("text", x = 135, y = 0.6, label = "Weibull", size = 5, hjust = 0)  # Weibull text
+
+
+ggsave("h_plot_anno.png", plot = combined_plot, width = 8, height = 6, dpi = 300, bg = "white")
+
+```
+
+
+```{r}
+library(viridis)
+
+combined_plot1 <- ggplot(data = data2, aes(x = dbh, y = h, color = density)) +
+  geom_point(size = 0.5, alpha = 0.6) +  # Reduced alpha for points
+  scale_color_viridis(option = "viridis", name = "Density") +
+  geom_line(data = df_pl, aes(x = x, y = y), color = "green", size = 1.2) +  # Increased line width
+  geom_line(data = df_gmm, aes(x = x, y = y), color = "blue", size = 1.2) +
+  geom_line(data = df_wb, aes(x = x, y = y), color = "red", size = 1.2) +
+  labs(
+       x = "DBH (cm)",
+       y = "H (m)") +
+  scale_x_log10() +
+  scale_y_log10() +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+combined_plot1
+```
+
+## Non-log scale
+
+```{r}
+dens <- with(data2, kde2d(dbh, h, n = 300))
+ix <- findInterval(data2$dbh, dens$x)
+iy <- findInterval(data2$h, dens$y)
+data2$density <- dens$z[cbind(ix, iy)]
+head(data2)
+
+# Create the plot without log scales
+combined_plot_non <- ggplot(data = data2, aes(x = dbh, y = h, color = density)) +
+  geom_point(size = 0.5, alpha = 0.8) +
+  scale_color_gradientn(colors = c("black", "purple", "orange", "yellow"), name = "Density") +
+  geom_line(data = df_pl, aes(x = x, y = y), color = "blue", size = 0.8) +
+  geom_line(data = df_gmm, aes(x = x, y = y), color = "green", size = 0.8) +
+  geom_line(data = df_wb, aes(x = x, y = y), color = "red", size = 0.8) +
+  labs(title = "Community-level Model Fits for Power-law, gMM, and Weibull Models",
+       x = "DBH (cm)",
+       y = "H (m)") +
+  theme_minimal()
+
+combined_plot_non
+```
+
+```{r}
+library(viridis)
+
+combined_plot_non1 <- ggplot(data = data2, aes(x = dbh, y = h, color = density)) +
+  geom_point(size = 0.5, alpha = 0.6) +  # Reduced alpha for points
+  scale_color_viridis(option = "viridis", name = "Density") +
+  geom_line(data = df_pl, aes(x = x, y = y), color = "green", size = 1.2) +  # Increased line width
+  geom_line(data = df_gmm, aes(x = x, y = y), color = "blue", size = 1.2) +
+  geom_line(data = df_wb, aes(x = x, y = y), color = "red", size = 1.2) +
+  labs(
+       x = "DBH (cm)",
+       y = "H (m)") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+combined_plot_non1
+```
+
+
+# Plotting with density-based coloring2
+
+## Log scale
+```{r}
+dens <- with(data2, kde2d(log10(dbh), log10(h), n = 300))
+ix <- findInterval(log10(data2$dbh), dens$x)
+iy <- findInterval(log10(data2$h), dens$y)
+data2$density <- dens$z[cbind(ix, iy)]
+head(data2)
+
+combined_plot1 <- ggplot(data = data2, aes(x = dbh, y = h, color = density)) +
+  geom_point(size = 0.5, alpha = 0.6) +  # Reduced alpha for points
+  scale_color_viridis(option = "viridis", name = "Density") +
+  geom_line(data = df_pl, aes(x = x, y = y), color = "green", size = 1.2) +  # Increased line width
+  geom_line(data = df_gmm, aes(x = x, y = y), color = "blue", size = 1.2) +
+  geom_line(data = df_wb, aes(x = x, y = y), color = "red", size = 1.2) +
+  labs(
+       x = "DBH (cm)",
+       y = "H (m)") +
+  scale_x_log10() +
+  scale_y_log10() +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+combined_plot1
+```
+
+## Non-log scale
+
+```{r}
+dens <- with(data2, kde2d(dbh, h, n = 300))
+ix <- findInterval(data2$dbh, dens$x)
+iy <- findInterval(data2$h, dens$y)
+data2$density <- dens$z[cbind(ix, iy)]
+head(data2)
+
+# Create the plot without log scales
+combined_plot_non <- ggplot(data = data2, aes(x = dbh, y = h, color = density)) +
+  geom_point(size = 0.5, alpha = 0.8) +
+  scale_color_gradientn(colors = c("black", "purple", "orange", "yellow"), name = "Density") +
+  geom_line(data = df_pl, aes(x = x, y = y), color = "blue", size = 0.8) +
+  geom_line(data = df_gmm, aes(x = x, y = y), color = "green", size = 0.8) +
+  geom_line(data = df_wb, aes(x = x, y = y), color = "red", size = 0.8) +
+  labs(title = "Community-level Model Fits for Power-law, gMM, and Weibull Models",
+       x = "DBH (cm)",
+       y = "H (m)") +
+  theme_minimal()
+
+combined_plot_non
+```
+
+```{r}
+library(viridis)
+
+combined_plot_non1 <- ggplot(data = data2, aes(x = dbh, y = h, color = density)) +
+  geom_point(size = 0.5, alpha = 0.6) +  # Reduced alpha for points
+  scale_color_viridis(option = "viridis", name = "Density") +
+  geom_line(data = df_pl, aes(x = x, y = y), color = "green", size = 1.2) +  # Increased line width
+  geom_line(data = df_gmm, aes(x = x, y = y), color = "blue", size = 1.2) +
+  geom_line(data = df_wb, aes(x = x, y = y), color = "red", size = 1.2) +
+  labs(
+       x = "DBH (cm)",
+       y = "H (m)") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+combined_plot_non1
+```

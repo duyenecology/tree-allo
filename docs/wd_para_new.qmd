@@ -1,0 +1,1017 @@
+---
+title: "WD's effect"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = TRUE, message = TRUE)
+knitr::opts_knit$set(root.dir = here::here())
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+
+```
+
+```{r, include=FALSE}
+library(ggplot2)
+library(targets)
+library(tidyverse)
+library(patchwork)
+options(width = 150)
+```
+
+# WD vs. CR-DBH
+
+## Angiosperm
+
+### All species
+
+```{r}
+fit_wd_ang_cr_summary_pl_wd <- tar_read(fit_wd_ang_cr_summary_pl_wd)
+fit_wd_ang_cr_summary_pl_wd
+beta_ang_cr_pl  <- fit_wd_ang_cr_summary_pl_wd |> filter(grepl("beta", variable))
+beta_ang_cr_pl
+
+tallo_reduced_lr_df_ang_cr <- tar_read(tallo_reduced_lr_df_ang_cr)
+tallo_reduced_lr_df_ang_cr
+
+ang_cr_df <- tallo_reduced_lr_df_ang_cr |> filter(division == "Angiosperm")
+ang_cr_df
+unique_species_cr_df <- unique(ang_cr_df$sp)
+sp_id_mapping <- ang_cr_df |>
+  select(sp) |>
+  distinct() |>
+  mutate(sp_id = row_number())
+
+
+angiosperm_parameters <- beta_ang_cr_pl |>
+  filter(grepl("beta", variable)) |>
+  mutate(param_type = case_when(
+    grepl("1,", variable) ~ "log_a",
+    grepl("2,", variable) ~ "b"
+  ))
+
+
+angiosperm_parameters <- angiosperm_parameters |>
+  mutate(sp_id = rep(1:(nrow(angiosperm_parameters) / 2), each = 2))
+
+angiosperm_params_wide <- angiosperm_parameters |>
+  pivot_wider(
+    names_from = param_type,
+    values_from = mean,
+    id_cols = sp_id
+  )
+
+angiosperm_params_wide
+
+angiosperm_params_with_sp <- angiosperm_params_wide |>
+  left_join(sp_id_mapping, by = "sp_id")
+
+angiosperm_params_with_sp
+
+angiosperm_data_full <- ang_cr_df |>
+  left_join(angiosperm_params_with_sp, by = "sp") |>
+  select(tree_id, sp, sp_id, dbh, cr, h, wd, log_a, b, )
+
+angiosperm_data_full
+
+species_summary <- angiosperm_data_full |>
+  group_by(sp) |>
+  summarize(
+    avg_dbh = mean(dbh, na.rm = TRUE),
+    avr_cr = mean(cr, na.rm = TRUE),
+    avg_log_a = mean(log_a, na.rm = TRUE),
+    avg_b = mean(b, na.rm = TRUE),
+    avg_wd = mean(wd, na.rm = TRUE)
+  )
+
+species_summary
+summary(species_summary)
+
+dbh_seq <- seq(min(species_summary$avg_dbh), max(species_summary$avg_dbh), length.out = 100)
+
+prediction_df <- data.frame()
+
+for(i in 1:nrow(species_summary)) {
+  sp <- species_summary$sp[i]
+  avg_log_a <- species_summary$avg_log_a[i]
+  avg_b <- species_summary$avg_b[i]
+  avg_wd <- species_summary$avg_wd[i]
+  
+  predicted_cr <- exp(avg_log_a) * (dbh_seq ^ avg_b)
+  
+  temp_df <- data.frame(sp = sp, dbh = dbh_seq, predicted_cr = predicted_cr, avg_wd = avg_wd)
+  prediction_df <- rbind(prediction_df, temp_df)
+}
+
+# ggplot(prediction_df, aes(x = dbh, y = predicted_cr, group = sp, color = avg_wd)) +
+#   geom_line(alpha = 0.7) +
+#   scale_color_viridis_c() +
+#   labs(x = "DBH (cm)", y = "Crown Radius (m)") +
+#   theme_minimal() +
+#   theme(legend.title = element_text(size = 12),
+#         plot.title = element_text(size = 14)) +
+#   guides(color = guide_colorbar(title = "Wood Density"))
+```
+
+### Light and Dense 
+
+```{r}
+# Calculate the 25% and 75% quantiles of WD
+wd_quantiles <- quantile(species_summary$avg_wd, probs = c(0.25, 0.75))
+
+# Filter data for low and high WD species
+low_wd_species <- species_summary |> filter(abs(avg_wd - wd_quantiles[1]) == min(abs(avg_wd - wd_quantiles[1])))
+high_wd_species <- species_summary |> filter(abs(avg_wd - wd_quantiles[2]) == min(abs(avg_wd - wd_quantiles[2])))
+
+# Combine low and high WD data
+wd_filtered <- bind_rows(low_wd_species, high_wd_species)
+
+# Create DBH sequence
+dbh_seq <- seq(min(species_summary$avg_dbh), max(species_summary$avg_dbh), length.out = 100)
+
+# Generate predictions for low and high WD
+prediction_df <- data.frame()
+
+for (i in 1:nrow(wd_filtered)) {
+  sp <- wd_filtered$sp[i]
+  avg_log_a <- wd_filtered$avg_log_a[i]
+  avg_b <- wd_filtered$avg_b[i]
+  avg_wd <- wd_filtered$avg_wd[i]
+  
+  predicted_cr <- exp(avg_log_a) * (dbh_seq ^ avg_b)
+  
+  temp_df <- data.frame(sp = sp, dbh = dbh_seq, predicted_cr = predicted_cr, avg_wd = avg_wd)
+  prediction_df <- rbind(prediction_df, temp_df)
+}
+
+ggplot(prediction_df, aes(x = dbh, y = predicted_cr, group = avg_wd, color = as.factor(round(avg_wd, 2)))) +
+  geom_line(alpha = 0.7) +
+  scale_color_manual(values = c("#f48d10", "#7f590e"), labels = c("Light WD species", "Dense WD species")) +
+  labs(x = "DBH (cm)", y = "Crown Radius (m)", color = "WD Quantiles") +
+  theme_minimal() +
+  theme(
+    legend.title = element_text(size = 12),
+    plot.title = element_text(size = 14)
+  )
+
+p1 <- ggplot(prediction_df, aes(x = dbh, y = predicted_cr, group = avg_wd, color = as.factor(round(avg_wd, 2)))) +
+  geom_line(alpha = 0.7) +
+  scale_color_manual(values = c("#f48d10", "#7f590e"), labels = c("Light WD species", "Dense WD species")) +
+  labs(x = "DBH", y = "Crown Radius", color = "WD Quantiles") +  # Removed units from labels
+  theme_minimal() +
+  theme(
+    legend.title = element_text(size = 12),
+    plot.title = element_text(size = 14),
+    axis.text = element_blank()  # Remove axis tick labels
+  )
+
+p1
+
+```
+
+## Gymnosperm
+
+### All species
+
+```{r}
+fit_wd_gym_cr_summary_gmm_wd <- tar_read(fit_wd_gym_cr_summary_gmm_wd)
+fit_wd_gym_cr_summary_gmm_wd
+beta_gym_cr_gmm  <- fit_wd_gym_cr_summary_gmm_wd |> filter(grepl("beta", variable))
+beta_gym_cr_gmm
+
+
+tallo_reduced_nlr_df_gym_cr <- tar_read(tallo_reduced_nlr_df_gym_cr)
+
+gym_cr_df <- tallo_reduced_nlr_df_gym_cr |> filter(division == "Gymnosperm")
+gym_cr_df
+
+unique_species_cr_df_gym <- unique(gym_cr_df$sp)
+sp_id_mapping_gym <- gym_cr_df |>
+  select(sp) |>
+  distinct() |>
+  mutate(sp_id = row_number())
+
+gymnosperm_parameters <- beta_gym_cr_gmm |>
+  filter(grepl("beta", variable)) |>
+  mutate(param_type = case_when(
+    grepl("\\[.*,1\\]", variable) ~ "log_a",
+    grepl("\\[.*,2\\]", variable) ~ "b",
+    grepl("\\[.*,3\\]", variable) ~ "k"
+  ))
+
+gymnosperm_parameters <- gymnosperm_parameters |>
+  mutate(sp_id = as.numeric(gsub("beta\\[|,.*", "", variable)))
+
+gymnosperm_params_wide <- gymnosperm_parameters |>
+  select(sp_id, param_type, mean) |>
+  pivot_wider(names_from = param_type, values_from = mean)
+
+gymnosperm_params_with_sp <- gymnosperm_params_wide |>
+  left_join(sp_id_mapping_gym, by = "sp_id")
+
+gymnosperm_data_full <- gym_cr_df |>
+  left_join(gymnosperm_params_with_sp, by = "sp") |>
+  select(tree_id, sp, sp_id, dbh, cr, h, wd, log_a, b, k)
+
+species_summary_gym <- gymnosperm_data_full |>
+  group_by(sp) |>
+  summarize(
+    avg_dbh = mean(dbh, na.rm = TRUE),
+    avr_cr = mean(cr, na.rm = TRUE),
+    avg_log_a = mean(log_a, na.rm = TRUE),
+    avg_b = mean(b, na.rm = TRUE),
+    avg_k = mean(k, na.rm = TRUE),
+    avg_wd = mean(wd, na.rm = TRUE)
+  )
+
+species_summary_gym
+
+summary(species_summary_gym)
+
+dbh_seq <- seq(min(species_summary_gym$avg_dbh), max(species_summary_gym$avg_dbh), length.out = 100)
+
+prediction_df_gym <- data.frame()
+
+for (i in 1:nrow(species_summary_gym)) {
+  sp <- species_summary_gym$sp[i]
+  avg_log_a <- species_summary_gym$avg_log_a[i]
+  avg_b <- species_summary_gym$avg_b[i]
+  avg_k <- species_summary_gym$avg_k[i]
+  avg_wd <- species_summary_gym$avg_wd[i]
+  
+  predicted_cr <- (exp(avg_log_a) * dbh_seq^avg_b) / (avg_k + dbh_seq^avg_b)
+  
+  temp_df <- data.frame(sp = sp, dbh = dbh_seq, predicted_cr = predicted_cr, avg_wd = avg_wd)
+  prediction_df_gym <- rbind(prediction_df_gym, temp_df)
+}
+
+
+ggplot(prediction_df_gym, aes(x = dbh, y = predicted_cr, group = sp, color = avg_wd)) +
+  geom_line(alpha = 0.7) +
+  scale_color_viridis_c() +
+  labs(x = "DBH (cm)", y = "Crown Radius (CR)") +
+  theme_minimal() +
+  theme(legend.title = element_text(size = 12),
+        plot.title = element_text(size = 14)) +
+  guides(color = guide_colorbar(title = "Wood Density"))
+
+```
+
+### Light and Dense
+
+```{r}
+# Calculate the 25% and 75% quantiles of WD for Gymnosperms
+wd_quantiles_gym <- quantile(species_summary_gym$avg_wd, probs = c(0.25, 0.75))
+
+# Filter data for low and high WD species
+low_wd_species_gym <- species_summary_gym |> filter(abs(avg_wd - wd_quantiles_gym[1]) == min(abs(avg_wd - wd_quantiles_gym[1])))
+high_wd_species_gym <- species_summary_gym |> filter(abs(avg_wd - wd_quantiles_gym[2]) == min(abs(avg_wd - wd_quantiles_gym[2])))
+
+# Combine low and high WD data
+wd_filtered_gym <- bind_rows(low_wd_species_gym, high_wd_species_gym)
+
+# Create predictions for Gymnosperms based on selected species
+prediction_df_gym <- data.frame()
+
+for (i in 1:nrow(wd_filtered_gym)) {
+  sp <- wd_filtered_gym$sp[i]
+  avg_log_a <- wd_filtered_gym$avg_log_a[i]
+  avg_b <- wd_filtered_gym$avg_b[i]
+  avg_k <- wd_filtered_gym$avg_k[i]
+  avg_wd <- wd_filtered_gym$avg_wd[i]
+  
+  predicted_cr <- (exp(avg_log_a) * dbh_seq^avg_b) / (avg_k + dbh_seq^avg_b)
+  
+  temp_df <- data.frame(sp = sp, dbh = dbh_seq, predicted_cr = predicted_cr, avg_wd = avg_wd)
+  prediction_df_gym <- rbind(prediction_df_gym, temp_df)
+}
+
+# ggplot(prediction_df_gym, aes(x = dbh, y = predicted_cr, group = avg_wd, color = as.factor(round(avg_wd, 2)))) +
+#   geom_line(alpha = 0.7) +
+#   scale_color_manual(values = c("#f48d10", "#7f590e"), labels = c("Light WD species", "Dense WD species")) +
+#   labs(x = "DBH (cm)", y = "Crown Radius (CR)", color = "WD Quantiles") +
+#   theme_minimal() +
+#   theme(
+#     legend.title = element_text(size = 12),
+#     plot.title = element_text(size = 14)
+#   )
+
+p2 <- ggplot(prediction_df_gym, aes(x = dbh, y = predicted_cr, group = avg_wd, color = as.factor(round(avg_wd, 2)))) +
+  geom_line(alpha = 0.7) +
+  scale_color_manual(values = c("#f48d10", "#7f590e"), labels = c("Light WD species", "Dense WD species")) +
+  labs(x = "DBH", y = "Crown Radius", color = "WD Quantiles") +  # Removed units from labels
+  theme_minimal() +
+  theme(
+    legend.title = element_text(size = 12),
+    plot.title = element_text(size = 14),
+    axis.text = element_blank()  # Remove axis tick labels
+  )
+
+p2
+```
+
+# WD vs. H-DBH
+
+## Angiosperm
+
+### All species
+```{r}
+fit_wd_ang_h_summary_weibull_wd <- tar_read(fit_wd_ang_h_summary_weibull_wd)
+fit_wd_ang_h_summary_weibull_wd
+
+beta_ang_h_wb  <- fit_wd_ang_h_summary_weibull_wd |> filter(grepl("beta", variable))
+beta_ang_h_wb
+
+
+tallo_reduced_nlr_df_ang_h <- tar_read(tallo_reduced_nlr_df_ang_h)
+tallo_reduced_nlr_df_ang_h
+
+ang_h_df <- tallo_reduced_nlr_df_ang_h |> filter(division == "Angiosperm")
+summary(ang_h_df)
+
+unique_species_h_df_ang <- unique(ang_h_df$sp)
+sp_id_mapping_ang <- ang_h_df |>
+  select(sp) |>
+  distinct() |>
+  mutate(sp_id = row_number())
+
+beta_ang_h_weibull <- fit_wd_ang_h_summary_weibull_wd |>
+  filter(grepl("beta", variable)) |>
+  mutate(param_type = case_when(
+    grepl("\\[.*,1\\]", variable) ~ "log_a",
+    grepl("\\[.*,2\\]", variable) ~ "b",
+    grepl("\\[.*,3\\]", variable) ~ "k"
+  ))
+
+beta_ang_h_weibull <- beta_ang_h_weibull |>
+  mutate(sp_id = as.numeric(gsub("beta\\[|,.*", "", variable)))
+
+angiosperm_params_wide <- beta_ang_h_weibull |>
+  select(sp_id, param_type, mean) |>
+  pivot_wider(names_from = param_type, values_from = mean)
+
+angiosperm_params_with_sp <- angiosperm_params_wide |>
+  left_join(sp_id_mapping_ang, by = "sp_id")
+
+angiosperm_data_full <- ang_h_df |>
+  left_join(angiosperm_params_with_sp, by = "sp") |>
+  select(tree_id, sp, sp_id, dbh, h, wd, log_a, b, k)
+
+species_summary_ang <- angiosperm_data_full |>
+  group_by(sp) |>
+  summarize(
+    avg_dbh = mean(dbh, na.rm = TRUE),
+    avg_h = mean(h, na.rm = TRUE),
+    avg_log_a = mean(log_a, na.rm = TRUE),
+    avg_b = mean(b, na.rm = TRUE),
+    avg_k = mean(k, na.rm = TRUE),
+    avg_wd = mean(wd, na.rm = TRUE)
+  )
+species_summary_ang
+
+summary(species_summary_ang)
+
+dbh_seq <- seq(min(species_summary_ang$avg_dbh), max(species_summary_ang$avg_dbh), length.out = 100)
+
+prediction_df_ang <- data.frame()
+
+for (i in 1:nrow(species_summary_ang)) {
+  sp <- species_summary_ang$sp[i]
+  avg_log_a <- species_summary_ang$avg_log_a[i]
+  avg_b <- species_summary_ang$avg_b[i]
+  avg_k <- species_summary_ang$avg_k[i]
+  avg_wd <- species_summary_ang$avg_wd[i]
+  
+  predicted_h <- exp(avg_log_a) * (1 - exp(-avg_b * dbh_seq^avg_k))
+  
+  temp_df <- data.frame(sp = sp, dbh = dbh_seq, predicted_h = predicted_h, avg_wd = avg_wd)
+  prediction_df_ang <- rbind(prediction_df_ang, temp_df)
+}
+
+ggplot(prediction_df_ang, aes(x = dbh, y = predicted_h, group = sp, color = avg_wd)) +
+  geom_line(alpha = 0.7) +
+  scale_color_viridis_c() +
+  labs(x = "DBH (cm)", y = "Height (H)") +
+  theme_minimal() +
+  theme(
+    legend.title = element_text(size = 12),
+    plot.title = element_text(size = 14)
+  ) +
+  guides(color = guide_colorbar(title = "Wood Density"))
+```
+
+
+### Light and Dense
+
+```{r}
+# Using Weibull model, calculate the 25% and 75% quantiles for WD in Angiosperms
+wd_quantiles_ang <- quantile(species_summary_ang$avg_wd, probs = c(0.25, 0.75))
+
+# Filter data for low and high WD species
+low_wd_species_ang <- species_summary_ang |> filter(abs(avg_wd - wd_quantiles_ang[1]) == min(abs(avg_wd - wd_quantiles_ang[1])))
+high_wd_species_ang <- species_summary_ang |> filter(abs(avg_wd - wd_quantiles_ang[2]) == min(abs(avg_wd - wd_quantiles_ang[2])))
+
+# Combine low and high WD data
+wd_filtered_ang <- bind_rows(low_wd_species_ang, high_wd_species_ang)
+
+# Generate height predictions for low and high WD
+prediction_df_ang <- data.frame()
+
+for (i in 1:nrow(wd_filtered_ang)) {
+  sp <- wd_filtered_ang$sp[i]
+  avg_log_a <- wd_filtered_ang$avg_log_a[i]
+  avg_b <- wd_filtered_ang$avg_b[i]
+  avg_k <- wd_filtered_ang$avg_k[i]
+  avg_wd <- wd_filtered_ang$avg_wd[i]
+  
+  predicted_h <- exp(avg_log_a) * (1 - exp(-avg_b * dbh_seq^avg_k))
+  
+  temp_df <- data.frame(sp = sp, dbh = dbh_seq, predicted_h = predicted_h, avg_wd = avg_wd)
+  prediction_df_ang <- rbind(prediction_df_ang, temp_df)
+}
+
+# # Plot DBH vs. Height (H) for Angiosperms with low and high WD
+# ggplot(prediction_df_ang, aes(x = dbh, y = predicted_h, group = avg_wd, color = as.factor(round(avg_wd, 2)))) +
+#   geom_line(alpha = 0.7) +
+#   scale_color_manual(values = c("#f48d10", "#7f590e"), labels = c("Light WD species", "Dense WD species")) +
+#   labs(x = "DBH (cm)", y = "Height (m)", color = "WD Quantiles") +
+#   theme_minimal() +
+#   theme(
+#     legend.title = element_text(size = 12),
+#     plot.title = element_text(size = 14)
+#   )
+
+
+# Plot DBH vs. Height (H) for Angiosperms with low and high WD
+p3 <- ggplot(prediction_df_ang, aes(x = dbh, y = predicted_h, group = avg_wd, color = as.factor(round(avg_wd, 2)))) +
+  geom_line(alpha = 0.7) +
+  scale_color_manual(values = c("#f48d10", "#7f590e"), labels = c("Light WD species", "Dense WD species")) +
+  labs(x = "DBH", y = "Height", color = "WD Quantiles") +
+  theme_minimal() +
+  theme(
+    legend.title = element_text(size = 12),
+    plot.title = element_text(size = 14),
+    axis.text = element_blank()  # Remove axis tick labels
+  )
+
+p3
+
+```
+
+# Combine in 1 plot
+
+```{r}
+p1 <- p1 + theme(legend.position = "none")
+p2 <- p2 + theme(legend.position = "none")
+p3 <- p3 + theme(legend.position = "right")
+
+p <- p1 + p2 + p3 + plot_layout(ncol = 3)
+p
+
+
+```
+
+# Writing function
+
+## p1
+```{r}
+library(ggplot2)
+library(targets)
+library(tidyverse)
+library(patchwork)
+```
+
+
+```{r}
+fit_wd_ang_cr_summary_pl_wd <- tar_read(fit_wd_ang_cr_summary_pl_wd)
+fit_wd_ang_cr_summary_pl_wd
+beta_ang_cr_pl  <- fit_wd_ang_cr_summary_pl_wd |> filter(grepl("beta", variable))
+beta_ang_cr_pl
+
+tallo_reduced_lr_df_ang_cr <- tar_read(tallo_reduced_lr_df_ang_cr)
+tallo_reduced_lr_df_ang_cr
+
+```
+
+
+```{r}
+generate_p1 <- function(fit_wd_ang_cr_summary_pl_wd, tallo_reduced_lr_df_ang_cr) {
+  # Filter the beta parameters from the fit data
+  beta_ang_cr_pl <- fit_wd_ang_cr_summary_pl_wd |> 
+    filter(grepl("beta", variable))
+  
+  # Filter Angiosperm data from the tallo data
+  ang_cr_df <- tallo_reduced_lr_df_ang_cr |> filter(division == "Angiosperm")
+  
+  # Create species ID mapping
+  sp_id_mapping <- ang_cr_df |> 
+    select(sp) |> 
+    distinct() |> 
+    mutate(sp_id = row_number())
+  
+  # Process beta parameters into log_a and b
+  angiosperm_parameters <- beta_ang_cr_pl |>
+    mutate(param_type = case_when(
+      grepl("1,", variable) ~ "log_a",
+      grepl("2,", variable) ~ "b"
+    )) |>
+    mutate(sp_id = rep(1:(nrow(beta_ang_cr_pl) / 2), each = 2))
+  
+  # Pivot the parameters into wide format
+  angiosperm_params_wide <- angiosperm_parameters |>
+    pivot_wider(
+      names_from = param_type,
+      values_from = mean,
+      id_cols = sp_id
+    )
+  
+  # Combine species parameters with the Angiosperm data
+  angiosperm_params_with_sp <- angiosperm_params_wide |>
+    left_join(sp_id_mapping, by = "sp_id")
+  
+  # Create the full dataset by joining the tree data and species parameters
+  angiosperm_data_full <- ang_cr_df |>
+    left_join(angiosperm_params_with_sp, by = "sp") |>
+    select(tree_id, sp, sp_id, dbh, cr, h, wd, log_a, b)
+  
+  # Summarize species data to calculate avg values
+  species_summary <- angiosperm_data_full |>
+    group_by(sp) |>
+    summarize(
+      avg_dbh = mean(dbh, na.rm = TRUE),
+      avg_log_a = mean(log_a, na.rm = TRUE),
+      avg_b = mean(b, na.rm = TRUE),
+      avg_wd = mean(wd, na.rm = TRUE)
+    )
+  
+  # Calculate the 25% and 75% quantiles of WD
+  wd_quantiles <- quantile(species_summary$avg_wd, probs = c(0.25, 0.75), na.rm = TRUE)
+  
+  # Filter data for low and high WD species
+  low_wd_species <- species_summary |>
+    filter(abs(avg_wd - wd_quantiles[1]) == min(abs(avg_wd - wd_quantiles[1])))
+  high_wd_species <- species_summary |>
+    filter(abs(avg_wd - wd_quantiles[2]) == min(abs(avg_wd - wd_quantiles[2])))
+  
+  # Combine low and high WD data
+  wd_filtered <- bind_rows(low_wd_species, high_wd_species)
+  
+  # Create DBH sequence
+  dbh_seq <- seq(min(species_summary$avg_dbh), max(species_summary$avg_dbh), length.out = 100)
+  
+  # Generate predictions for low and high WD
+  prediction_df <- data.frame()
+  
+  for (i in 1:nrow(wd_filtered)) {
+    sp <- wd_filtered$sp[i]
+    avg_log_a <- wd_filtered$avg_log_a[i]
+    avg_b <- wd_filtered$avg_b[i]
+    avg_wd <- wd_filtered$avg_wd[i]
+    
+    predicted_cr <- exp(avg_log_a) * (dbh_seq ^ avg_b)
+    
+    temp_df <- data.frame(sp = sp, dbh = dbh_seq, predicted_cr = predicted_cr, avg_wd = avg_wd)
+    prediction_df <- rbind(prediction_df, temp_df)
+  }
+  
+  # Plot
+  p1 <- ggplot(prediction_df, aes(x = dbh, y = predicted_cr, group = avg_wd, color = as.factor(round(avg_wd, 2)))) +
+    geom_line(alpha = 0.7) +
+    scale_color_manual(values = c("#f48d10", "#7f590e"), labels = c("Light WD species", "Dense WD species")) +
+    labs(x = "DBH", y = "Crown Radius", color = "WD Quantiles") +  # Removed units from labels
+    theme_minimal() +
+    theme(
+      legend.title = element_text(size = 12),
+      plot.title = element_text(size = 14),
+      axis.text = element_blank()  # Remove axis tick labels
+    )
+  
+  return(p1)
+}
+
+# Now call the function using the fit data and tallo data
+p1 <- generate_p1(fit_wd_ang_cr_summary_pl_wd, tallo_reduced_lr_df_ang_cr)
+print(p1)
+```
+
+## p2
+
+```{r}
+fit_wd_gym_cr_summary_gmm_wd <- tar_read(fit_wd_gym_cr_summary_gmm_wd)
+fit_wd_gym_cr_summary_gmm_wd
+beta_gym_cr_gmm  <- fit_wd_gym_cr_summary_gmm_wd |> filter(grepl("beta", variable))
+beta_gym_cr_gmm
+
+
+tallo_reduced_nlr_df_gym_cr <- tar_read(tallo_reduced_nlr_df_gym_cr)
+
+
+generate_p2 <- function(fit_wd_gym_cr_summary_gmm_wd, tallo_reduced_nlr_df_gym_cr) {
+  # Filter the beta parameters from the fit data
+  beta_gym_cr_gmm <- fit_wd_gym_cr_summary_gmm_wd |> filter(grepl("beta", variable))
+  
+  # Filter Gymnosperm data from the tallo data
+  gym_cr_df <- tallo_reduced_nlr_df_gym_cr |> filter(division == "Gymnosperm")
+  
+  # Create species ID mapping
+  sp_id_mapping_gym <- gym_cr_df |> 
+    select(sp) |> 
+    distinct() |> 
+    mutate(sp_id = row_number())
+  
+  # Process beta parameters into log_a, b, and k
+  gymnosperm_parameters <- beta_gym_cr_gmm |>
+    mutate(param_type = case_when(
+      grepl("\\[.*,1\\]", variable) ~ "log_a",
+      grepl("\\[.*,2\\]", variable) ~ "b",
+      grepl("\\[.*,3\\]", variable) ~ "k"
+    )) |>
+    mutate(sp_id = as.numeric(gsub("beta\\[|,.*", "", variable)))
+  
+  # Pivot the parameters into wide format
+  gymnosperm_params_wide <- gymnosperm_parameters |>
+    pivot_wider(
+      names_from = param_type,
+      values_from = mean,
+      id_cols = sp_id
+    )
+  
+  # Combine species parameters with the Gymnosperm data
+  gymnosperm_params_with_sp <- gymnosperm_params_wide |>
+    left_join(sp_id_mapping_gym, by = "sp_id")
+  
+  # Create the full dataset by joining the tree data and species parameters
+  gymnosperm_data_full <- gym_cr_df |>
+    left_join(gymnosperm_params_with_sp, by = "sp") |>
+    select(tree_id, sp, sp_id, dbh, cr, h, wd, log_a, b, k)
+  
+  # Summarize species data to calculate avg values
+  species_summary_gym <- gymnosperm_data_full |>
+    group_by(sp) |>
+    summarize(
+      avg_dbh = mean(dbh, na.rm = TRUE),
+      avg_log_a = mean(log_a, na.rm = TRUE),
+      avg_b = mean(b, na.rm = TRUE),
+      avg_k = mean(k, na.rm = TRUE),
+      avg_wd = mean(wd, na.rm = TRUE)
+    )
+  
+  # Calculate the 25% and 75% quantiles of WD
+  wd_quantiles_gym <- quantile(species_summary_gym$avg_wd, probs = c(0.25, 0.75), na.rm = TRUE)
+  
+  # Filter data for low and high WD species
+  low_wd_species_gym <- species_summary_gym |>
+    filter(abs(avg_wd - wd_quantiles_gym[1]) == min(abs(avg_wd - wd_quantiles_gym[1])))
+  high_wd_species_gym <- species_summary_gym |>
+    filter(abs(avg_wd - wd_quantiles_gym[2]) == min(abs(avg_wd - wd_quantiles_gym[2])))
+  
+  # Combine low and high WD data
+  wd_filtered_gym <- bind_rows(low_wd_species_gym, high_wd_species_gym)
+  
+  # Create DBH sequence
+  dbh_seq <- seq(min(species_summary_gym$avg_dbh), max(species_summary_gym$avg_dbh), length.out = 100)
+  
+  # Generate predictions for low and high WD
+  prediction_df_gym <- data.frame()
+  
+  for (i in 1:nrow(wd_filtered_gym)) {
+    sp <- wd_filtered_gym$sp[i]
+    avg_log_a <- wd_filtered_gym$avg_log_a[i]
+    avg_b <- wd_filtered_gym$avg_b[i]
+    avg_k <- wd_filtered_gym$avg_k[i]
+    avg_wd <- wd_filtered_gym$avg_wd[i]
+    
+    predicted_cr <- (exp(avg_log_a) * dbh_seq^avg_b) / (avg_k + dbh_seq^avg_b)
+    
+    temp_df <- data.frame(sp = sp, dbh = dbh_seq, predicted_cr = predicted_cr, avg_wd = avg_wd)
+    prediction_df_gym <- rbind(prediction_df_gym, temp_df)
+  }
+  
+  # Plot
+  p2 <- ggplot(prediction_df_gym, aes(x = dbh, y = predicted_cr, group = avg_wd, color = as.factor(round(avg_wd, 2)))) +
+    geom_line(alpha = 0.7) +
+    scale_color_manual(values = c("#f48d10", "#7f590e"), labels = c("Light WD species", "Dense WD species")) +
+    labs(x = "DBH", y = "Crown Radius", color = "WD Quantiles") +  # Removed units from labels
+    theme_minimal() +
+    theme(
+      legend.title = element_text(size = 12),
+      plot.title = element_text(size = 14),
+      axis.text = element_blank()  # Remove axis tick labels
+    )
+  
+  return(p2)
+}
+
+# Now call the function using the fit data and tallo data
+p2 <- generate_p2(fit_wd_gym_cr_summary_gmm_wd, tallo_reduced_nlr_df_gym_cr)
+print(p2)
+```
+
+
+## p3
+```{r}
+fit_wd_ang_h_summary_weibull_wd <- tar_read(fit_wd_ang_h_summary_weibull_wd)
+fit_wd_ang_h_summary_weibull_wd
+
+beta_ang_h_wb  <- fit_wd_ang_h_summary_weibull_wd |> filter(grepl("beta", variable))
+beta_ang_h_wb
+
+
+tallo_reduced_nlr_df_ang_h <- tar_read(tallo_reduced_nlr_df_ang_h)
+tallo_reduced_nlr_df_ang_h
+
+
+generate_p3 <- function(fit_wd_ang_h_summary_weibull_wd, tallo_reduced_nlr_df_ang_h) {
+  # Filter the beta parameters from the fit data
+  beta_ang_h_wb <- fit_wd_ang_h_summary_weibull_wd |> filter(grepl("beta", variable))
+  
+  # Filter Angiosperm data from the tallo data
+  ang_h_df <- tallo_reduced_nlr_df_ang_h |> filter(division == "Angiosperm")
+  
+  # Create species ID mapping
+  sp_id_mapping_ang <- ang_h_df |>
+    select(sp) |>
+    distinct() |>
+    mutate(sp_id = row_number())
+  
+  # Process beta parameters into log_a, b, and k
+  beta_ang_h_weibull <- beta_ang_h_wb |>
+    mutate(param_type = case_when(
+      grepl("\\[.*,1\\]", variable) ~ "log_a",
+      grepl("\\[.*,2\\]", variable) ~ "b",
+      grepl("\\[.*,3\\]", variable) ~ "k"
+    )) |>
+    mutate(sp_id = as.numeric(gsub("beta\\[|,.*", "", variable)))
+  
+  # Pivot the parameters into wide format
+  angiosperm_params_wide <- beta_ang_h_weibull |>
+    pivot_wider(
+      names_from = param_type,
+      values_from = mean,
+      id_cols = sp_id
+    )
+  
+  # Combine species parameters with the Angiosperm data
+  angiosperm_params_with_sp <- angiosperm_params_wide |>
+    left_join(sp_id_mapping_ang, by = "sp_id")
+  
+  # Create the full dataset by joining the tree data and species parameters
+  angiosperm_data_full <- ang_h_df |>
+    left_join(angiosperm_params_with_sp, by = "sp") |>
+    select(tree_id, sp, sp_id, dbh, h, wd, log_a, b, k)
+  
+  # Summarize species data to calculate avg values
+  species_summary_ang <- angiosperm_data_full |>
+    group_by(sp) |>
+    summarize(
+      avg_dbh = mean(dbh, na.rm = TRUE),
+      avg_h = mean(h, na.rm = TRUE),
+      avg_log_a = mean(log_a, na.rm = TRUE),
+      avg_b = mean(b, na.rm = TRUE),
+      avg_k = mean(k, na.rm = TRUE),
+      avg_wd = mean(wd, na.rm = TRUE)
+    )
+  
+  # Calculate the 25% and 75% quantiles of WD
+  wd_quantiles_ang <- quantile(species_summary_ang$avg_wd, probs = c(0.25, 0.75), na.rm = TRUE)
+  
+  # Filter data for low and high WD species
+  low_wd_species_ang <- species_summary_ang |>
+    filter(abs(avg_wd - wd_quantiles_ang[1]) == min(abs(avg_wd - wd_quantiles_ang[1])))
+  high_wd_species_ang <- species_summary_ang |>
+    filter(abs(avg_wd - wd_quantiles_ang[2]) == min(abs(avg_wd - wd_quantiles_ang[2])))
+  
+  # Combine low and high WD data
+  wd_filtered_ang <- bind_rows(low_wd_species_ang, high_wd_species_ang)
+  
+  # Create DBH sequence
+  dbh_seq <- seq(min(species_summary_ang$avg_dbh), max(species_summary_ang$avg_dbh), length.out = 100)
+  
+  # Generate height predictions for low and high WD
+  prediction_df_ang <- data.frame()
+  
+  for (i in 1:nrow(wd_filtered_ang)) {
+    sp <- wd_filtered_ang$sp[i]
+    avg_log_a <- wd_filtered_ang$avg_log_a[i]
+    avg_b <- wd_filtered_ang$avg_b[i]
+    avg_k <- wd_filtered_ang$avg_k[i]
+    avg_wd <- wd_filtered_ang$avg_wd[i]
+    
+    predicted_h <- exp(avg_log_a) * (1 - exp(-avg_b * dbh_seq^avg_k))
+    
+    temp_df <- data.frame(sp = sp, dbh = dbh_seq, predicted_h = predicted_h, avg_wd = avg_wd)
+    prediction_df_ang <- rbind(prediction_df_ang, temp_df)
+  }
+  
+  # Plot
+  p3 <- ggplot(prediction_df_ang, aes(x = dbh, y = predicted_h, group = avg_wd, color = as.factor(round(avg_wd, 2)))) +
+    geom_line(alpha = 0.7) +
+    scale_color_manual(values = c("#f48d10", "#7f590e"), labels = c("Light WD species", "Dense WD species")) +
+    labs(x = "DBH", y = "Height", color = "WD Quantiles") +
+    theme_minimal() +
+    theme(
+      legend.title = element_text(size = 12),
+      plot.title = element_text(size = 14),
+      axis.text = element_blank()  # Remove axis tick labels
+    )
+  
+  return(p3)
+}
+
+p3 <- generate_p3(fit_wd_ang_h_summary_weibull_wd, tallo_reduced_nlr_df_ang_h)
+print(p3)
+```
+
+
+# 3 function in 1
+```{r}
+
+generate_wd_ef <- function(fit_wd_ang_cr_summary_pl_wd, tallo_reduced_lr_df_ang_cr,
+                           fit_wd_gym_cr_summary_gmm_wd, tallo_reduced_nlr_df_gym_cr,
+                           fit_wd_ang_h_summary_weibull_wd, tallo_reduced_nlr_df_ang_h) {
+  
+  generate_p1 <- function() {
+    beta_ang_cr_pl <- fit_wd_ang_cr_summary_pl_wd |> filter(grepl("beta", variable))
+    ang_cr_df <- tallo_reduced_lr_df_ang_cr |> filter(division == "Angiosperm")
+    sp_id_mapping <- ang_cr_df |> select(sp) |> distinct() |> mutate(sp_id = row_number())
+    angiosperm_parameters <- beta_ang_cr_pl |>
+      mutate(param_type = case_when(
+        grepl("1,", variable) ~ "log_a",
+        grepl("2,", variable) ~ "b"
+      )) |>
+      mutate(sp_id = rep(1:(nrow(beta_ang_cr_pl) / 2), each = 2))
+    angiosperm_params_wide <- angiosperm_parameters |>
+      pivot_wider(names_from = param_type, values_from = mean, id_cols = sp_id)
+    angiosperm_params_with_sp <- angiosperm_params_wide |>
+      left_join(sp_id_mapping, by = "sp_id")
+    angiosperm_data_full <- ang_cr_df |>
+      left_join(angiosperm_params_with_sp, by = "sp") |>
+      select(tree_id, sp, sp_id, dbh, cr, h, wd, log_a, b)
+    species_summary <- angiosperm_data_full |>
+      group_by(sp) |>
+      summarize(avg_dbh = mean(dbh, na.rm = TRUE), avg_log_a = mean(log_a, na.rm = TRUE),
+                avg_b = mean(b, na.rm = TRUE), avg_wd = mean(wd, na.rm = TRUE))
+    wd_quantiles <- quantile(species_summary$avg_wd, probs = c(0.25, 0.75), na.rm = TRUE)
+    low_wd_species <- species_summary |> filter(abs(avg_wd - wd_quantiles[1]) == min(abs(avg_wd - wd_quantiles[1])))
+    high_wd_species <- species_summary |> filter(abs(avg_wd - wd_quantiles[2]) == min(abs(avg_wd - wd_quantiles[2])))
+    wd_filtered <- bind_rows(low_wd_species, high_wd_species)
+    dbh_seq <- seq(min(species_summary$avg_dbh), max(species_summary$avg_dbh), length.out = 100)
+    prediction_df <- data.frame()
+    for (i in 1:nrow(wd_filtered)) {
+      sp <- wd_filtered$sp[i]
+      avg_log_a <- wd_filtered$avg_log_a[i]
+      avg_b <- wd_filtered$avg_b[i]
+      avg_wd <- wd_filtered$avg_wd[i]
+      predicted_cr <- exp(avg_log_a) * (dbh_seq ^ avg_b)
+      temp_df <- data.frame(sp = sp, dbh = dbh_seq, predicted_cr = predicted_cr, avg_wd = avg_wd)
+      prediction_df <- rbind(prediction_df, temp_df)
+    }
+    p1 <- ggplot(prediction_df, aes(x = dbh, y = predicted_cr, group = avg_wd, color = as.factor(round(avg_wd, 2)))) +
+      geom_line(alpha = 0.7) +
+      scale_color_manual(values = c("#f48d10", "#7f590e"), labels = c("Light WD species", "Dense WD species")) +
+      labs(x = "DBH", y = "Crown Radius", color = "WD Quantiles") +
+      theme_minimal() +
+      theme(legend.title = element_text(size = 12), plot.title = element_text(size = 14), axis.text = element_blank())
+    return(p1)
+  }
+  
+  generate_p2 <- function() {
+    beta_gym_cr_gmm <- fit_wd_gym_cr_summary_gmm_wd |> filter(grepl("beta", variable))
+    gym_cr_df <- tallo_reduced_nlr_df_gym_cr |> filter(division == "Gymnosperm")
+    sp_id_mapping_gym <- gym_cr_df |> select(sp) |> distinct() |> mutate(sp_id = row_number())
+    gymnosperm_parameters <- beta_gym_cr_gmm |>
+      mutate(param_type = case_when(
+        grepl("\\[.*,1\\]", variable) ~ "log_a",
+        grepl("\\[.*,2\\]", variable) ~ "b",
+        grepl("\\[.*,3\\]", variable) ~ "k"
+      )) |>
+      mutate(sp_id = as.numeric(gsub("beta\\[|,.*", "", variable)))
+    gymnosperm_params_wide <- gymnosperm_parameters |>
+      pivot_wider(names_from = param_type, values_from = mean, id_cols = sp_id)
+    gymnosperm_params_with_sp <- gymnosperm_params_wide |>
+      left_join(sp_id_mapping_gym, by = "sp_id")
+    gymnosperm_data_full <- gym_cr_df |>
+      left_join(gymnosperm_params_with_sp, by = "sp") |>
+      select(tree_id, sp, sp_id, dbh, cr, h, wd, log_a, b, k)
+    species_summary_gym <- gymnosperm_data_full |>
+      group_by(sp) |>
+      summarize(avg_dbh = mean(dbh, na.rm = TRUE), avg_log_a = mean(log_a, na.rm = TRUE),
+                avg_b = mean(b, na.rm = TRUE), avg_k = mean(k, na.rm = TRUE), avg_wd = mean(wd, na.rm = TRUE))
+    wd_quantiles_gym <- quantile(species_summary_gym$avg_wd, probs = c(0.25, 0.75), na.rm = TRUE)
+    low_wd_species_gym <- species_summary_gym |> filter(abs(avg_wd - wd_quantiles_gym[1]) == min(abs(avg_wd - wd_quantiles_gym[1])))
+    high_wd_species_gym <- species_summary_gym |> filter(abs(avg_wd - wd_quantiles_gym[2]) == min(abs(avg_wd - wd_quantiles_gym[2])))
+    wd_filtered_gym <- bind_rows(low_wd_species_gym, high_wd_species_gym)
+    dbh_seq <- seq(min(species_summary_gym$avg_dbh), max(species_summary_gym$avg_dbh), length.out = 100)
+    prediction_df_gym <- data.frame()
+    for (i in 1:nrow(wd_filtered_gym)) {
+      sp <- wd_filtered_gym$sp[i]
+      avg_log_a <- wd_filtered_gym$avg_log_a[i]
+      avg_b <- wd_filtered_gym$avg_b[i]
+      avg_k <- wd_filtered_gym$avg_k[i]
+      avg_wd <- wd_filtered_gym$avg_wd[i]
+      predicted_cr <- (exp(avg_log_a) * dbh_seq^avg_b) / (avg_k + dbh_seq^avg_b)
+      temp_df <- data.frame(sp = sp, dbh = dbh_seq, predicted_cr = predicted_cr, avg_wd = avg_wd)
+      prediction_df_gym <- rbind(prediction_df_gym, temp_df)
+    }
+    p2 <- ggplot(prediction_df_gym, aes(x = dbh, y = predicted_cr, group = avg_wd, color = as.factor(round(avg_wd, 2)))) +
+      geom_line(alpha = 0.7) +
+      scale_color_manual(values = c("#f48d10", "#7f590e"), labels = c("Light WD species", "Dense WD species")) +
+      labs(x = "DBH", y = "Crown Radius", color = "WD Quantiles") +
+      theme_minimal() +
+      theme(legend.title = element_text(size = 12), plot.title = element_text(size = 14), axis.text = element_blank())
+    return(p2)
+  }
+  
+  generate_p3 <- function() {
+    beta_ang_h_wb <- fit_wd_ang_h_summary_weibull_wd |> filter(grepl("beta", variable))
+    ang_h_df <- tallo_reduced_nlr_df_ang_h |> filter(division == "Angiosperm")
+    sp_id_mapping_ang <- ang_h_df |> select(sp) |> distinct() |> mutate(sp_id = row_number())
+    beta_ang_h_weibull <- beta_ang_h_wb |>
+      mutate(param_type = case_when(
+        grepl("\\[.*,1\\]", variable) ~ "log_a",
+        grepl("\\[.*,2\\]", variable) ~ "b",
+        grepl("\\[.*,3\\]", variable) ~ "k"
+      )) |>
+      mutate(sp_id = as.numeric(gsub("beta\\[|,.*", "", variable)))
+    angiosperm_params_wide <- beta_ang_h_weibull |>
+      pivot_wider(names_from = param_type, values_from = mean, id_cols = sp_id)
+    angiosperm_params_with_sp <- angiosperm_params_wide |>
+      left_join(sp_id_mapping_ang, by = "sp_id")
+    angiosperm_data_full <- ang_h_df |>
+      left_join(angiosperm_params_with_sp, by = "sp") |>
+      select(tree_id, sp, sp_id, dbh, h, wd, log_a, b, k)
+    species_summary_ang <- angiosperm_data_full |>
+      group_by(sp) |>
+      summarize(avg_dbh = mean(dbh, na.rm = TRUE), avg_h = mean(h, na.rm = TRUE),
+                avg_log_a = mean(log_a, na.rm = TRUE), avg_b = mean(b, na.rm = TRUE),
+                avg_k = mean(k, na.rm = TRUE), avg_wd = mean(wd, na.rm = TRUE))
+    wd_quantiles_ang <- quantile(species_summary_ang$avg_wd, probs = c(0.25, 0.75), na.rm = TRUE)
+    low_wd_species_ang <- species_summary_ang |>
+      filter(abs(avg_wd - wd_quantiles_ang[1]) == min(abs(avg_wd - wd_quantiles_ang[1])))
+    high_wd_species_ang <- species_summary_ang |>
+      filter(abs(avg_wd - wd_quantiles_ang[2]) == min(abs(avg_wd - wd_quantiles_ang[2])))
+    wd_filtered_ang <- bind_rows(low_wd_species_ang, high_wd_species_ang)
+    dbh_seq <- seq(min(species_summary_ang$avg_dbh), max(species_summary_ang$avg_dbh), length.out = 100)
+    prediction_df_ang <- data.frame()
+    for (i in 1:nrow(wd_filtered_ang)) {
+      sp <- wd_filtered_ang$sp[i]
+      avg_log_a <- wd_filtered_ang$avg_log_a[i]
+      avg_b <- wd_filtered_ang$avg_b[i]
+      avg_k <- wd_filtered_ang$avg_k[i]
+      avg_wd <- wd_filtered_ang$avg_wd[i]
+      predicted_h <- exp(avg_log_a) * (1 - exp(-avg_b * dbh_seq^avg_k))
+      temp_df <- data.frame(sp = sp, dbh = dbh_seq, predicted_h = predicted_h, avg_wd = avg_wd)
+      prediction_df_ang <- rbind(prediction_df_ang, temp_df)
+    }
+    p3 <- ggplot(prediction_df_ang, aes(x = dbh, y = predicted_h, group = avg_wd, color = as.factor(round(avg_wd, 2)))) +
+      geom_line(alpha = 0.7) +
+      scale_color_manual(values = c("#f48d10", "#7f590e"), labels = c("Light WD species", "Dense WD species")) +
+      labs(x = "DBH", y = "Height", color = "WD Quantiles") +
+      theme_minimal() +
+      theme(legend.title = element_text(size = 12), plot.title = element_text(size = 14), axis.text = element_blank())
+    return(p3)
+  }
+  
+  # Generate all three plots
+  p1 <- generate_p1()
+  p2 <- generate_p2()
+  p3 <- generate_p3()
+  
+  # return(list(p1 = p1, p2 = p2, p3 = p3))
+  p <- p1 + p2 + p3 + plot_layout(nrow = 1)
+
+  return(p)
+}
+
+# Usage
+p <- generate_wd_ef(fit_wd_ang_cr_summary_pl_wd, tallo_reduced_lr_df_ang_cr,
+                        fit_wd_gym_cr_summary_gmm_wd, tallo_reduced_nlr_df_gym_cr,
+                        fit_wd_ang_h_summary_weibull_wd, tallo_reduced_nlr_df_ang_h)
+
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```

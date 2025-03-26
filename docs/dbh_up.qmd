@@ -1,0 +1,233 @@
+---
+title: "Comparing DBH models"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: coderpro
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/workspaces/tree-allometry")
+```
+
+```{r global_options, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+```
+
+
+```{r, include=FALSE}
+library(targets)
+library(tidyverse)
+library(ggplot2)
+options(width = 120)
+```
+
+# Read in data
+
+```{r}
+loo_tbl <- tar_read(loo_tbl)
+print(loo_tbl, n = Inf)
+
+dbh_models <- loo_tbl |> 
+  filter(grepl("dbh($|1|2|3)", model)) |> 
+  arrange(looic)
+dbh_models
+
+```
+
+```{r}
+# Extract relevant data for model 1 (loo_dbh)
+stan_data_lr_dbh <- tar_read(stan_data_lr_dbh)
+str(stan_data_lr_dbh)
+
+log_y <- stan_data_lr_dbh$log_y
+log_x_cr <- stan_data_lr_dbh$log_x[, 2]
+log_x_h <- stan_data_lr_dbh$log_x[, 3]
+sp <- as.factor(stan_data_lr_dbh$jj)
+
+# Read in the model summary for model 
+dbh_nou_summary <- tar_read(fit_lr2_summary_power_law1_nou_dbh)
+dbh_nou_summary
+
+# Filter rows where the variable is "beta"
+beta <- dbh_nou_summary |>
+  filter(grepl("beta", variable))
+
+beta
+
+log_a <- beta |> filter(str_detect(variable, "beta\\[1,\\d+\\]")) |> pull(q50)
+b_cr <- beta |> filter(str_detect(variable, "beta\\[2,\\d+\\]")) |> pull(q50)
+b_h <- beta |> filter(str_detect(variable, "beta\\[3,\\d+\\]")) |> pull(q50)
+
+# Compute fitted values for DBH using the power law formula
+fitted_log_y_dbh <- sapply(1:length(log_a), function(i) {
+  log_a[i] + b_cr[i] * log_x_cr + b_h[i] * log_x_h
+})
+
+fitted_dbh <- exp(fitted_log_y_dbh)
+
+gamma <- dbh_nou_summary |>
+  filter(grepl("gamma", variable))
+gamma
+
+# Calculate community-level fitted line by averaging the species-level coefficients
+community_log_a <- gamma |> filter(variable == "gamma[1]") |> pull(q50)
+community_b_cr <- gamma |> filter(variable == "gamma[2]") |> pull(q50)
+community_b_h <- gamma |> filter(variable == "gamma[3]") |> pull(q50)
+
+community_fitted_log_y_dbh <- community_log_a + community_b_cr * log_x_cr + community_b_h * log_x_h
+community_fitted_DBH <- exp(community_fitted_log_y_dbh)
+
+# Create a data frame for plotting
+data_dbh <- data.frame(DBH = exp(log_y), CR = exp(log_x_cr), H = exp(log_x_h), sp = sp)
+data_dbh$community_fitted_DBH <- community_fitted_DBH
+head(data_dbh)
+
+# Add species-specific fitted values to the data frame
+for (i in 1:length(log_a)) {
+  data_dbh[[paste0("fitted_DBH_sp_", i)]] <- fitted_dbh[, i]
+}
+
+# Compute CR^b and H^c for each observation
+data_dbh$CR_b <- data_dbh$CR^community_b_cr
+data_dbh$H_c <- data_dbh$H^community_b_h
+data_dbh$CR_H <- data_dbh$CR_b*data_dbh$H_c
+
+head(data_dbh)
+
+data_long <- reshape2::melt(data_dbh, id.vars = c("DBH", "CR_H", "sp", "community_fitted_DBH"), measure.vars = grep("fitted_DBH_sp_", names(data_dbh), value = TRUE))
+
+head(data_long)
+
+data_long <- data_long |> 
+  mutate(partial_residuals = DBH - value)
+
+
+data_summary <- data_long |> 
+  group_by(sp, CR_H) |> 
+  summarize(mean_residuals = mean(partial_residuals),
+            sd_residuals = sd(partial_residuals),
+            .groups = 'drop')me(legend.position = "none")
+
+head(data_summary)
+
+ggplot(data_summary, aes(x = CR_H, y = mean_residuals)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = mean_residuals - sd_residuals, ymax = mean_residuals + sd_residuals), width = 0.01) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "CR^b * H^c", y = "Partial Residuals") +
+  theme_minimal()
+
+```
+
+
+```{r}
+# Extract relevant data for model (stan_data_lr_dbh)
+stan_data_lr_dbh <- tar_read(stan_data_lr_dbh)
+str(stan_data_lr_dbh)
+# Ensure the correct indexing for variables
+log_y <- stan_data_lr_dbh$log_y
+log_x_cr <- stan_data_lr_dbh$log_x[, 2]  
+log_x_h <- stan_data_lr_dbh$log_x[, 3]   
+sp <- as.factor(stan_data_lr_dbh$jj)
+
+# Read in the model summary
+dbh_nou_summary <- tar_read(fit_lr2_summary_power_law1_nou_dbh)
+
+# Filter rows where the variable is "beta" and extract parameters
+beta <- dbh_nou_summary |> filter(grepl("beta", variable))
+
+log_a <- beta |> filter(str_detect(variable, "beta\\[1,\\d+\\]")) |> pull(q50)
+b_cr <- beta |> filter(str_detect(variable, "beta\\[2,\\d+\\]")) |> pull(q50)
+b_h <- beta |> filter(str_detect(variable, "beta\\[3,\\d+\\]")) |> pull(q50)
+
+# Compute fitted values for DBH in log scale using the multiple regression formula
+fitted_log_y_dbh <- sapply(1:length(log_a), function(i) {
+  log_a[i] + b_cr[i] * log_x_cr + b_h[i] * log_x_h
+})
+
+# Extract gamma values for community-level effects
+gamma <- dbh_nou_summary |> filter(grepl("gamma", variable))
+community_log_a <- gamma |> filter(variable == "gamma[1]") |> pull(q50)
+community_b_cr <- gamma |> filter(variable == "gamma[2]") |> pull(q50)
+community_b_h <- gamma |> filter(variable == "gamma[3]") |> pull(q50)
+
+# Calculate community-level fitted line in log scale
+community_fitted_log_y_dbh <- community_log_a + community_b_cr * log_x_cr + community_b_h * log_x_h
+
+# Create a data frame for plotting (log scale)
+data_dbh <- data.frame(log_DBH = log_y, log_CR = log_x_cr, log_H = log_x_h, sp = sp)
+data_dbh$community_fitted_log_DBH <- community_fitted_log_y_dbh
+
+# Add species-specific fitted values to the data frame
+for (i in 1:length(log_a)) {
+  data_dbh[[paste0("fitted_log_DBH_sp_", i)]] <- fitted_log_y_dbh[, i]
+}
+
+# Reshape data for plotting
+data_long <- reshape2::melt(data_dbh, id.vars = c("log_DBH", "log_CR", "log_H", "sp", "community_fitted_log_DBH"),
+                            measure.vars = grep("fitted_log_DBH_sp_", names(data_dbh), value = TRUE))
+
+head(data_long)
+
+dim(data_long)
+```
+
+
+
+# Visualization
+
+## Scatter Plot of Observed vs. Fitted Values
+```{r}
+> ggplot(data_long, aes(x = value, y = log_DBH, color = sp)) +
++   geom_point() +
++   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
++   labs(x = "Fitted Log(DBH)", y = "Observed Log(DBH)") +
++   theme_minimal() +
++   theme(legend.position = "none")
+```
+
+
+## Partial Residuals Plot
+```{r}
+data_long <- data_long |> 
+  mutate(partial_residuals = log_DBH - value)
+
+head(data_long)
+
+ggplot(data_long, aes(x = sp, y = partial_residuals, color = sp)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(x = "Species", y = "Partial Residuals (Log Scale)") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+```
+
+## Residuals vs. Fitted Plot
+
+```{r}
+ggplot(data_long, aes(x = value, y = partial_residuals, color = sp)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(x = "Fitted Log(DBH)", y = "Partial Residuals") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+```

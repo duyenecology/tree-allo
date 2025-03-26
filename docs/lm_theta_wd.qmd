@@ -1,0 +1,308 @@
+---
+title: "The relationships between tree architecture and wood density"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r global_options, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+```
+
+# Load the packages
+```{r}
+library(targets)
+library(targets)
+library(tidyverse)
+library(stringr)
+```
+
+# log(h) ~ log(dbh)
+```{r}
+p1 <- tar_read(fit_lm_summary_lm)
+p1
+p1$variable <- as.factor(p1$variable)
+ln_a1 <- p1 %>%
+  filter(str_detect(variable, "theta\\[.*,1\\]")) %>%
+  pull(mean)
+
+# Filter rows corresponding to slopes
+b1 <- p1 %>%
+  filter(str_detect(variable, "theta\\[.*,2\\]")) %>%
+  pull(mean)
+
+summary(ln_a1)
+summary(b1)
+
+```
+```{r}
+par(mfrow = c(1, 2))
+hist(ln_a1)
+hist(b1)
+```
+
+```{r}
+alpha1_1 <- p1[p1$variable == "alpha[1]", ]
+alpha2_1 <- p1[p1$variable == "alpha[2]", ]
+beta1_1 <- p1[p1$variable == "beta[1]", ]
+beta2_1 <- p1[p1$variable == "beta[2]", ]
+alpha1_1
+alpha2_1
+beta1_1
+beta2_1
+```
+
+r$> beta1_1
+# A tibble: 1 × 15
+  variable     mean     sd    mad    q2.5      q5     q25      q50     q75    q95  q97.5  rhat ess_bulk ess_tail .join_data
+  <fct>       <dbl>  <dbl>  <dbl>   <dbl>   <dbl>   <dbl>    <dbl>   <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>      <dbl>
+1 beta[1]  -0.00135 0.0137 0.0139 -0.0267 -0.0233 -0.0109 -0.00185 0.00789 0.0211 0.0274  1.00     381.     342.         NA
+
+r$> beta2_1
+# A tibble: 1 × 15
+  variable    mean     sd    mad    q2.5      q5     q25     q50    q75    q95  q97.5  rhat ess_bulk ess_tail .join_data
+  <fct>      <dbl>  <dbl>  <dbl>   <dbl>   <dbl>   <dbl>   <dbl>  <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>      <dbl>
+1 beta[2]  0.00899 0.0122 0.0125 -0.0166 -0.0109 0.00117 0.00857 0.0178 0.0283 0.0329  1.01     533.     411.         NA
+
+- Key findings: 
+
+
+## log(cr) ~ log(dbh)
+```{r}
+p2 <- tar_read(fit_lm_summary_lm)
+p2
+p2$variable <- as.factor(p2$variable)
+ln_a2 <- p2 %>%
+  filter(str_detect(variable, "theta\\[.*,1\\]")) %>%
+  pull(mean)
+beta <- p2 %>% filter(str_detect(variable, "beta\\[.*,1\\")) %>% pull(mean)
+# Filter rows corresponding to slopes
+b2 <- p2 %>%
+  filter(str_detect(variable, "theta\\[.*,2\\]")) %>%
+  pull(mean)
+
+summary(ln_a2)
+summary(b2)
+
+```
+```{r}
+par(mfrow = c(1, 2))
+hist(ln_a2)
+hist(b2)
+```
+
+```{r}
+alpha1_2 <- p2[p2$variable == "alpha[1]", ]
+alpha2_2 <- p2[p2$variable == "alpha[2]", ]
+beta1_2 <- p2[p2$variable == "beta[1]", ]
+beta2_2 <- p2[p2$variable == "beta[2]", ]
+alpha1_2
+alpha2_2
+beta1_2
+beta2_2
+```
+
+- beta1_2
+
+# A tibble: 1 × 15
+  variable    mean     sd    mad    q2.5      q5        q25     q50    q75    q95  q97.5  rhat ess_bulk ess_tail
+  <fct>      <dbl>  <dbl>  <dbl>   <dbl>   <dbl>      <dbl>   <dbl>  <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
+1 beta[1]  0.00868 0.0116 0.0129 -0.0147 -0.0113 -0.0000615 0.00900 0.0174 0.0269 0.0293  1.02     355.     299.
+# ℹ 1 more variable: .join_data <dbl>
+
+- beta2_2
+# A tibble: 1 × 15
+  variable     mean      sd     mad    q2.5      q5      q25      q50     q75     q95  q97.5  rhat ess_bulk
+  <fct>       <dbl>   <dbl>   <dbl>   <dbl>   <dbl>    <dbl>    <dbl>   <dbl>   <dbl>  <dbl> <dbl>    <dbl>
+1 beta[2]  -0.00322 0.00771 0.00831 -0.0166 -0.0151 -0.00891 -0.00350 0.00233 0.00931 0.0120  1.01     374.
+# ℹ 2 more variables: ess_tail <dbl>, .join_data <dbl>
+
+                   
+
+## log(dbh) ~ log(h) + log(cr)
+
+```{r}
+p3 <- tar_read(fit_lm_summary_lm)
+p3
+p3$variable <- as.factor(p3$variable)
+ln_a3 <- p3 %>%
+  filter(str_detect(variable, "theta\\[.*,1\\]")) %>%
+  pull(mean)
+
+# Filter rows corresponding to slopes
+b3 <- p3 %>%
+  filter(str_detect(variable, "theta\\[.*,2\\]")) %>%
+  pull(mean)
+
+summary(ln_a3)
+summary(b3)
+
+```
+```{r}
+par(mfrow = c(1, 2))
+hist(ln_a3)
+hist(b3)
+```
+
+```{r}
+alpha1_3 <- p3[p3$variable == "alpha[1]", ]
+alpha2_3 <- p3[p3$variable == "alpha[2]", ]
+beta1_3 <- p3[p3$variable == "beta[1]", ]
+beta2_3 <- p3[p3$variable == "beta[2]", ]
+alpha1_3
+alpha2_3
+beta1_3
+beta2_3
+```
+
+r$> beta1_3
+# A tibble: 1 × 15
+  variable     mean     sd    mad    q2.5      q5     q25      q50     q75    q95  q97.5  rhat ess_bulk ess_tail .join_data
+  <chr>       <dbl>  <dbl>  <dbl>   <dbl>   <dbl>   <dbl>    <dbl>   <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>      <dbl>
+1 beta[1]  -0.00338 0.0124 0.0122 -0.0279 -0.0241 -0.0114 -0.00350 0.00498 0.0171 0.0194  1.00     499.     374.         NA
+
+r$> beta2_3
+# A tibble: 1 × 15
+  variable   mean     sd    mad    q2.5       q5     q25     q50    q75    q95  q97.5  rhat ess_bulk ess_tail .join_data
+  <chr>     <dbl>  <dbl>  <dbl>   <dbl>    <dbl>   <dbl>   <dbl>  <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>      <dbl>
+1 beta[2]  0.0101 0.0109 0.0110 -0.0113 -0.00809 0.00289 0.00999 0.0176 0.0283 0.0322  1.00     434.     375.         NA
+
+
+```{r}
+p <- tar_read(fit_lm_summary_lm)
+p
+p$variable <- as.factor(p$variable)
+library(dplyr)
+
+# Extract theta1[i,1]
+theta1_1 <- p %>% 
+  filter(grepl("^theta1\\[.*,1\\]$", variable))
+
+# Extract theta1[i,2]
+theta1_2 <- p %>% 
+  filter(grepl("^theta1\\[.*,2\\]$", variable))
+
+# Extract alpha1[i]
+alpha1 <- p %>% 
+  filter(grepl("^alpha1\\[.*\\]$", variable))
+
+# Extract alpha2[i]
+alpha2 <- p %>% 
+  filter(grepl("^alpha2\\[.*\\]$", variable))
+
+# Extract alpha3[i]
+alpha3 <- p %>% 
+  filter(grepl("^alpha3\\[.*\\]$", variable))
+
+# Extract beta1[i]
+beta1 <- p %>% 
+  filter(grepl("^beta1\\[.*\\]$", variable))
+
+# Extract beta2[i]
+beta2 <- p %>% 
+  filter(grepl("^beta2\\[.*\\]$", variable))
+
+# Extract beta3[i]
+beta3 <- p %>% 
+  filter(grepl("^beta3\\[.*\\]$", variable))
+
+# Display the extracted data
+theta1_1
+theta1_2
+alpha1
+alpha2
+alpha3
+beta1
+beta2
+beta3
+```
+
+r$> beta1
+# A tibble: 2 × 15
+  variable     mean      sd     mad    q2.5      q5     q25      q50      q75     q95  q97.5  rhat ess_bulk ess_tail .join_data
+  <fct>       <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>    <dbl>    <dbl>   <dbl>  <dbl> <dbl>    <dbl>    <dbl>      <dbl>
+1 beta1[1] -0.00199 0.0122  0.0126  -0.0266 -0.0212 -0.0106 -0.00209 0.00637  0.0189  0.0230  1.00     447.     392.         NA
+2 beta1[2] -0.00537 0.00813 0.00789 -0.0204 -0.0173 -0.0107 -0.00598 0.000108 0.00846 0.0109  1.02     382.     313.         NA
+
+r$> beta2
+# A tibble: 2 × 15
+  variable     mean      sd     mad    q2.5      q5       q25      q50     q75     q95  q97.5  rhat ess_bulk ess_tail .join_data
+  <fct>       <dbl>   <dbl>   <dbl>   <dbl>   <dbl>     <dbl>    <dbl>   <dbl>   <dbl>  <dbl> <dbl>    <dbl>    <dbl>      <dbl>
+1 beta2[1]  0.00871 0.0116  0.0125  -0.0141 -0.0100 -0.000392  0.00850 0.0166  0.0276  0.0321  1.01     382.     341.         NA
+2 beta2[2] -0.00340 0.00804 0.00762 -0.0194 -0.0168 -0.00841  -0.00323 0.00188 0.00911 0.0119  1.00     418.     372.         NA
+
+r$> beta3
+# A tibble: 2 × 15
+  variable     mean      sd     mad     q2.5       q5      q25      q50     q75    q95  q97.5  rhat ess_bulk ess_tail .join_data
+  <fct>       <dbl>   <dbl>   <dbl>    <dbl>    <dbl>    <dbl>    <dbl>   <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>      <dbl>
+1 beta3[1] -0.00293 0.0125  0.0119  -0.0269  -0.0237  -0.0108  -0.00309 0.00505 0.0174 0.0209  1.01     383.     335.         NA
+2 beta3[2]  0.00925 0.00844 0.00868 -0.00628 -0.00471  0.00330  0.00951 0.0148  0.0226 0.0251  1.00     430.     304.         NA
+
+# Using multivariate normal distribution
+
+## log(cr) ~ log(dbh)
+```{r}
+p2 <- tar_read(fit_lm_summary_lm)
+```
+
+
+r$> p2
+# A tibble: 230,753 × 15
+   variable         mean       sd      mad       q2.5         q5        q25        q50        q75        q95      q97.5  rhat ess_bulk ess_tail .join_data
+   <fct>           <dbl>    <dbl>    <dbl>      <dbl>      <dbl>      <dbl>      <dbl>      <dbl>      <dbl>      <dbl> <dbl>    <dbl>    <dbl>      <dbl>
+ 1 lp__       72673.     35.6     35.9     72602.     72612.     72649.     72673.     72698.     72731.     72738.      1.01     128.     274.         NA
+ 2 Omega[1,1]     1       0        0           1          1          1          1          1          1          1      NA         NA       NA          NA
+ 3 tau[1]         0.249   0.00386  0.00377     0.241      0.242      0.246      0.249      0.251      0.255      0.256   1.00     428.     304.         NA
+ 4 gamma[1,1]    -0.198   0.00689  0.00744    -0.211     -0.210     -0.203     -0.199     -0.193     -0.187     -0.185   1.01     390.     266.         NA
+ 5 beta[1,1]      0.368   0.0393   0.0422      0.292      0.307      0.340      0.368      0.396      0.433      0.445   1.00     377.     282.         NA
+ 6 beta[2,1]      0.236   0.00428  0.00462     0.228      0.229      0.233      0.236      0.239      0.243      0.245   1.02     437.     124.         NA
+ 7 beta[3,1]      0.268   0.0303   0.0298      0.209      0.223      0.247      0.265      0.287      0.318      0.324   1.03     517.     215.         NA
+ 8 beta[4,1]      0.0544  0.00357  0.00379     0.0486     0.0489     0.0519     0.0545     0.0570     0.0598     0.0609  1.04     345.     313.         NA
+ 9 beta[5,1]      0.251   0.0185   0.0193      0.217      0.221      0.239      0.252      0.265      0.281      0.285   1.01     465.     229.         NA
+10 beta[6,1]      0.262   0.0120   0.0124      0.239      0.243      0.253      0.262      0.269      0.281      0.286   1.01     413.     268.         NA
+# ℹ 230,743 more rows
+# ℹ Use `print(n = ...)` to see more rows
+
+- Key findings:
+For the effect of wood density on log(cr) ~ log(dbh) relationship:
+The mean value of gamma is approximately -0.198 with a standard deviation of around 0.00689. The 95% credible interval ranges from approximately -0.211 to -0.185.
+Since the 95% credible interval does not include zero (-0.198 ± 0.013), it suggests that gamma is significantly different from zero.
+Suggesting that the effect of wood density (gamma) on the relationship between log(cr) and log(dbh) is statistically significant.
+
+```{r}
+beta <- p2 %>%
+  filter(str_detect(variable, "beta\\[.*,1\\]")) %>%
+  pull(mean)
+hist(beta)
+```
+
+```{r}
+# Calculate the number of beta values where the 95% CI includes zero
+num_beta_ci_include_zero <- sum(p2$q2.5 <= 0 & p2$q97.5 >= 0 & str_detect(p2$variable, "beta\\[.*,1\\]"))
+
+# Print the result
+print(num_beta_ci_include_zero)
+```
+
+[1] 514
+- Key findings:
+For the interaction between log(dbh) and wood density.
+There are 514 beta values where the 95% CI includes zero.
+This suggests that the interaction between log(dbh) and wood density (beta) does not significantly impact the relationship between log(cr) and log(dbh).

@@ -1,0 +1,58 @@
+---
+fontsize: 12pt
+geometry: margin=1in
+link-citations: true
+format:
+  pdf:
+    toc: false
+    keep-tex: true
+    latex-clean: false
+    pdf-engine: xelatex
+    include-in-header:
+      text: |
+        \usepackage[default]{sourcesanspro}
+        \usepackage{sourcecodepro}
+    prefer-html: true
+  docx:
+    toc: false
+    include-in-header:
+      text: |
+        \usepackage{sourcecodepro}
+---
+
+February 13, 2025
+
+Dear Editor,
+
+We here submit our manuscript, "Saturating allometric relationships reveal how wood density shapes global tree architecture," for consideration for publication in the *Journal of Forestry Research*.
+
+Selecting an appropriate allometric model is a critical step in estimating forest carbon biomass.
+However, developing precise allometric models across regions characterized by diverse tree species composition and varying forest structures remains a persistent challenge.
+
+In this study, we employed Bayesian hierarchical models and three alternative functional forms to characterize how the diameter at breast height, tree height, and crown radius scale with and without wood density as a species-level predictor.
+By leveraging a global dataset, we overcome the limitations of previous studies that often relied on site-specific or regional observations with limited samples and species.
+By integrating species-specific wood density into a multilevel framework, our methodology avoids the post-hoc correlations used in previous studies, offering a more universal and scalable model and effectively capturing variability from the species to the community level.
+
+Our results emphasize the importance of applying saturating functions for large trees to improve forest biomass estimates and show that wood density, while not always predictive at broad scales, illuminates the biomechanical and ecological constraints underlying diverse tree architectures.
+
+Relationships among tree-size variables are foundational to both ecological theory and practical forestry applications, informing everything from carbon stock estimation to dynamic vegetation modeling.
+Our findings offer practical pathways for integrating height- and crown-based metrics into existing carbon monitoring programs worldwide, which we believe would be of significant interest to broad readers.
+
+This manuscript is original, has not been published elsewhere, and is not under consideration by another journal.
+All authors have approved the submission and have no conflicts of interest to declare.
+The codes and data supporting the findings of this study will be deposited at Zenodo (<https://zenodo.org/>).
+Allometry data can be downloaded from <https://doi.org/10.5281/zenodo.6637599>, and wood density data can be requested from <https://www.try-db.org/TryWeb/Home.php>.
+
+Sincerely,
+
+Masatoshi Katabuchi
+
+On behalf of the authors:
+Thi Duyen Nguyen,
+Masatoshi Katabuchi
+
+Corresponding author and contact information:
+
+Key Laboratory of Tropical Forest Ecology, Xishuangbanna Tropical Botanical Garden, Chinese Academy of Sciences, Mengla, Yunnan 666303, China
+
+Email: katabuchi@xtbg.ac.cn; mattocci27@gmail.com

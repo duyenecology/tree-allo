@@ -1,0 +1,182 @@
+---
+title: "Checking the covariance between beta parameter of gmm_nou_h"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: coderpro
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r global_options, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+```
+
+# Load required packages 
+```{r}
+library(cmdstanr)
+library(posterior)
+library(targets)
+```
+
+# Data preparation
+```{r}
+gmm_nou_h <- tar_read(fit_nlr7_mcmc_gmm_nou_h)
+```
+
+# Extract correlations among each parameter 
+```{r}
+# Convert posterior samples to an array
+posterior_samples <- as_draws_array(gmm_nou_h$draws())
+
+# Number of posterior samples
+num_samples <- dim(posterior_samples)[1]
+print(num_samples)
+
+# Number of predictors (K)
+K <- 3  
+
+# Extract L_Sigma_beta samples
+# Adjust the regex pattern if the variable names differ
+L_Sigma_beta_samples <- posterior_samples[, , grep("^L_Sigma_beta", dimnames(posterior_samples)$variable)]
+
+# Initialize array to store covariance matrices
+cov_matrices <- array(NA, dim = c(K, K, num_samples))
+
+# Calculate covariance matrix for each sample
+for (i in 1:num_samples) {
+  L_Sigma_beta <- matrix(L_Sigma_beta_samples[i, , ], nrow = K, byrow = TRUE)
+  cov_matrices[, , i] <- L_Sigma_beta %*% t(L_Sigma_beta)
+  }
+
+```
+
+
+```{r}
+# Calculate the mean covariance matrix
+mean_cov_matrix <- apply(cov_matrices, c(1, 2), mean)
+
+# Print the mean covariance matrix
+print(mean_cov_matrix)
+
+# Calculate the mean correlation matrix
+mean_cor_matrix <- cov2cor(mean_cov_matrix)
+
+# Print the mean correlation matrix
+print(mean_cor_matrix)
+```
+
+# Interpretation:
+
+- Diagonal Element (Variance):
+Variance of beta1: 853.0958
+Variance of beta 2: 112.9586
+Variance of beta 3: 478.6792
+- Off-Diagonal Elements (Covariance):
+Covariance between beta1 and beta2: 306.1926
+Covariance between beta1 and beta3: 636.5709
+Covariance between beta2 and beta3: 230.3332
+- The Mean Correlation Matrix
+Correlation Coefficients:
+Correlation between beta1 and beta2: 0.9863616
+Correlation between beta1 and beta3: 0.9961519
+Correlation between beta2 and beta3: 0.9905461
+
+# Summary
+- All correlations are very high (close to 1), indicating strong positive relationship between beta parameters.
+- Betas move together strongly in the same direction (in gmm_nou_h model)
+
+# Checking 95% CI of the correlations coefficients
+```{r}
+# Calculate correlation matrices for each sample
+cor_matrices <- array(NA, dim = c(K, K, num_samples))
+for (i in 1:num_samples) {
+  L_Sigma_beta <- matrix(L_Sigma_beta_samples[i, , ], nrow = K, byrow = TRUE)
+  cov_matrix <- L_Sigma_beta %*% t(L_Sigma_beta)
+  cor_matrices[, , i] <- cov2cor(cov_matrix)
+}
+
+# Initialize matrices to store the lower and upper bounds of the 95% CI
+lower_ci <- matrix(NA, nrow = K, ncol = K)
+upper_ci <- matrix(NA, nrow = K, ncol = K)
+
+# Calculate the 95% CI for each correlation coefficient
+for (row in 1:K) {
+  for (col in 1:K) {
+    cor_values <- cor_matrices[row, col, ]
+    lower_ci[row, col] <- quantile(cor_values, probs = 0.025)
+    upper_ci[row, col] <- quantile(cor_values, probs = 0.975)
+  }
+}
+
+# Print the 95% CI for each correlation coefficient
+print(lower_ci)
+print(upper_ci)
+
+```
+
+
+
+
+```{r}
+# Assuming you have the posterior samples already extracted
+posterior_samples <- as_draws_array(gmm_h$draws())
+
+# Number of posterior samples
+num_samples <- dim(posterior_samples)[1]
+
+# Define the number of tree-level predictors (K)
+K <- 2
+
+# Extract L_Sigma_beta samples
+L_Sigma_beta_samples <- posterior_samples[, , grep("^L_Sigma_beta", dimnames(posterior_samples)$variable)]
+
+# Initialize array to store covariance matrices
+cov_matrices <- array(NA, dim = c(K, K, num_samples))
+
+# Calculate covariance matrix for each sample
+for (i in 1:num_samples) {
+  L_Sigma_beta <- matrix(L_Sigma_beta_samples[i, , ], nrow = K, byrow = TRUE)
+  cov_matrices[,,i] <- L_Sigma_beta %*% t(L_Sigma_beta)
+}
+
+# Calculate the mean covariance matrix
+mean_cov_matrix <- apply(cov_matrices, c(1, 2), mean)
+
+# Print the mean covariance matrix
+print(mean_cov_matrix)
+
+# Calculate the correlations
+mean_cor_matrix <- cov2cor(mean_cov_matrix)
+
+# Print the mean correlation matrix
+print(mean_cor_matrix)
+
+# Calculate 95% credible intervals for the correlations
+cor_samples <- array(NA, dim = c(K, K, num_samples))
+for (i in 1:num_samples) {
+  cor_samples[,,i] <- cov2cor(cov_matrices[,,i])
+}
+
+# Calculate the 95% credible intervals
+lower_ci <- apply(cor_samples, c(1, 2), function(x) quantile(x, 0.025))
+upper_ci <- apply(cor_samples, c(1, 2), function(x) quantile(x, 0.975))
+
+# Print the 95% credible intervals
+print(lower_ci)
+print(upper_ci)
+```

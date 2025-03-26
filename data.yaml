@@ -1,0 +1,176 @@
+ori_sample_size: '355,881'
+ori_species_number: '2,961'
+h_allometry:
+  angiosperm:
+    sample_size: '79,332'
+    species_number: '1,214'
+    trait_ranges:
+      dbh:
+        min: 1.0
+        max: 560.0
+      h:
+        min: 1.3
+        max: 94.0
+      wd:
+        min: 0.131
+        max: 1.17
+  gymnosperm:
+    sample_size: '6,306'
+    species_number: '76'
+    trait_ranges:
+      dbh:
+        min: 1.0
+        max: 648.0
+      h:
+        min: 1.3
+        max: 115.8
+      wd:
+        min: 0.32
+        max: 0.689
+cr_allometry:
+  angiosperm:
+    sample_size: '45,350'
+    species_number: '762'
+    trait_ranges:
+      dbh:
+        min: 1.0
+        max: 385.0
+      cr:
+        min: 0.05
+        max: 24.25
+      wd:
+        min: 0.131
+        max: 1.15
+  gymnosperm:
+    sample_size: '4,632'
+    species_number: '59'
+    trait_ranges:
+      dbh:
+        min: 1.0
+        max: 266.0
+      cr:
+        min: 0.1
+        max: 8.75
+      wd:
+        min: 0.32
+        max: 0.689
+dbh_allometry:
+  angiosperm:
+    sample_size: '41,713'
+    species_number: '744'
+    trait_ranges:
+      dbh:
+        min: 1.0
+        max: 385.0
+      cr:
+        min: 0.1
+        max: 24.25
+      h:
+        min: 1.3
+        max: 70.6
+      wd:
+        min: 0.131
+        max: 1.15
+  gymnosperm:
+    sample_size: '3,661'
+    species_number: '56'
+    trait_ranges:
+      dbh:
+        min: 1.0
+        max: 266.0
+      cr:
+        min: 0.1
+        max: 10.65
+      h:
+        min: 1.3
+        max: 46.2
+      wd:
+        min: 0.32
+        max: 0.651
+dbh1_allometry:
+  angiosperm:
+    sample_size: '41,733'
+    species_number: '743'
+    trait_ranges:
+      dbh:
+        min: 1.0
+        max: 385.0
+      cr:
+        min: 0.1
+        max: 24.25
+      h:
+        min: 1.3
+        max: 70.6
+      wd:
+        min: 0.131
+        max: 1.15
+  gymnosperm:
+    sample_size: '3,716'
+    species_number: '56'
+    trait_ranges:
+      dbh:
+        min: 1.0
+        max: 266.0
+      cr:
+        min: 0.15
+        max: 10.65
+      h:
+        min: 1.5
+        max: 53.9
+      wd:
+        min: 0.32
+        max: 0.651
+dbh2_allometry:
+  angiosperm:
+    sample_size: '41,733'
+    species_number: '744'
+    trait_ranges:
+      dbh:
+        min: 1.0
+        max: 385.0
+      cr:
+        min: 0.1
+        max: 24.25
+      wd:
+        min: 0.131
+        max: 1.15
+  gymnosperm:
+    sample_size: '3,702'
+    species_number: '56'
+    trait_ranges:
+      dbh:
+        min: 1.0
+        max: 266.0
+      cr:
+        min: 0.15
+        max: 8.75
+      wd:
+        min: 0.32
+        max: 0.651
+dbh3_allometry:
+  angiosperm:
+    sample_size: '41,689'
+    species_number: '746'
+    trait_ranges:
+      dbh:
+        min: 1.0
+        max: 385.0
+      h:
+        min: 1.3
+        max: 70.6
+      wd:
+        min: 0.131
+        max: 1.15
+  gymnosperm:
+    sample_size: '3,648'
+    species_number: '55'
+    trait_ranges:
+      dbh:
+        min: 1.0
+        max: 266.0
+      h:
+        min: 1.5
+        max: 46.2
+      wd:
+        min: 0.32
+        max: 0.651

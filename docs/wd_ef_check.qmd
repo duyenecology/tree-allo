@@ -1,0 +1,501 @@
+---
+title: "Checking Wood density's effect plot"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = TRUE, message = TRUE)
+knitr::opts_knit$set(root.dir = here::here())
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+
+```
+
+```{r, include=FALSE}
+library(ggplot2)
+library(targets)
+library(tidyverse)
+library(patchwork)
+source("R/figs.R")
+options(width = 150)
+
+```
+
+# WD vs. CR-DBH
+
+## Angiosperm
+
+### No CIs
+```{r}
+sp_posterior_cr_ang_df_wd <- tar_read(sp_posterior_cr_ang_df_wd)
+head(sp_posterior_cr_ang_df_wd)
+
+tallo_reduced_lr_df_ang_cr <- tar_read(tallo_reduced_lr_df_ang_cr)
+
+ang_cr_post <- tallo_reduced_lr_df_ang_cr |>
+  filter(division == "Angiosperm") |>
+  left_join(sp_posterior_cr_ang_df_wd, by = "sp") |>
+  select(tree_id, sp, dbh, h, cr, wd, a, b) |>
+  mutate(
+    a = as.numeric(sub(" .*", "", a)),
+    b = as.numeric(sub(" .*", "", b))
+  )
+
+ang_cr_post
+summary(ang_cr_post)
+
+wd_quantiles <- quantile(ang_cr_post$wd, probs = c(0.1, 0.9), na.rm = TRUE)
+
+light_wood <- ang_cr_post |>
+  filter(wd < wd_quantiles[1])
+
+dense_wood <- ang_cr_post |>
+  filter(wd > wd_quantiles[2])
+
+dbh_seq <- seq(1, 150, length.out = 100)
+
+mean_light_wood <- light_wood |>
+  summarise(across(c(a, b), mean, na.rm = TRUE))
+
+mean_dense_wood <- dense_wood |>
+  summarise(across(c(a, b), mean, na.rm = TRUE))
+
+predicted_cr_light <- mean_light_wood$a * dbh_seq^mean_light_wood$b
+predicted_cr_dense <- mean_dense_wood$a * dbh_seq^mean_dense_wood$b
+
+prediction_df_mean <- data.frame(
+  dbh = rep(dbh_seq, 2),
+  predicted_cr = c(predicted_cr_light, predicted_cr_dense),
+  wood_type = rep(c("Light WD species", "Dense WD species"), each = length(dbh_seq))
+)
+
+ggplot(prediction_df_mean, aes(x = dbh, y = predicted_cr, color = wood_type)) +
+  geom_line(alpha = 0.9) +
+  scale_color_manual(values = c("Light WD species" = "#f48d10", "Dense WD species" = "#7f590e")) +
+  labs(
+    x = "DBH (cm)",
+    y = "Crown Radius (m)",
+    color = "Wood Density"
+  ) +
+  my_theme()
+
+
+```
+
+### Adding CIs
+
+```{r}
+sp_posterior_cr_ang_df_wd <- tar_read(sp_posterior_cr_ang_df_wd)
+tallo_reduced_lr_df_ang_cr <- tar_read(tallo_reduced_lr_df_ang_cr)
+
+
+ang_cr_post <- tallo_reduced_lr_df_ang_cr |>
+  filter(division == "Angiosperm") |>
+  left_join(sp_posterior_cr_ang_df_wd, by = "sp") |>
+  select(tree_id, sp, dbh, h, cr, wd, a, b) |>
+  mutate(
+    a_median = as.numeric(str_extract(a, "^[^ ]+")),
+    b_median = as.numeric(str_extract(b, "^[^ ]+")),
+    
+    a_lower = as.numeric(str_extract(a, "(?<=\\().*?(?=,)")),
+    b_lower = as.numeric(str_extract(b, "(?<=\\().*?(?=,)")),
+    
+    a_upper = as.numeric(str_extract(a, "(?<=,).*?(?=\\))")),
+    b_upper = as.numeric(str_extract(b, "(?<=,).*?(?=\\))"))
+  ) |>
+  dplyr::select(-a, - b)
+
+ang_cr_post
+summary(ang_cr_post)
+
+light_wood <- ang_cr_post |>
+  filter(wd < quantile(ang_cr_post$wd, probs = 0.1, na.rm = TRUE))
+
+dense_wood <- ang_cr_post |>
+  filter(wd > quantile(ang_cr_post$wd, probs = 0.9, na.rm = TRUE))
+
+
+mean_light_wood <- light_wood |>
+  summarise(
+    a_median = mean(a_median, na.rm = TRUE),
+    b_median = mean(b_median, na.rm = TRUE),
+    a_lower = mean(a_lower, na.rm = TRUE),
+    b_lower = mean(b_lower, na.rm = TRUE),
+    a_upper = mean(a_upper, na.rm = TRUE),
+    b_upper = mean(b_upper, na.rm = TRUE)
+  )
+
+mean_dense_wood <- dense_wood |>
+  summarise(
+    a_median = mean(a_median, na.rm = TRUE),
+    b_median = mean(b_median, na.rm = TRUE),
+    a_lower = mean(a_lower, na.rm = TRUE),
+    b_lower = mean(b_lower, na.rm = TRUE),
+    a_upper = mean(a_upper, na.rm = TRUE),
+    b_upper = mean(b_upper, na.rm = TRUE)
+  )
+
+dbh_seq <- seq(1, 100, length.out = 100)
+
+predicted_cr_light <- mean_light_wood$a_median * dbh_seq^mean_light_wood$b_median
+predicted_cr_dense <- mean_dense_wood$a_median * dbh_seq^mean_dense_wood$b_median
+
+# Calculate CI bounds for both wood types using lower and upper values of a and b
+predicted_cr_light_lower <- mean_light_wood$a_lower * dbh_seq^mean_light_wood$b_lower
+predicted_cr_light_upper <- mean_light_wood$a_upper * dbh_seq^mean_light_wood$b_upper
+
+predicted_cr_dense_lower <- mean_dense_wood$a_lower * dbh_seq^mean_dense_wood$b_lower
+predicted_cr_dense_upper <- mean_dense_wood$a_upper * dbh_seq^mean_dense_wood$b_upper
+
+prediction_df_mean <- data.frame(
+  dbh = rep(dbh_seq, 2),
+  predicted_cr = c(predicted_cr_light, predicted_cr_dense),
+  predicted_cr_lower = c(predicted_cr_light_lower, predicted_cr_dense_lower),
+  predicted_cr_upper = c(predicted_cr_light_upper, predicted_cr_dense_upper),
+  wood_type = rep(c("Light WD species", "Dense WD species"), each = length(dbh_seq))
+)
+
+head(prediction_df_mean)
+
+ggplot(prediction_df_mean, aes(x = dbh, fill = wood_type)) +
+  geom_ribbon(aes(ymin = predicted_cr_lower, ymax = predicted_cr_upper), alpha = 0.2) +
+  geom_line(aes(y = predicted_cr, color = wood_type), alpha = 0.9) +
+  scale_fill_manual(values = c("Light WD species" = "#f48d10", "Dense WD species" = "#7f590e")) +
+  scale_color_manual(values = c("Light WD species" = "#f48d10", "Dense WD species" = "#7f590e")) +
+  labs(
+    x = "DBH (cm)",
+    y = "Crown Radius (m)",
+    fill = "Wood Density",
+    color = "Wood Density"
+  ) +
+  my_theme()
+
+```
+
+## Gymnosperms
+
+### No CIs
+
+```{r}
+sp_posterior_cr_gym_df_wd <- tar_read(sp_posterior_cr_gym_df_wd)
+head(sp_posterior_cr_gym_df_wd)
+
+tallo_reduced_lr_df_gym_cr <- tar_read(tallo_reduced_nlr_df_gym_cr)
+
+gym_cr_df <- tallo_reduced_lr_df_gym_cr |> filter(division == "Gymnosperm")
+gym_cr_df
+
+gym_cr_post <- gym_cr_df |>
+  left_join(sp_posterior_cr_gym_df_wd, by = c("sp" = "sp")) |>
+  dplyr::select(tree_id, sp, dbh, h, cr, wd, a, b, k) |>
+  mutate(
+    a = as.numeric(sub(" .*", "", a)),
+    b = as.numeric(sub(" .*", "", b)),
+    k = as.numeric(sub(" .*", "", k))
+  )
+
+gym_cr_post
+summary(gym_cr_post)
+
+sp_posterior_cr_gym_df_wd <- tar_read(sp_posterior_cr_gym_df_wd)
+tallo_reduced_lr_df_gym_cr <- tar_read(tallo_reduced_nlr_df_gym_cr)
+
+gym_cr_post <- tallo_reduced_lr_df_gym_cr |>
+  filter(division == "Gymnosperm") |>
+  left_join(sp_posterior_cr_gym_df_wd, by = "sp") |>
+  select(tree_id, sp, dbh, h, cr, wd, a, b, k) |>
+  mutate(across(c(a, b, k), ~ as.numeric(sub(" .*", "", .))))
+
+wd_quantiles <- quantile(gym_cr_post$wd, probs = c(0.1, 0.9), na.rm = TRUE)
+light_wood <- gym_cr_post |> filter(wd < wd_quantiles[1])
+dense_wood <- gym_cr_post |> filter(wd > wd_quantiles[2])
+
+dbh_seq <- seq(1, 150, length.out = 100)
+
+mean_light_wood <- light_wood |> summarise(across(c(a, b, k), mean, na.rm = TRUE))
+mean_dense_wood <- dense_wood |> summarise(across(c(a, b, k), mean, na.rm = TRUE))
+
+predicted_cr_light <- (mean_light_wood$a * dbh_seq^mean_light_wood$b) / (mean_light_wood$k + dbh_seq^mean_light_wood$b)
+predicted_cr_dense <- (mean_dense_wood$a * dbh_seq^mean_dense_wood$b) / (mean_dense_wood$k + dbh_seq^mean_dense_wood$b)
+
+prediction_df_mean <- data.frame(
+  dbh = rep(dbh_seq, 2),
+  predicted_cr = c(predicted_cr_light, predicted_cr_dense),
+  wood_type = rep(c("Light WD species", "Dense WD species"), each = length(dbh_seq))
+)
+
+ggplot(prediction_df_mean, aes(x = dbh, y = predicted_cr, color = wood_type)) +
+  geom_line(alpha = 0.9) +
+  scale_color_manual(values = c("Light WD species" = "#f48d10", "Dense WD species" = "#7f590e")) +
+  labs(
+    x = "DBH (cm)",
+    y = "Crown Radius (m)",
+    color = "Wood Density"
+  ) +
+  my_theme()
+
+```
+
+### Adding CIs
+
+```{r}
+sp_posterior_cr_gym_df_wd <- tar_read(sp_posterior_cr_gym_df_wd)
+tallo_reduced_lr_df_gym_cr <- tar_read(tallo_reduced_nlr_df_gym_cr)
+
+# tallo_reduced_nlr_df_gym_cr <- tar_read(tallo_reduced_nlr_df_gym_cr)
+
+gym_cr_post <- tallo_reduced_lr_df_gym_cr |>
+  filter(division == "Gymnosperm") |>
+  left_join(sp_posterior_cr_gym_df_wd, by = "sp") |>
+  select(tree_id, sp, dbh, h, cr, wd, a, b, k) |>
+  mutate(
+    a_median = as.numeric(str_extract(a, "^[^ ]+")),
+    b_median = as.numeric(str_extract(b, "^[^ ]+")),
+    k_median = as.numeric(str_extract(k, "^[^ ]+")),
+    
+    a_lower = as.numeric(str_extract(a, "(?<=\\().*?(?=,)")),
+    b_lower = as.numeric(str_extract(b, "(?<=\\().*?(?=,)")),
+    k_lower = as.numeric(str_extract(k, "(?<=\\().*?(?=,)")),
+    
+    a_upper = as.numeric(str_extract(a, "(?<=,).*?(?=\\))")),
+    b_upper = as.numeric(str_extract(b, "(?<=,).*?(?=\\))")),
+    k_upper = as.numeric(str_extract(k, "(?<=,).*?(?=\\))"))
+  ) |>
+  select(-a, -b, -k)
+
+gym_cr_post
+wd_quantiles <- quantile(gym_cr_post$wd, probs = c(0.1, 0.9), na.rm = TRUE)
+light_wood <- gym_cr_post |> filter(wd < wd_quantiles[1])
+dense_wood <- gym_cr_post |> filter(wd > wd_quantiles[2])
+
+mean_light_wood <- light_wood |>
+  summarise(
+    a_median = mean(a_median, na.rm = TRUE),
+    b_median = mean(b_median, na.rm = TRUE),
+    k_median = mean(k_median, na.rm = TRUE),
+    a_lower = mean(a_lower, na.rm = TRUE),
+    b_lower = mean(b_lower, na.rm = TRUE),
+    k_lower = mean(k_lower, na.rm = TRUE),
+    a_upper = mean(a_upper, na.rm = TRUE),
+    b_upper = mean(b_upper, na.rm = TRUE),
+    k_upper = mean(k_upper, na.rm = TRUE)
+  )
+
+mean_dense_wood <- dense_wood |>
+  summarise(
+    a_median = mean(a_median, na.rm = TRUE),
+    b_median = mean(b_median, na.rm = TRUE),
+    k_median = mean(k_median, na.rm = TRUE),
+    a_lower = mean(a_lower, na.rm = TRUE),
+    b_lower = mean(b_lower, na.rm = TRUE),
+    k_lower = mean(k_lower, na.rm = TRUE),
+    a_upper = mean(a_upper, na.rm = TRUE),
+    b_upper = mean(b_upper, na.rm = TRUE),
+    k_upper = mean(k_upper, na.rm = TRUE)
+  )
+
+dbh_seq <- seq(1, 150, length.out = 100)
+
+predicted_cr_light <- (mean_light_wood$a_median * dbh_seq^mean_light_wood$b_median) / 
+  (mean_light_wood$k_median + dbh_seq^mean_light_wood$b_median)
+
+predicted_cr_dense <- (mean_dense_wood$a_median * dbh_seq^mean_dense_wood$b_median) / 
+  (mean_dense_wood$k_median + dbh_seq^mean_dense_wood$b_median)
+
+predicted_cr_light_lower <- (mean_light_wood$a_lower * dbh_seq^mean_light_wood$b_lower) / 
+  (mean_light_wood$k_lower + dbh_seq^mean_light_wood$b_lower)
+
+predicted_cr_light_upper <- (mean_light_wood$a_upper * dbh_seq^mean_light_wood$b_upper) / 
+  (mean_light_wood$k_upper + dbh_seq^mean_light_wood$b_upper)
+
+predicted_cr_dense_lower <- (mean_dense_wood$a_lower * dbh_seq^mean_dense_wood$b_lower) / 
+  (mean_dense_wood$k_lower + dbh_seq^mean_dense_wood$b_lower)
+
+predicted_cr_dense_upper <- (mean_dense_wood$a_upper * dbh_seq^mean_dense_wood$b_upper) / 
+  (mean_dense_wood$k_upper + dbh_seq^mean_dense_wood$b_upper)
+
+# Combine into a single data frame
+prediction_df_mean <- data.frame(
+  dbh = rep(dbh_seq, 2),
+  predicted_cr = c(predicted_cr_light, predicted_cr_dense),
+  predicted_cr_lower = c(predicted_cr_light_lower, predicted_cr_dense_lower),
+  predicted_cr_upper = c(predicted_cr_light_upper, predicted_cr_dense_upper),
+  wood_type = rep(c("Light WD species", "Dense WD species"), each = length(dbh_seq))
+)
+
+
+ggplot(prediction_df_mean, aes(x = dbh, fill = wood_type)) +
+  geom_ribbon(aes(ymin = predicted_cr_lower, ymax = predicted_cr_upper), alpha = 0.2) +
+  geom_line(aes(y = predicted_cr, color = wood_type), alpha = 0.9) +
+  scale_fill_manual(values = c("Light WD species" = "#f48d10", "Dense WD species" = "#7f590e")) +
+  scale_color_manual(values = c("Light WD species" = "#f48d10", "Dense WD species" = "#7f590e")) +
+  labs(
+    x = "DBH (cm)",
+    y = "Crown Radius (m)",
+    fill = "Wood Density",
+    color = "Wood Density"
+  ) +
+  my_theme()
+```
+
+
+# WD vs. H-DBH
+
+## Angiosperm
+
+### No CIs
+```{r}
+sp_posterior_h_ang_df_wd <- tar_read(sp_posterior_h_ang_df_wd)
+# tallo_reduced_lr_df_h_ang <- tar_read(tallo_reduced_nlr_df_ang_h)
+
+tallo_reduced_nlr_df_ang_h <- tar_read(tallo_reduced_nlr_df_ang_h)
+
+
+ang_h_post <- tallo_reduced_lr_df_h_ang |>
+  filter(division == "Angiosperm") |>
+  left_join(sp_posterior_h_ang_df_wd, by = "sp") |>
+  select(tree_id, sp, dbh, h, wd, a, b, k) |>
+  mutate(across(c(a, b, k), ~ as.numeric(sub(" .*", "", .))))
+
+wd_quantiles <- quantile(ang_h_post$wd, probs = c(0.25, 0.75), na.rm = TRUE)
+light_wood <- filter(ang_h_post, wd < wd_quantiles[1])
+dense_wood <- filter(ang_h_post, wd > wd_quantiles[2])
+
+dbh_seq <- seq(1, 150, length.out = 100)
+mean_light_wood <- summarise(light_wood, across(c(a, b, k), mean))
+mean_dense_wood <- summarise(dense_wood, across(c(a, b, k), mean))
+
+predicted_h_light <- mean_light_wood$a * (1 - exp(-mean_light_wood$b * dbh_seq^mean_light_wood$k))
+predicted_h_dense <- mean_dense_wood$a * (1 - exp(-mean_dense_wood$b * dbh_seq^mean_dense_wood$k))
+
+prediction_df_mean <- data.frame(
+  dbh = rep(dbh_seq, 2),
+  predicted_h = c(predicted_h_light, predicted_h_dense),
+  wood_type = rep(c("Light WD species", "Dense WD species"), each = length(dbh_seq))
+)
+
+ggplot(prediction_df_mean, aes(x = dbh, y = predicted_h, color = wood_type)) +
+  geom_line(alpha = 0.9) +
+  scale_color_manual(values = c("Light WD species" = "#f48d10", "Dense WD species" = "#7f590e")) +
+  labs(
+    x = "DBH (cm)",
+    y = "Tree Height (m)",
+    color = "Wood Density"
+  ) +
+  my_theme()
+
+```
+
+### Adding CIs
+
+```{r}
+# Load data
+sp_posterior_h_ang_df_wd <- tar_read(sp_posterior_h_ang_df_wd)
+tallo_reduced_lr_df_h_ang <- tar_read(tallo_reduced_nlr_df_ang_h)
+
+# Process data and parse CIs
+ang_h_post <- tallo_reduced_lr_df_h_ang |>
+  filter(division == "Angiosperm") |>
+  left_join(sp_posterior_h_ang_df_wd, by = "sp") |>
+  select(tree_id, sp, dbh, h, wd, a, b, k) |>
+  mutate(
+    a_median = as.numeric(str_extract(a, "^[^ ]+")),
+    b_median = as.numeric(str_extract(b, "^[^ ]+")),
+    k_median = as.numeric(str_extract(k, "^[^ ]+")),
+    
+    a_lower = as.numeric(str_extract(a, "(?<=\\().*?(?=,)")),
+    b_lower = as.numeric(str_extract(b, "(?<=\\().*?(?=,)")),
+    k_lower = as.numeric(str_extract(k, "(?<=\\().*?(?=,)")),
+    
+    a_upper = as.numeric(str_extract(a, "(?<=,).*?(?=\\))")),
+    b_upper = as.numeric(str_extract(b, "(?<=,).*?(?=\\))")),
+    k_upper = as.numeric(str_extract(k, "(?<=,).*?(?=\\))"))
+  ) |>
+  select(-a, -b, -k)
+
+# Quantiles for Wood Density
+wd_quantiles <- quantile(ang_h_post$wd, probs = c(0.25, 0.75), na.rm = TRUE)
+light_wood <- filter(ang_h_post, wd < wd_quantiles[1])
+dense_wood <- filter(ang_h_post, wd > wd_quantiles[2])
+
+# Summary statistics
+mean_light_wood <- light_wood |>
+  summarise(
+    a_median = mean(a_median, na.rm = TRUE),
+    b_median = mean(b_median, na.rm = TRUE),
+    k_median = mean(k_median, na.rm = TRUE),
+    a_lower = mean(a_lower, na.rm = TRUE),
+    b_lower = mean(b_lower, na.rm = TRUE),
+    k_lower = mean(k_lower, na.rm = TRUE),
+    a_upper = mean(a_upper, na.rm = TRUE),
+    b_upper = mean(b_upper, na.rm = TRUE),
+    k_upper = mean(k_upper, na.rm = TRUE)
+  )
+
+mean_dense_wood <- dense_wood |>
+  summarise(
+    a_median = mean(a_median, na.rm = TRUE),
+    b_median = mean(b_median, na.rm = TRUE),
+    k_median = mean(k_median, na.rm = TRUE),
+    a_lower = mean(a_lower, na.rm = TRUE),
+    b_lower = mean(b_lower, na.rm = TRUE),
+    k_lower = mean(k_lower, na.rm = TRUE),
+    a_upper = mean(a_upper, na.rm = TRUE),
+    b_upper = mean(b_upper, na.rm = TRUE),
+    k_upper = mean(k_upper, na.rm = TRUE)
+  )
+
+# Generate predictions
+dbh_seq <- seq(1, 150, length.out = 100)
+
+# Median predictions
+predicted_h_light <- mean_light_wood$a_median * (1 - exp(-mean_light_wood$b_median * dbh_seq^mean_light_wood$k_median))
+predicted_h_dense <- mean_dense_wood$a_median * (1 - exp(-mean_dense_wood$b_median * dbh_seq^mean_dense_wood$k_median))
+
+# Lower and upper bounds
+predicted_h_light_lower <- mean_light_wood$a_lower * (1 - exp(-mean_light_wood$b_lower * dbh_seq^mean_light_wood$k_lower))
+predicted_h_light_upper <- mean_light_wood$a_upper * (1 - exp(-mean_light_wood$b_upper * dbh_seq^mean_light_wood$k_upper))
+
+predicted_h_dense_lower <- mean_dense_wood$a_lower * (1 - exp(-mean_dense_wood$b_lower * dbh_seq^mean_dense_wood$k_lower))
+predicted_h_dense_upper <- mean_dense_wood$a_upper * (1 - exp(-mean_dense_wood$b_upper * dbh_seq^mean_dense_wood$k_upper))
+
+# Combine into a single data frame
+prediction_df_mean <- data.frame(
+  dbh = rep(dbh_seq, 2),
+  predicted_h = c(predicted_h_light, predicted_h_dense),
+  predicted_h_lower = c(predicted_h_light_lower, predicted_h_dense_lower),
+  predicted_h_upper = c(predicted_h_light_upper, predicted_h_dense_upper),
+  wood_type = rep(c("Light WD species", "Dense WD species"), each = length(dbh_seq))
+)
+
+# Plot with CIs
+ggplot(prediction_df_mean, aes(x = dbh, fill = wood_type)) +
+  geom_ribbon(aes(ymin = predicted_h_lower, ymax = predicted_h_upper), alpha = 0.2) +
+  geom_line(aes(y = predicted_h, color = wood_type), alpha = 0.9) +
+  scale_fill_manual(values = c("Light WD species" = "#f48d10", "Dense WD species" = "#7f590e")) +
+  scale_color_manual(values = c("Light WD species" = "#f48d10", "Dense WD species" = "#7f590e")) +
+  labs(
+    x = "DBH (cm)",
+    y = "Tree Height (m)",
+    fill = "Wood Density",
+    color = "Wood Density"
+  ) +
+  my_theme()
+```

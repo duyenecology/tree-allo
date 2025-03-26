@@ -1,0 +1,360 @@
+---
+title: "Plotting DBH models"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: coderpro
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/workspaces/tree-allometry")
+```
+
+```{r global_options, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+```
+
+# Load necessary libraries
+
+```{r}
+library(targets)
+library(cmdstanr)
+library(posterior)
+library(loo)
+library(dplyr)
+library(ggplot2)
+library(stringr)
+library(reshape2)
+library(scales)
+# Define and run the targets pipeline
+# tar_make()
+```
+
+# Plot DBH = aCR^b * H^c model (1, 5) (no WD)
+
+```{r}
+# Extract relevant data for model 1 (loo_dbh)
+stan_data_lr_dbh <- tar_read(stan_data_lr_dbh)
+str(stan_data_lr_dbh)
+
+log_y <- stan_data_lr_dbh$log_y
+log_x_cr <- stan_data_lr_dbh$log_x[, 2]
+log_x_h <- stan_data_lr_dbh$log_x[, 3]
+sp <- as.factor(stan_data_lr_dbh$jj)
+
+str(log_x_cr)
+str(log_x_h)
+
+# Read in the model summary for model 
+dbh_nou_summary <- tar_read(fit_lr2_summary_power_law1_nou_dbh)
+dbh_nou_summary
+
+# Filter rows where the variable is "beta"
+beta <- dbh_nou_summary |>
+  filter(grepl("beta", variable))
+
+beta
+
+log_a <- beta |> filter(str_detect(variable, "beta\\[1,\\d+\\]")) |> pull(mean)
+b_cr <- beta |> filter(str_detect(variable, "beta\\[2,\\d+\\]")) |> pull(mean)
+b_h <- beta |> filter(str_detect(variable, "beta\\[3,\\d+\\]")) |> pull(mean)
+
+# Compute fitted values for DBH using the power law formula
+fitted_log_y_dbh <- sapply(1:length(log_a), function(i) {
+  log_a[i] + b_cr[i] * log_x_cr + b_h[i] * log_x_h
+})
+
+fitted_dbh <- exp(fitted_log_y_dbh)
+
+gamma <- dbh_nou_summary |>
+  filter(grepl("gamma", variable))
+gamma
+
+# Calculate community-level fitted line by averaging the species-level coefficients
+community_log_a <- gamma |> filter(variable == "gamma[1]") |> pull(mean)
+community_b_cr <- gamma |> filter(variable == "gamma[2]") |> pull(mean)
+community_b_h <- gamma |> filter(variable == "gamma[3]") |> pull(mean)
+
+community_fitted_log_y_dbh <- community_log_a + community_b_cr * log_x_cr + community_b_h * log_x_h
+community_fitted_DBH <- exp(community_fitted_log_y_dbh)
+
+# Create a data frame for plotting
+data_dbh <- data.frame(DBH = exp(log_y), CR = exp(log_x_cr), H = exp(log_x_h), sp = sp)
+data_dbh$community_fitted_DBH <- community_fitted_DBH
+head(data_dbh)
+
+# Add species-specific fitted values to the data frame
+for (i in 1:length(log_a)) {
+  data_dbh[[paste0("fitted_DBH_sp_", i)]] <- fitted_dbh[, i]
+}
+
+# Compute CR^b and H^c for each observation
+data_dbh$CR_b <- data_dbh$CR^community_b_cr
+data_dbh$H_c <- data_dbh$H^community_b_h
+data_dbh$CR_H <- data_dbh$CR_b*data_dbh$H_c
+
+head(data_dbh)
+
+data_long <- reshape2::melt(data_dbh, id.vars = c("DBH", "CR_H", "sp", "community_fitted_DBH"), measure.vars = grep("fitted_DBH_sp_", names(data_dbh), value = TRUE))
+
+head(data_long)
+
+dbh_plot <- ggplot(data_long, aes(x = CR_H, y = DBH)) +
+  geom_point(alpha = 0.5, color = "grey") +
+  geom_line(data = data_long, aes(x = CR_H, y = value, group = variable), color = "#4682B4", alpha = 0.3) + # SteelBlue color for species fits
+  geom_line(aes(y = community_fitted_DBH), color = "white", linewidth = 1.2) +
+  labs(title = "DBH = a*CR^b * H^c",
+       x = "CR_H",
+       y = "DBH") +
+  scale_x_log10(labels = label_number()) +
+  scale_y_log10(labels = label_number()) +
+  theme_minimal()
+
+# Save the plot
+ggsave(filename = "figs/dbh/H_CR_DBH1.png", plot = dbh_plot, width = 12, height = 8, dpi = 300, bg = "white")
+
+dbh_plot
+```
+
+- Note: Plot looks weird and I am struggling with this TT_TT
+
+
+
+
+```{r}
+# Extract relevant data for model 1 (loo_dbh)
+stan_data_lr_dbh <- tar_read(stan_data_lr_dbh)
+str(stan_data_lr_dbh)
+
+log_y <- stan_data_lr_dbh$log_y
+log_x_cr <- stan_data_lr_dbh$log_x[, 2]
+log_x_h <- stan_data_lr_dbh$log_x[, 3]
+sp <- as.factor(stan_data_lr_dbh$jj)
+
+str(log_x_cr)
+str(log_x_h)
+
+# Read in the model summary for model 
+dbh_nou_summary <- tar_read(fit_lr2_summary_power_law1_nou_dbh)
+dbh_nou_summary
+
+# Filter rows where the variable is "beta"
+beta <- dbh_nou_summary |>
+  filter(grepl("beta", variable))
+
+beta
+
+log_a <- beta |> filter(str_detect(variable, "beta\\[1,\\d+\\]")) |> pull(mean)
+b_cr <- beta |> filter(str_detect(variable, "beta\\[2,\\d+\\]")) |> pull(mean)
+b_h <- beta |> filter(str_detect(variable, "beta\\[3,\\d+\\]")) |> pull(mean)
+
+# Compute fitted values for DBH using the power law formula
+fitted_log_y_dbh <- sapply(1:length(log_a), function(i) {
+  log_a[i] + b_cr[i] * log_x_cr + b_h[i] * log_x_h
+})
+
+gamma <- dbh_nou_summary |>
+  filter(grepl("gamma", variable))
+gamma
+
+# Calculate community-level fitted line by averaging the species-level coefficients
+community_log_a <- gamma |> filter(variable == "gamma[1]") |> pull(mean)
+community_b_cr <- gamma |> filter(variable == "gamma[2]") |> pull(mean)
+community_b_h <- gamma |> filter(variable == "gamma[3]") |> pull(mean)
+
+community_fitted_log_y_dbh <- community_log_a + community_b_cr * log_x_cr + community_b_h * log_x_h
+
+# Create a data frame for plotting with log-transformed values
+data_dbh <- data.frame(log_DBH = log_y, log_CR = log_x_cr, log_H = log_x_h, sp = sp)
+data_dbh$community_fitted_log_DBH <- community_fitted_log_y_dbh
+
+# Add species-specific fitted values to the data frame
+for (i in 1:length(log_a)) {
+  data_dbh[[paste0("fitted_log_DBH_sp_", i)]] <- fitted_log_y_dbh[, i]
+}
+
+# Compute CR^b and H^c for each observation in the log scale
+data_dbh$log_CR_b <- community_b_cr * data_dbh$log_CR
+data_dbh$log_H_c <- community_b_h * data_dbh$log_H
+data_dbh$log_CR_H <- data_dbh$log_CR_b + data_dbh$log_H_c
+
+# Reshape the data for plotting
+data_long <- reshape2::melt(data_dbh, id.vars = c("log_DBH", "log_CR_H", "sp", "community_fitted_log_DBH"), measure.vars = grep("fitted_log_DBH_sp_", names(data_dbh), value = TRUE))
+
+head(data_long)
+
+# Plot with log-transformed values
+dbh_plot <- ggplot(data_long, aes(x = log_CR_H, y = log_DBH)) +
+  geom_point(alpha = 0.5, color = "grey") +
+  geom_line(data = data_long, aes(x = log_CR_H, y = value, group = variable), color = "#4682B4", alpha = 0.3) +  # SteelBlue color for species fits
+  geom_line(aes(y = community_fitted_log_DBH), color = "white", linewidth = 1.2) +
+  labs(title = "log(DBH) = log(a) + b*log(CR) + c*log(H)",
+       x = "log(CR^b * H^c)",
+       y = "log(DBH)") +
+  theme_minimal()
+
+# Save the plot
+ggsave(filename = "figs/dbh/H_CR_DBH1_log.png", plot = dbh_plot, width = 12, height = 8, dpi = 300, bg = "white")
+
+dbh_plot
+
+
+```
+
+
+
+
+
+
+
+
+
+# Plot DBH = a(CR*H)^b model (6, 2) (with WD)
+
+```{r}
+# Read the data
+stan_data_lr_dbh1 <- tar_read(stan_data_lr_dbh1)
+str(stan_data_lr_dbh1)
+
+# Extract relevant data
+log_y <- stan_data_lr_dbh1$log_y
+log_x <- stan_data_lr_dbh1$log_x[, 2]
+sp <- as.factor(stan_data_lr_dbh1$jj)
+
+str(log_x)
+head(log_x)
+
+# Read in the model summary
+dbh1 <- tar_read(fit_lr2_summary_power_law1_dbh1)
+dbh1
+
+# Filter rows where the variable is "beta"
+beta <- dbh1 |>
+  filter(grepl("beta", variable))
+
+beta
+
+log_a <- beta |> filter(str_detect(variable, "beta\\[1,\\d+\\]")) |> pull(mean)
+b <- beta |> filter(str_detect(variable, "beta\\[2,\\d+\\]")) |> pull(mean)
+
+print(length(log_a))
+print(length(b))
+print(length(sp))
+
+# Compute fitted values for DBH using the power law formula
+fitted_log_y_dbh <- sapply(1:length(log_a), function(i) {
+  log_a[i] + b[i] * log_x
+})
+
+fitted_dbh <- exp(fitted_log_y_dbh)
+
+# Extract community-level parameters directly
+community_log_a <- dbh1 |> filter(variable == "gamma[1,1]") |> pull(mean)
+community_b <- dbh1 |> filter(variable == "gamma[2,1]") |> pull(mean)
+
+community_fitted_log_y_dbh <- community_log_a + community_b * log_x
+
+community_fitted_DBH <- exp(community_fitted_log_y_dbh)
+
+# Create a data frame for plotting
+data_dbh1 <- data.frame(DBH = exp(log_y), CRxH = exp(log_x), sp = sp)
+data_dbh1$community_fitted_DBH <- community_fitted_DBH
+
+head(data_dbh1)
+summary(data_dbh1)
+
+# Add species-specific fitted values to the data frame
+for (i in 1:length(log_a)) {
+  data_dbh1[[paste0("fitted_DBH_sp_", i)]] <- fitted_dbh[, i]
+}
+
+data_long <- melt(data_dbh1, id.vars = c("DBH", "CRxH", "sp", "community_fitted_DBH"), measure.vars = grep("fitted_DBH_sp_", names(data_dbh1), value = TRUE))
+
+head(data_long)
+summary(data_long)
+str(data_long)
+
+# Plotting
+dbh_plot1 <- ggplot(data_dbh1, aes(x = CRxH, y = DBH)) +
+  geom_point(alpha = 0.5, color = "grey") +
+  geom_line(data = data_long, aes(x = CRxH, y = value, group = variable), color = "#4682B4", alpha = 0.3) + # SteelBlue color for species fits
+  geom_line(aes(y = community_fitted_DBH), color = "white", linewidth = 1.2) +
+  labs(title = "DBH = a*(CR*H)^b",
+       x = "CR*H",
+       y = "DBH") +
+  scale_x_log10(labels = label_number()) +
+  scale_y_log10(labels = label_number()) +
+  theme_minimal()
+
+# Save the plot
+ggsave(filename = "figs/dbh/CR*H_DBH1.png", plot = dbh_plot1, width = 12, height = 8, dpi = 300, bg = "white")
+
+dbh_plot1
+```
+
+# Fix the range of the CR*H axis
+
+```{r}
+# Function to create CR*H sequence for each species based on actual range
+create_crxh_sequence <- function(species, log_x, length_out = 100) {
+  crxh_values <- exp(log_x[stan_data_lr_dbh1$jj == species])
+  min_crxh <- min(crxh_values)
+  max_crxh <- max(crxh_values)
+  seq(min_crxh, max_crxh, length.out = length_out)
+}
+
+# Calculate fitted DBH values for each species using gamma parameters
+fitted_dbh_list <- lapply(1:length(log_a), function(i) {
+  crxh_seq <- create_crxh_sequence(i, log_x)
+  fitted_log_dbh <- log_a[i] + b[i] * log(crxh_seq)
+  fitted_dbh <- exp(fitted_log_dbh)
+  
+  data.frame(
+    CRxH = crxh_seq,
+    DBH = fitted_dbh,
+    variable = paste0("fitted_DBH_sp_", i)
+  )
+})
+
+# Combine all species data frames into one
+data_long <- do.call(rbind, fitted_dbh_list)
+head(data_long)
+
+# Original data for points
+data_dbh1 <- data.frame(DBH = exp(log_y), CRxH = exp(log_x), sp = sp)
+head(data_dbh1)
+
+# Plotting the DBH against CR*H
+dbh_plot1 <- ggplot(data_dbh1, aes(x = CRxH, y = DBH)) +
+  geom_point(alpha = 0.5, color = "grey") +
+  geom_line(data = data_long, aes(x = CRxH, y = DBH, group = variable), color = "#4682B4", alpha = 0.3) +
+  geom_line(aes(y = community_fitted_DBH), color = "white", linewidth = 1.2) +
+  labs(title = "DBH = a*(CR*H)^b",
+       x = "CR*H",
+       y = "DBH") +
+  scale_x_log10(labels = scales::label_number()) +
+  scale_y_log10(labels = scales::label_number()) +
+  theme_minimal()
+
+# Save the plot
+ggsave(filename = "figs/dbh/CRxH_DBH1.png", plot = dbh_plot1, width = 12, height = 8, dpi = 300, bg = "white")
+
+dbh_plot1
+```
+

@@ -1,0 +1,150 @@
+---
+title: "Overlaps species"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r}
+library(readr)
+library(ggplot2)
+library(tidyverse)
+```
+
+# Read the CSV file
+```{r}
+hcr <- read_csv("data/bb_allometry_re.csv")
+summary(hcr)
+head(hcr, n=100)
+summary(hcr)
+```
+
+
+# Convert sp to a factor
+```{r}
+hcr$sp <- factor(hcr$sp)
+hcr$life <- factor(hcr$life)
+#Construct the histogram 
+par(mfrow=c(2,1))
+hist(hcr$tree_height)
+hist(hcr$crown_width_we) # positive skewed
+```
+
+#log transform
+```{r}
+hcr$crown_width_we.ln <- log(hcr$crown_width_we)
+hcr$tree_height.ln <- log(hcr$tree_height)
+summary(hcr)
+```
+
+#check
+```{r}
+par(mfrow=c(2,1))
+hist(hcr$tree_height.ln) #look better
+hist(hcr$crown_width_we.ln) 
+```
+
+#plot the relationship of interest
+```{r}
+plot(crown_width_we.ln ~ tree_height.ln, data = hcr)
+plot(hcr$tree_height.ln ,hcr$crown_width_we.ln ,col= c("red", "blue", "green")[as.numeric(hcr$sp)])
+```
+
+# Remove rows with -Inf and NA in crown_width_we.ln, tree_height.ln
+```{r}
+hcr <- hcr[is.finite(hcr$crown_width_we.ln) & !is.na(hcr$crown_width_we.ln), ]
+hcr <- hcr[is.finite(hcr$tree_height.ln) & !is.na(hcr$tree_height.ln), ]
+
+# Check the summary again
+summary(hcr$crown_width_we.ln)
+summary(hcr$tree_height.ln)
+```
+
+# Fit a linear model
+```{r}
+hcr.rg <- lm(crown_width_we.ln ~ tree_height.ln, data = hcr)
+summary(hcr.rg)
+plot(hcr.rg)
+# Create a line graph using ggplot2 with regression lines for each species
+ggplot(data = hcr, aes(y = crown_width_we.ln, x = tree_height.ln, group = sp, colour = sp, shape = sp)) +
+  geom_point(size = 5) +
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ x, size = 1, aes(group = sp)) +
+  theme(legend.position = "none")  # Optional: To remove legend for shapes due to the large number of levels
+```
+
+
+# Relationship between Tree Height and Crown Width by Life
+```{r}
+ggplot(data = hcr, aes(y = crown_width_we.ln, x = tree_height.ln, group = life, colour = life, shape = life)) +
+  geom_point(size = 5) +
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ x, size = 1, aes(group = life)) +
+  theme_minimal() +
+  labs(title = "Relationship between Tree Height and Crown Width by Life",
+       subtitle = "Regression lines for each life, colored and shaped by life",
+       color = "Life", shape = "Life")
+```
+
+#separate plots for each level of the life variable
+```{r}
+ggplot(data = hcr, aes(y = crown_width_we.ln, x = tree_height.ln, group = life, colour = life)) +
+  geom_point(size = 5) +
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ x, size = 1, aes(group = life)) +
+  facet_wrap(~life, scales = "free") +
+  theme_minimal() +
+  labs(title = "Relationship between Tree Height and Crown Width by Life",
+       subtitle = "Regression lines for each life, colored by life",
+       color = "Life")
+```
+
+# 
+```{r}
+ggplot(data = hcr, aes(y = crown_width_we.ln, x = tree_height.ln, group = life, colour = life)) +
+  geom_point(size = 5) +
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ x, size = 1, aes(group = sp)) +
+  facet_wrap(~life, scales = "free") +
+  theme_minimal() +
+  labs(title = "Relationship between Tree Height and Crown Width by Life",
+       subtitle = "Regression lines for each life, colored by life",
+       color = "Life")
+```
+
+# facetting the plot by the life variable and showing regression lines for each life category, colored by the life variable.
+```{r}
+bb_plot <- ggplot(data = hcr, aes(y = crown_width_we.ln, x = tree_height.ln, group = interaction(sp, life), colour = life)) +
+  geom_point(size = 5) +
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ x, size = 1, aes(group = interaction(sp, life))) +
+  facet_wrap(~life, scales = "free") +
+  theme_minimal() +
+  labs(title = "Relationship between Tree Height and Crown Width by Life",
+       subtitle = "Regression lines for each species within different life categories",
+       color = "Life")
+
+
+# Save the plot
+ggsave("figs/bb.png", plot = bb_plot, width = 10, height = 6)
+
+```
+
+```{r}
+
+bb <- ggplot(data = hcr, aes(y = crown_width_we.ln, x = tree_height.ln, group = interaction(sp, life), colour = life)) +
+  geom_point(size = 7, alpha = 0.7) +  # Increase point size and add transparency
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ x, size = 0.7, aes(group = interaction(sp, life))) +  # Reduce line size
+  facet_wrap(~life, scales = "free") +
+  theme_minimal() +
+  labs(title = "Relationship between Tree Height and Crown Width by Life",
+       subtitle = "Regression lines for each species within different life categories",
+       color = "Life")
+
+# Save the plot
+ggsave("figs/bb_2.png", plot = bb, width = 10, height = 6)
+```

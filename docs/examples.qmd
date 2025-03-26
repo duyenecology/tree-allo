@@ -1,0 +1,205 @@
+---
+title: "Crown width vs. DBH"
+author: "Masatoshi Katabuchi"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: coderpro
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r global_options, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+```
+
+I will explain a MLE example for crown width vs. DBH using a power-law model.
+
+# Load the packages
+```{r}
+library(tidyverse)
+library(here)
+```
+
+# Data preparation
+
+I prepared `tallo_cleaned.csv` withouth wood density but with other iformation like laitiude and family.
+We may need these information later.
+For example, we can use faimly or biomes as random effects if needed.
+
+```{r}
+tallo_df <- read_csv(here("data/tallo_cleaned.csv"))
+tallo_df
+```
+
+I also prepared wood density data for each species (`wd.csv`)
+It's better to have species-based data (i.e., number of species = number of rows) for the analysis.
+
+```{r}
+wd_df <- read_csv(here("data/wd.csv"))
+wd_df <- wd_df |>
+  mutate(wd_s = scale(wd) |> as.numeric())
+wd_df
+```
+
+You can easily join these two dataframes by `sp` (species name) before the analysis.
+
+```{r}
+tallo_wd <- left_join(tallo_df, wd_df, by = "sp")
+tallo_wd
+```
+
+# Example for *C* vs. *D*
+
+For tree *i* and species *j*, we assume that crown width ($C$) and DBH ($D$) has a power-law relationship :
+$$
+\text{ln}C_{i} \sim N(\alpha_j + \beta_j \text{ln}D_{i})
+$$ {#eq-cd}
+
+and species-level varaition can be explaiend by wood density ($\rho$):
+$$
+\begin{split}
+\text{ln}C_{i} &= \alpha_{j} + \beta_{j}\text{ln}D_{i} + \epsilon_{i} \\
+\alpha_j &= \gamma_{0}^{(\alpha)} + \gamma_{1}^{(\alpha)}\rho_{j} + \eta_{j}^{(\alpha)} \\
+\beta_j &= \gamma_{0}^{(\beta)} + \gamma_{1}^{(\beta)}\rho_{j} +\eta_{j}^{(\beta)}.
+\end{split}
+$$ {#eq-wd_lmm}
+
+To use `lme4::lmer`, we need to re-express the model (@eq-wd_lmm) as:
+
+$$
+\text{ln}C_{i} =
+(\gamma_{0}^{(\alpha)} + \gamma_{1}^{(\alpha)}\rho_{j} + \eta_{j}^{(\alpha)})
+ + (\gamma_{0}^{(\beta)} + \gamma_{1}^{(\beta)}\rho_{j} +\eta_{j}^{(\beta)})\text{ln}D_j + \epsilon_{i}.
+$$ {#eq-wd_lmm_re}
+
+
+We define new variables (
+$a_j = \gamma_{0}^{(\alpha)} + \eta_{j}^{(\alpha)}$,
+$b_j = \gamma_{0}^{(\beta)} + \eta_{j}^{(\beta)}$,
+$c = \gamma_{1}^{(\alpha)}$, and
+$d = \gamma_{1}^{(\beta)}$),
+and we can further re-express the above model (@eq-wd_lmm_re) as:
+
+$$
+\text{ln}C_{i}= a_j + b_j \text{ln}D_{i} + c \rho_{j} + d \text{ln}D_{i} \times \rho_{j} + \epsilon_{i}.
+$$ {#eq-lmer}
+
+The correspoding R code looks like the following:
+
+```{r, eval=FALSE}
+lme4::lmer(log(cr) ~ log(dbh) + wd_s + log(dbh):wd_s + (1 + log(dbh) | sp), ...)
+```
+
+In this code, `(1 + log(dbh) | sp)` indiates varying intercepts ($a_j$) and slopes ($b_j$) for each species.
+If you use `(1 | sp)`, this indicats only varying intercepts ($a_j$).
+
+Note that:
+
+- $a_j$ and $b_j$ are vectors of lenght $J$ (number of species).
+- $c$ and $d$ are sclars (single values).
+
+```{r}
+fit_cd_power <- lme4::lmer(log(cr) ~ log(dbh) + wd_s + log(dbh):wd_s + (1 + log(dbh) | sp), data = tallo_wd)
+summary(fit_cd_power)
+```
+
+The t-value for wd_s is relatively large (> 3), which indicates $c = \gamma_{1}^{(\alpha)}$ is (probably) significant.
+This pattern was not that clear in Martínez Cano's paper.
+On the other hand, $d = \gamma_{1}^{(\beta)}$ doesn't seem to be significant.
+
+# Next
+
+Power-law models with `lme4` are just preliminary analysis.
+We also want to use gMM and Weibull, which requrie other R packages.
+It will be more straightforward to use `stan` for all the models.
+
+- Write **equations** for stan codes for:
+  - power-law
+  - gMM
+  - Weibull
+
+- Write stan codes for:
+  - power-law
+  - gMM
+  - Weibull
+
+- Write simple stan codes for simple data.
+
+- Create dummy data for your stan codes.
+
+#  Liner models with dummy data example
+
+## Dummy data
+$$
+y_i \sim N(\beta_0 + \beta_1 x_i, \sigma)
+$$ {#eq-lm}
+
+where $\beta_0$ = 1.2, $\beta_1$ = -0.8, $\sigma$ = 0.5, and the number of samples (n) is 100.
+
+```{r}
+set.seed(123)
+n <- 100
+beta0 <- 1.2
+beta1 <- -0.8
+sigma <- 0.5
+
+x <- rnorm(n)
+mu <- beta0 + beta1 * x
+y <- rnorm(n, mu, sigma)
+plot(x, y)
+```
+
+### Matrix Operations
+
+In practice, we use matrix operations to handle computations:
+
+```{r}
+x_mat <- cbind(1, x)
+mu2 <- x_mat %*% c(beta0, beta1)
+
+# mu and mu2 are expected to be equal
+testthat::expect_equal(mu, as.numeric(mu2))
+```
+
+## Linear Regression (MLE Approach)
+
+```{r}
+fit <- lm(y ~ x)
+summary(fit)
+```
+
+## Bayesian Analysis with Stan
+
+### Stan model
+
+The Stan model code is stored in `stan/lm_example.stan`:
+
+```{stan, size="small", file="../stan/lm_example.stan", echo=TRUE, eval=FALSE, output.var="hoge"}
+```
+
+As you can see, the stan code looks like how the dummy data was generated.
+This is why it is a good practice to write both stan code and code to generate dummy data.
+It helps you to understand the model and to debug the code.
+
+Summary of posteriors:
+
+<!-- ```{r}
+# targets::tar_read(fit0_summary_lm_example)
+withr::with_dir(rprojroot::find_root('_targets.R'),
+    targets::tar_read(fit0_summary_lm_example))
+```
+ -->

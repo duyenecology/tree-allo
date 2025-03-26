@@ -1,0 +1,161 @@
+---
+title: ""
+author: "Masatoshi Katabuchi"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: coderpro
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r global_options, include=FALSE}
+library(knitr)
+library(tidyverse)
+library(targets)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+knitr::opts_knit$set(root.dir = "/workspaces/tree-allometry-div")
+```
+
+```{r}
+d <- tar_read(tallo_wd_df_200) |>
+  filter(!is.na(dbh)) |>
+  filter(!is.na(cr)) |>
+  filter(!is.na(h)) |>
+  filter(!is.na(wd_s))
+
+gym_df <- d |>
+  filter(division == "Gymnosperm") |>
+  mutate(dbh_s = dbh / max(dbh))
+ang_df <- d |>
+  filter(division != "Gymnosperm") |>
+  mutate(dbh_s = dbh / max(dbh))
+
+```
+
+## gMM
+
+```{r}
+gmm_ang_h <- nls(
+  log(h) ~ log_a + b * log(dbh) - log(K + dbh^b),
+  data = ang_df,
+  start = list(log_a = 3, b = 1, K = 50))
+summary(gmm_ang_h)
+```
+
+```{r}
+gmm_gym_h <- nls(
+  log(h) ~ log_a + b * log(dbh) - log(K + dbh^b),
+  data = gym_df,
+  start = list(log_a = 3, b = 1, K = 50))
+summary(gmm_gym_h)
+```
+
+```{r}
+gmm_ang_cr <- nls(
+  log(cr) ~ log_a + b * log(dbh) - log(K + dbh^b),
+  data = ang_df,
+  start = list(log_a = 2, b = 1, K = 10))
+summary(gmm_ang_cr)
+```
+
+```{r}
+gmm_gym_cr <- nls(
+  log(cr) ~ log_a + b * log(dbh) - log(K + dbh^b),
+  data = gym_df,
+  start = list(log_a = 5, b = 1, K = 100))
+summary(gmm_gym_cr)
+```
+
+
+
+## Weibull
+
+```{r}
+wb_ang_h <- nls(
+  log(h) ~ log_a + log(1 - exp(-b * dbh_s^K)),
+  data = ang_df,
+  start = list(log_a = 3, b = 1, K = 1))
+summary(wb_ang_h)
+```
+
+```{r}
+wb_gym_h <- nls(
+  log(h) ~ log_a + log(1 - exp(-b * dbh_s^K)),
+  data = gym_df,
+  start = list(log_a = 3, b = 1, K = 1))
+summary(wb_gym_h)
+```
+
+```{r}
+tar_read(fit_nlr_nou_summary_weibull_nc_ang_cr) |>
+  filter(str_detect(variable, "gamma"))
+
+wb_ang_cr <- nls(
+  log(cr) ~ log_a + log(1 - exp(-exp(log_b) * dbh_s^exp(log_K))),
+  data = ang_df,
+  start = list(log_a = 5, log_b = log(0.08), log_K = log(0.6)))
+summary(wb_ang_cr)
+```
+
+```{r}
+wb_gym_cr <- nls(
+  log(cr) ~ log_a + log(1 - exp(-b * dbh_s^K)),
+  data = gym_df,
+  start = list(log_a = 2, b = 0.01, K = 0.5))
+summary(wb_gym_cr)
+```
+
+
+
+
+## Exponential growth
+
+```{r}
+egg_ang_h <- nls(
+  log(h) ~ log_a - b /(dbh + K),
+  data = ang_df,
+  start = list(log_a = 3, b = 10, K = 10))
+summary(egg_ang_h)
+```
+
+```{r}
+egg_gym_h <- nls(
+  log(h) ~ log_a - b /(dbh + K),
+  data = gym_df,
+  start = list(log_a = 3, b = 10, K = 10))
+summary(egg_gym_h)
+```
+
+```{r}
+egg_ang_cr <- nls(
+  log(cr) ~ log_a - b /(dbh + K),
+  data = ang_df,
+  start = list(log_a = 3, b = 10, K = 10))
+summary(egg_ang_cr)
+```
+
+```{r}
+egg_gym_cr <- nls(
+  log(cr) ~ log_a - b /(dbh + K),
+  data = gym_df,
+  start = list(log_a = 3, b = 10, K = 10))
+summary(egg_gym_cr)
+```
+
+```{r}
+AIC(gmm_gym_h, wb_gym_h, egg_gym_h)
+AIC(gmm_ang_h, wb_ang_h, egg_ang_h)
+```

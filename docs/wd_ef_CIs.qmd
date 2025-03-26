@@ -1,0 +1,418 @@
+---
+title: "Wood density's effect"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = TRUE, message = TRUE)
+knitr::opts_knit$set(root.dir = here::here())
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+
+```
+
+```{r, include=FALSE}
+library(ggplot2)
+library(targets)
+library(tidyverse)
+library(patchwork)
+source("R/figs.R")
+options(width = 150)
+library(cowplot)
+
+```
+
+# H-DBH angiosperms
+
+```{r}
+tallo_reduced_nlr_df_ang_h <- tar_read(tallo_reduced_nlr_df_ang_h)
+tallo_reduced_nlr_df_ang_h
+
+wd_h_ang_dat <- tallo_reduced_nlr_df_ang_h |>
+  filter(division == "Angiosperm") |>
+  dplyr::select(sp, dbh, h, cr, wd) |>
+  group_by(sp) |>
+  summarize(wd = mean(wd)) |>
+  mutate(wd_s = scale(wd) |> as.numeric())
+wd_h_ang_dat
+
+light_h_ang_wd_s <- quantile(wd_h_ang_dat$wd_s, 0.1, na.rm = TRUE)
+dense_h_ang_wd_s <- quantile(wd_h_ang_dat$wd_s, 0.9, na.rm = TRUE)
+light_h_ang_wd_s
+dense_h_ang_wd_s
+
+fit_wd_ang_h_draws_weibull_wd <- tar_read(fit_wd_ang_h_draws_weibull_wd)
+fit_wd_ang_h_draws_weibull_wd
+
+gamma_params_h <- fit_wd_ang_h_draws_weibull_wd |>
+  dplyr::select(starts_with("gamma_int"), starts_with("gamma_slope"))
+
+gamma_params_h
+
+median_a <- median(exp(gamma_params_h$`gamma_int[1]`), na.rm = TRUE)
+median_b <- median(gamma_params_h$`gamma_int[2]`, na.rm = TRUE)
+
+gamma_params_h <- gamma_params_h |>
+  mutate(
+    k_light = `gamma_int[3]` + `gamma_slope[3]` * light_h_ang_wd_s,
+    k_dense = `gamma_int[3]` + `gamma_slope[3]` * dense_h_ang_wd_s
+  )
+gamma_params_h
+
+dbh_seq <- seq(1, 150, length.out = 100)
+
+pred_h <- gamma_params_h |>
+  rowwise() |>
+  mutate(
+    h_light = list(tibble(
+      dbh = dbh_seq,
+      h_light = median_a * (1 - exp(-median_b * dbh^k_light))
+    )),
+    h_dense = list(tibble(
+      dbh = dbh_seq,
+      h_dense = median_a * (1 - exp(-median_b * dbh^k_dense))
+    ))
+  ) |>
+  select(h_light, h_dense) |>
+  unnest(cols = c(h_light, h_dense), names_sep = "_") |>
+  rename(
+    dbh = h_light_dbh,
+    h_light = h_light_h_light,
+    h_dense_dbh = h_dense_dbh,
+    h_dense = h_dense_h_dense
+  )
+
+pred_h
+summary(pred_h)
+str(pred_h)
+
+h_ang_light <- pred_h |>
+  group_by(dbh) |>
+  summarize(
+    h_median_light = median(h_light),
+    h_lower_light = quantile(h_light, 0.025),
+    h_upper_light = quantile(h_light, 0.975),
+    .groups = "drop"
+  )
+
+h_ang_light
+
+h_ang_dense <- pred_h |>
+  group_by(dbh) |>
+  summarize(
+    h_median_dense = median(h_dense),
+    h_lower_dense = quantile(h_dense, 0.025),
+    h_upper_dense = quantile(h_dense, 0.975),
+    .groups = "drop"
+  )
+
+h_ang_dense
+
+h_ang_dat <- left_join(
+  h_ang_light,
+  h_ang_dense,
+  by = "dbh"
+)
+h_ang_dat
+
+p1 <- ggplot(h_ang_dat, aes(x = dbh)) +
+  geom_ribbon(aes(ymin = h_lower_light, ymax = h_upper_light, fill = "Light WD species"), alpha = 0.2) +
+  geom_line(aes(y = h_median_light, color = "Light WD species")) +
+  geom_ribbon(aes(ymin = h_lower_dense, ymax = h_upper_dense, fill = "Dense WD species"), alpha = 0.2) +
+  geom_line(aes(y = h_median_dense, color = "Dense WD species")) +
+  scale_color_manual(name = "Wood Type", values = c("Light WD species" = "#f48d10", "Dense WD species" = "#7f590e")) +
+  scale_fill_manual(name = "Wood Type", values = c("Light WD species" = "#f48d10", "Dense WD species" = "#7f590e")) +
+  labs(x = "DBH (cm)", y = "Height (m)") +
+  my_theme()
+
+p1
+
+```
+
+
+# CR-DBH angiosperms
+
+```{r}
+tallo_reduced_lr_df_ang_cr <- tar_read(tallo_reduced_lr_df_ang_cr)
+tallo_reduced_lr_df_ang_cr
+
+wd_cr_ang_dat <- tallo_reduced_lr_df_ang_cr |>
+  filter(division == "Angiosperm") |>
+  dplyr::select(sp, wd) |>
+  group_by(sp) |>
+  summarize(wd = mean(wd)) |>
+  mutate(wd_s = scale(wd) |> as.numeric())
+wd_cr_ang_dat
+
+light_cr_ang_wd_s <- quantile(wd_cr_ang_dat$wd_s, 0.1, na.rm = TRUE)
+dense_cr_ang_wd_s <- quantile(wd_cr_ang_dat$wd_s, 0.9, na.rm = TRUE)
+light_cr_ang_wd_s
+dense_cr_ang_wd_s
+
+fit_wd_ang_cr_draws_pl_wd <- tar_read(fit_wd_ang_cr_draws_pl_wd)
+fit_wd_ang_cr_draws_pl_wd
+
+gamma_params_cr_ang <- fit_wd_ang_cr_draws_pl_wd |>
+  dplyr::select(starts_with("gamma"))
+
+gamma_params_cr_ang
+
+gamma_params_cr_ang <- gamma_params_cr_ang |>
+  mutate(
+    a_light = exp(`gamma[1,1]` + `gamma[1,2]` * light_cr_ang_wd_s),
+    a_dense = exp(`gamma[1,1]` + `gamma[1,2]` * dense_cr_ang_wd_s),
+    b_light = `gamma[2,1]` + `gamma[2,2]` * light_cr_ang_wd_s,
+    b_dense = `gamma[2,1]` + `gamma[2,2]` * dense_cr_ang_wd_s
+  )
+
+gamma_params_cr_ang
+
+dbh_cr_ang_seq <- seq(1, 150, length.out = 100)
+
+pred_ang_cr <- gamma_params_cr_ang |>
+  rowwise() |>
+  mutate(
+    cr_light = list(tibble(
+      dbh = dbh_cr_ang_seq,
+      cr_light = a_light * dbh^b_light
+    )),
+    cr_dense = list(tibble(
+      dbh = dbh_cr_ang_seq,
+      cr_dense = a_dense * dbh^b_dense
+    ))
+  ) |>
+  select(cr_light, cr_dense) |>
+  unnest(cols = c(cr_light, cr_dense), names_sep = "_") |>
+  rename(
+    dbh = cr_light_dbh,
+    cr_light = cr_light_cr_light,
+    cr_dense_dbh = cr_dense_dbh,
+    cr_dense = cr_dense_cr_dense
+  )
+
+pred_ang_cr
+summary(pred_ang_cr)
+str(pred_ang_cr)
+
+cr_ang_light <- pred_ang_cr |>
+  group_by(dbh) |>
+  summarize(
+    cr_median_light = median(cr_light),
+    cr_lower_light = quantile(cr_light, 0.025),
+    cr_upper_light = quantile(cr_light, 0.975),
+    .groups = "drop"
+  )
+
+cr_ang_light
+
+cr_ang_dense <- pred_ang_cr |>
+  group_by(dbh) |>
+  summarize(
+    cr_median_dense = median(cr_dense),
+    cr_lower_dense = quantile(cr_dense, 0.025),
+    cr_upper_dense = quantile(cr_dense, 0.975),
+    .groups = "drop"
+  )
+
+cr_ang_dense
+
+cr_ang_dat <- left_join(
+  cr_ang_light,
+  cr_ang_dense,
+  by = "dbh"
+)
+
+cr_ang_dat
+
+p2 <- ggplot(cr_ang_dat, aes(x = dbh)) +
+  geom_ribbon(aes(ymin = cr_lower_light, ymax = cr_upper_light, fill = "Light WD species"), alpha = 0.2) +
+  geom_line(aes(y =  cr_median_light, color = "Light WD species")) +
+  geom_ribbon(aes(ymin = cr_lower_dense, ymax = cr_upper_dense, fill = "Dense WD species"), alpha = 0.2) +
+  geom_line(aes(y = cr_median_dense, color = "Dense WD species")) +
+  scale_color_manual(name = "Wood Type", values = c("Light WD species" = "#f48d10", "Dense WD species" = "#7f590e")) +
+  scale_fill_manual(name = "Wood Type", values = c("Light WD species" = "#f48d10", "Dense WD species" = "#7f590e")) +
+  labs(x = "DBH (cm)", y = "Crown Radius (m)") +
+  my_theme()
+
+p2
+```
+
+# CR-DBH gymnosperms
+
+```{r}
+tallo_reduced_nlr_df_gym_cr <- tar_read(tallo_reduced_nlr_df_gym_cr)
+tallo_reduced_nlr_df_gym_cr
+
+wd_cr_gym_dat <- tallo_reduced_nlr_df_gym_cr |>
+  filter(division == "Gymnosperm") |>
+  dplyr::select(sp, dbh, h, cr, wd) |>
+  group_by(sp) |>
+  summarize(wd = mean(wd)) |>
+  mutate(wd_s = scale(wd) |> as.numeric())
+wd_cr_gym_dat
+
+light_cr_gym_wd_s <- quantile(wd_cr_gym_dat$wd_s, 0.1, na.rm = TRUE)
+dense_cr_gym_wd_s <- quantile(wd_cr_gym_dat$wd_s, 0.9, na.rm = TRUE)
+light_cr_gym_wd_s
+dense_cr_gym_wd_s
+
+fit_wd_gym_cr_draws_gmm_wd <- tar_read(fit_wd_gym_cr_draws_gmm_wd)
+fit_wd_gym_cr_draws_gmm_wd
+
+gamma_params_cr_gym <- fit_wd_gym_cr_draws_gmm_wd |>
+  dplyr::select(starts_with("gamma_int"), starts_with("gamma_slope"))
+
+gamma_params_cr_gym
+
+median_cr_gym_a <- median(exp(gamma_params_cr_gym$`gamma_int[1]`), na.rm = TRUE)
+median_cr_gym_k <- median(gamma_params_cr_gym$`gamma_int[3]`, na.rm = TRUE)
+
+gamma_params_cr_gym <- gamma_params_cr_gym |>
+  mutate(
+    b_light = `gamma_int[2]` + `gamma_slope[2]` * light_cr_gym_wd_s,
+    b_dense = `gamma_int[2]` + `gamma_slope[2]` * dense_cr_gym_wd_s
+  )
+gamma_params_cr_gym
+
+dbh_cr_gym_seq <- seq(1, 150, length.out = 100)
+
+pred_gym_cr <- gamma_params_cr_gym |>
+  rowwise() |>
+  mutate(
+    cr_light = list(tibble(
+      dbh = dbh_cr_gym_seq,
+      cr_light = median_cr_gym_a * dbh^b_light / (median_cr_gym_k + dbh^b_light)
+    )),
+    cr_dense = list(tibble(
+      dbh = dbh_cr_gym_seq,
+      cr_dense = median_cr_gym_a * dbh^b_dense / (median_cr_gym_k + dbh^b_dense)
+    ))
+  ) |>
+  select(cr_light, cr_dense) |>
+  unnest(cols = c(cr_light, cr_dense), names_sep = "_") |>
+  rename(
+    dbh = cr_light_dbh,
+    cr_light = cr_light_cr_light,
+    cr_dense_dbh = cr_dense_dbh,
+    cr_dense = cr_dense_cr_dense
+  )
+
+pred_gym_cr
+summary(pred_gym_cr)
+str(pred_gym_cr)
+
+cr_gym_light <- pred_gym_cr |>
+  group_by(dbh) |>
+  summarize(
+    cr_median_light = median(cr_light),
+    cr_lower_light = quantile(cr_light, 0.025),
+    cr_upper_light = quantile(cr_light, 0.975),
+    .groups = "drop"
+  )
+
+cr_gym_light
+
+cr_gym_dense <- pred_gym_cr |>
+  group_by(dbh) |>
+  summarize(
+    cr_median_dense = median(cr_dense),
+    cr_lower_dense = quantile(cr_dense, 0.025),
+    cr_upper_dense = quantile(cr_dense, 0.975),
+    .groups = "drop"
+  )
+
+pred_gym_cr
+
+cr_gym_dat <- left_join(
+  cr_gym_light,
+  cr_gym_dense,
+  by = "dbh"
+)
+
+cr_gym_dat
+
+p3 <- ggplot(cr_gym_dat, aes(x = dbh)) +
+  geom_ribbon(aes(ymin = cr_lower_light, ymax = cr_upper_light, fill = "Light WD species"), alpha = 0.2) +
+  geom_line(aes(y =  cr_median_light, color = "Light WD species")) +
+  geom_ribbon(aes(ymin = cr_lower_dense, ymax = cr_upper_dense, fill = "Dense WD species"), alpha = 0.2) +
+  geom_line(aes(y = cr_median_dense, color = "Dense WD species")) +
+  scale_color_manual(name = "Wood Type", values = c("Light WD species" = "#f48d10", "Dense WD species" = "#7f590e")) +
+  scale_fill_manual(name = "Wood Type", values = c("Light WD species" = "#f48d10", "Dense WD species" = "#7f590e")) +
+  labs(x = "DBH (cm)", y = "Crown Radius (m)") +
+  my_theme()
+
+p3
+```
+
+# Combine in 1 plot
+
+```{r}
+p <- p1 + p2 + p3 + plot_layout(nrow = 1, guides = "collect") +
+      plot_annotation(tag_levels = list(c("(a)", "(b)", "(c)"))) &
+      theme(
+      plot.tag = element_text(size = 8),
+      axis.title = element_text(size = 9),
+      text = element_text(size = 8),
+      legend.title = element_blank(),
+      plot.margin = margin(t = 2, r = 2, b = 2, l = 2, unit = "pt")
+    )
+
+
+p <- ggdraw() +
+draw_plot(p, x = 0, y = 0, width = 1, height = 0.95) +  
+draw_label("Angiosperm", x = 0.172, y = 0.94, fontface = 'bold', size = 10) +  
+draw_label("Angiosperm", x = 0.429, y = 0.94, fontface = 'bold', size = 10) +  
+draw_label("Gymnosperm", x = 0.689, y = 0.94, fontface = 'bold', size = 10)
+
+```
+
+
+
+# Writing function
+
+```{r}
+process_wd_data <- function(df, division, light_quantile = 0.1, dense_quantile = 0.9) {
+  df_filtered <- df |>
+    filter(division == division) |>
+    dplyr::select(sp, dbh, h, cr, wd) |>
+    group_by(sp) |>
+    summarize(wd = mean(wd)) |>
+    mutate(wd_s = scale(wd) |> as.numeric())
+  
+  light_wd_s <- quantile(df_filtered$wd_s, light_quantile, na.rm = TRUE)
+  dense_wd_s <- quantile(df_filtered$wd_s, dense_quantile, na.rm = TRUE)
+  
+  return(list(df = df_filtered, light_wd_s = light_wd_s, dense_wd_s = dense_wd_s))
+}
+
+```
+
+```{r}
+
+wd_h_ang_dat <- process_wd_data(tallo_reduced_nlr_df_ang_h)
+wd_h_ang_dat
+
+wd_cr_ang_dat <- process_wd_data(tallo_reduced_lr_df_ang_cr)
+wd_cr_ang_dat
+
+wd_cr_gym_dat <- process_wd_data(tallo_reduced_nlr_df_gym_cr)
+wd_cr_gym_dat
+
+```

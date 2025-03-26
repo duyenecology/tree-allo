@@ -1,0 +1,805 @@
+---
+title: "Caculating Bayesian R2"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: coderpro
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = TRUE, message = TRUE)
+knitr::opts_knit$set(root.dir = here::here())
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+
+```
+
+```{r echo=FALSE}
+library(targets)
+library(tidyverse)
+# source("R/functions.R")
+```
+
+
+# Read in data
+
+# Power-law
+
+## H
+
+```{r}
+pl_nou_ang_h_sum <- tar_read(fit_lr_nou_summary_pl_ang_h)
+pl_nou_ang_h_sum
+
+beta_pl_nou_ang_h_sum <- pl_nou_ang_h_sum |> filter(grepl("beta", variable))
+beta_pl_nou_ang_h_sum
+
+### ANG
+stan_data_lr_ang_h <- tar_read(stan_data_lr_ang_h)
+str(stan_data_lr_ang_h)
+
+# Without wood density
+pl_nou_ang_h <- tar_read(fit_lr_nou_draws_pl_ang_h)
+pl_nou_ang_h
+
+# Get column names that match beta[1, ] and beta[2, ]
+beta1_cols <- grep("^beta\\[1,\\d+\\]", colnames(pl_nou_ang_h), value = TRUE)
+beta2_cols <- grep("^beta\\[2,\\d+\\]", colnames(pl_nou_ang_h), value = TRUE)
+
+# Extract the beta[1, ] and beta[2, ] columns
+beta1 <- as.matrix(pl_nou_ang_h[, beta1_cols])
+beta2 <- as.matrix(pl_nou_ang_h[, beta2_cols])
+
+dim(beta1)
+dim(beta2)
+
+# Assuming beta1 and beta2 are already extracted as matrices with dimensions (3000, 1214)
+y_pred <- matrix(NA, nrow = nrow(stan_data_lr_ang_h$log_x), ncol = nrow(beta1))  # Empty matrix for predictions
+
+# Loop over posterior draws and compute predicted log_y for each tree
+for (i in 1:nrow(beta1)) {  # Loop over iterations (posterior draws)
+  for (n in 1:stan_data_lr_ang_h$N) {       # Loop over trees
+    # Extract the corresponding beta[1, jj[n]] and beta[2, jj[n]]
+    beta_n <- c(beta1[i, stan_data_lr_ang_h$jj[n]], beta2[i, stan_data_lr_ang_h$jj[n]])
+    
+    # Multiply the log_x (tree-level predictors) by the corresponding beta values
+    y_pred[n, i] <- stan_data_lr_ang_h$log_x[n, ] %*% beta_n  # Predicted log_y for each tree
+  }
+}
+
+dim(y_pred) 
+
+
+```
+
+
+## CR
+
+
+```{r}
+stan_data_lr_cr <- tar_read(stan_data_lr_cr)
+
+# Without wood density
+pl_nou_cr <- tar_read(fit_lr2_draws_power_law1_nou_cr)  
+
+gamma1_draws_pl_nou_cr <- as.matrix(pl_nou_cr[, "gamma[1]"])
+gamma2_draws_pl_nou_cr <- as.matrix(pl_nou_cr[, "gamma[2]"])
+sigma_draws_pl_nou_cr <- as.matrix(pl_nou_cr[, "sigma"])
+
+num_sam_pl_nou_cr <- nrow(gamma1_draws_pl_nou_cr)
+num_obs_pl_nou_cr <- nrow(stan_data_lr_cr$log_x)
+
+log_y_pred_draws_pl_nou_cr <- matrix(NA, nrow = num_sam_pl_nou_cr, ncol = num_obs_pl_nou_cr)
+
+for (i in 1:num_sam_pl_nou_cr) {
+  log_y_pred_draws_pl_nou_cr[i, ] <- gamma1_draws_pl_nou_cr[i] + 
+                                     gamma2_draws_pl_nou_cr[i] * stan_data_lr_cr$log_x[, 2]
+}
+
+var_log_y_pred_pl_nou_cr <- apply(log_y_pred_draws_pl_nou_cr, 1, var)
+
+var_res_pl_nou_cr <- sigma_draws_pl_nou_cr^2
+
+bayes_R2_draws_pl_nou_cr <- var_log_y_pred_pl_nou_cr / (var_log_y_pred_pl_nou_cr + var_res_pl_nou_cr)
+
+summary_bayes_R2_pl_nou_cr <- summary(bayes_R2_draws_pl_nou_cr)
+
+summary_bayes_R2_pl_nou_cr
+
+# With wood density
+stan_data_lr_cr <- tar_read(stan_data_lr_cr)  
+pl_cr <- tar_read(fit_lr2_draws_power_law1_cr) 
+
+gamma1_draws_pl_cr <- as.matrix(pl_cr[, "gamma[1,1]"])
+gamma2_draws_pl_cr <- as.matrix(pl_cr[, "gamma[2,1]"])
+sigma_draws_pl_cr <- as.matrix(pl_cr[, "sigma"])
+
+num_sam_pl_cr <- nrow(gamma1_draws_cr)
+num_obs_pl_cr <- nrow(stan_data_lr_cr$log_x)
+
+log_y_pred_draws_pl_cr <- matrix(NA, nrow = num_sam_pl_cr, ncol = num_obs_pl_cr)
+
+for (i in 1:num_sam_cr) {
+  log_y_pred_draws_pl_cr[i, ] <- gamma1_draws_pl_cr[i] + gamma2_draws_pl_cr[i] * stan_data_lr_cr$log_x[, 2]
+}
+
+var_log_y_pred_pl_cr <- apply(log_y_pred_draws_pl_cr, 1, var)
+
+var_res_pl_cr <- sigma_draws_pl_cr^2
+
+bayes_R2_draws_pl_cr <- var_log_y_pred_pl_cr / (var_log_y_pred_pl_cr + var_res_pl_cr)
+
+summary_bayes_R2_pl_cr <- summary(bayes_R2_draws_pl_cr)
+summary_bayes_R2__pl_cr
+```
+
+
+# DBH
+
+## DBH0
+
+
+```{r}
+stan_data_lr_dbh <- tar_read(stan_data_lr_dbh)
+str(stan_data_lr_dbh)
+
+# Without wood density
+pl_nou_dbh <- tar_read(fit_lr2_draws_power_law1_nou_dbh)
+pl_nou_dbh
+
+gamma1_draws_nou_dbh <- as.matrix(pl_nou_dbh[ , "gamma[1]"])
+gamma2_draws_nou_dbh <- as.matrix(pl_nou_dbh[ , "gamma[2]"])
+gamma3_draws_nou_dbh <- as.matrix(pl_nou_dbh[ , "gamma[3]"])
+sigma_draws_nou_dbh <- as.matrix(pl_nou_dbh[ , "sigma"])
+
+num_sam_nou_dbh <- nrow(gamma1_draws_nou_dbh)
+num_obs_nou_dbh <- nrow(stan_data_lr_dbh$log_x)
+
+log_y_pred_draws_nou_dbh <- matrix(NA, nrow = num_sam_nou_dbh, ncol = num_obs_nou_dbh)
+
+for (i in 1:num_sam_nou_dbh) {
+  log_y_pred_draws_nou_dbh[i, ] <- gamma1_draws_nou_dbh[i] + 
+                               gamma2_draws_nou_dbh[i] * stan_data_lr_dbh$log_x[, 2] + 
+                               gamma3_draws_nou_dbh[i] * stan_data_lr_dbh$log_x[, 3]
+}
+
+var_log_y_pred_nou_dbh <- apply(log_y_pred_draws_nou_dbh, 1, var)
+
+var_res_nou_dbh <- sigma_draws_nou_dbh^2
+
+bayes_R2_draws_nou_dbh <- var_log_y_pred_nou_dbh / (var_log_y_pred_nou_dbh + var_res_nou_dbh)
+
+summary_bayes_R2_nou_dbh <- summary(bayes_R2_draws_nou_dbh)
+
+summary_bayes_R2_nou_dbh
+
+# With wood density
+pl_dbh <- tar_read(fit_lr2_draws_power_law1_dbh)  
+pl_dbh
+
+gamma1_draws_dbh <- as.matrix(pl_dbh[, "gamma[1,1]"])
+gamma2_draws_dbh <- as.matrix(pl_dbh[, "gamma[2,1]"])
+gamma3_draws_dbh <- as.matrix(pl_dbh[, "gamma[3,1]"])
+sigma_draws_dbh <- as.matrix(pl_dbh[, "sigma"])
+
+num_sam_dbh <- nrow(gamma1_draws_dbh)
+num_obs_dbh <- nrow(stan_data_lr_dbh$log_x)
+
+log_y_pred_draws_dbh <- matrix(NA, nrow = num_sam_dbh, ncol = num_obs_dbh)
+
+for (i in 1:num_sam_dbh) {
+  log_y_pred_draws_dbh[i, ] <- gamma1_draws_dbh[i] + 
+                               gamma2_draws_dbh[i] * stan_data_lr_dbh$log_x[, 2] + 
+                               gamma3_draws_dbh[i] * stan_data_lr_dbh$log_x[, 3]
+}
+
+var_log_y_pred_dbh <- apply(log_y_pred_draws_dbh, 1, var)
+
+var_res_dbh <- sigma_draws_dbh^2
+
+bayes_R2_draws_dbh <- var_log_y_pred_dbh / (var_log_y_pred_dbh + var_res_dbh)
+
+summary_bayes_R2_dbh <- summary(bayes_R2_draws_dbh)
+
+summary_bayes_R2_dbh
+```
+
+
+## DBH1
+
+
+```{r}
+stan_data_lr_dbh1 <- tar_read(stan_data_lr_dbh1)
+str(stan_data_lr_dbh1)
+
+# Without wood density
+pl_nou_dbh1 <- tar_read(fit_lr2_draws_power_law1_nou_dbh1)
+pl_nou_dbh1
+
+gamma1_draws_nou_dbh1 <- as.matrix(pl_nou_dbh1[, "gamma[1]"])
+gamma2_draws_nou_dbh1 <- as.matrix(pl_nou_dbh1[, "gamma[2]"])
+sigma_draws_nou_dbh1 <- as.matrix(pl_nou_dbh1[, "sigma"])
+
+num_sam_nou_dbh1 <- nrow(gamma1_draws_nou_dbh1)
+num_obs_nou_dbh1 <- nrow(stan_data_lr_dbh1$log_x)
+
+log_y_pred_draws_nou_dbh1 <- matrix(NA, nrow = num_sam_nou_dbh1, ncol = num_obs_nou_dbh1)
+
+for (i in 1:num_sam_nou_dbh1) {
+  log_y_pred_draws_nou_dbh1[i, ] <- gamma1_draws_nou_dbh1[i] + 
+                                    gamma2_draws_nou_dbh1[i] * stan_data_lr_dbh1$log_x[, 2]
+}
+
+var_log_y_pred_nou_dbh1 <- apply(log_y_pred_draws_nou_dbh1, 1, var)
+
+var_res_nou_dbh1 <- sigma_draws_nou_dbh1^2
+
+bayes_R2_draws_nou_dbh1 <- var_log_y_pred_nou_dbh1 / (var_log_y_pred_nou_dbh1 + var_res_nou_dbh1)
+
+summary_bayes_R2_nou_dbh1 <- summary(bayes_R2_draws_nou_dbh1)
+
+summary_bayes_R2_nou_dbh1
+
+# With wood density
+pl_dbh1 <- tar_read(fit_lr2_draws_power_law1_dbh1)  
+pl_dbh1
+
+gamma1_draws_dbh1 <- as.matrix(pl_dbh1[, "gamma[1,1]"])
+gamma2_draws_dbh1 <- as.matrix(pl_dbh1[, "gamma[2,1]"])
+sigma_draws_dbh1 <- as.matrix(pl_dbh1[, "sigma"])
+
+# Number of posterior samples and observations
+num_sam_dbh1 <- nrow(gamma1_draws_dbh1)
+num_obs_dbh1 <- nrow(stan_data_lr_dbh1$log_x)
+
+# Calculate predicted log values across all posterior samples using two predictors
+log_y_pred_draws_dbh1 <- matrix(NA, nrow = num_sam_dbh1, ncol = num_obs_dbh1)
+
+for (i in 1:num_sam_dbh1) {
+  log_y_pred_draws_dbh1[i, ] <- gamma1_draws_dbh1[i] + 
+                                gamma2_draws_dbh1[i] * stan_data_lr_dbh1$log_x[, 2]
+}
+
+var_log_y_pred_dbh1 <- apply(log_y_pred_draws_dbh1, 1, var)
+
+var_res_dbh1 <- sigma_draws_dbh1^2
+
+bayes_R2_draws_dbh1 <- var_log_y_pred_dbh1 / (var_log_y_pred_dbh1 + var_res_dbh1)
+
+summary_bayes_R2_dbh1 <- summary(bayes_R2_draws_dbh1)
+
+summary_bayes_R2_dbh1
+```
+
+
+## DBH2
+
+
+```{r}
+stan_data_lr_dbh2 <- tar_read(stan_data_lr_dbh2)
+str(stan_data_lr_dbh2)
+
+# Without wood desnity
+pl_nou_dbh2 <- tar_read(fit_lr2_draws_power_law1_nou_dbh2)
+pl_nou_dbh2
+
+gamma1_draws_nou_dbh2 <- as.matrix(pl_nou_dbh2[, "gamma[1]"])
+gamma2_draws_nou_dbh2 <- as.matrix(pl_nou_dbh2[, "gamma[2]"])
+sigma_draws_nou_dbh2 <- as.matrix(pl_nou_dbh2[, "sigma"])
+
+num_sam_nou_dbh2 <- nrow(gamma1_draws_nou_dbh2)
+num_obs_nou_dbh2 <- nrow(stan_data_lr_dbh2$log_x)
+
+log_y_pred_draws_nou_dbh2 <- matrix(NA, nrow = num_sam_nou_dbh2, ncol = num_obs_nou_dbh2)
+
+for (i in 1:num_sam_nou_dbh2) {
+  log_y_pred_draws_nou_dbh2[i, ] <- gamma1_draws_nou_dbh2[i] + 
+                                    gamma2_draws_nou_dbh2[i] * stan_data_lr_dbh2$log_x[, 2]
+}
+
+var_log_y_pred_nou_dbh2 <- apply(log_y_pred_draws_nou_dbh2, 1, var)
+
+var_res_nou_dbh2 <- sigma_draws_nou_dbh2^2
+
+bayes_R2_draws_nou_dbh2 <- var_log_y_pred_nou_dbh2 / (var_log_y_pred_nou_dbh2 + var_res_nou_dbh2)
+
+summary_bayes_R2_nou_dbh2 <- summary(bayes_R2_draws_nou_dbh2)
+
+summary_bayes_R2_nou_dbh2
+
+# With wood density
+pl_dbh2 <- tar_read(fit_lr2_draws_power_law1_dbh2)  
+pl_dbh2 
+
+gamma1_draws_dbh2 <- as.matrix(pl_dbh2[, "gamma[1,1]"])
+gamma2_draws_dbh2 <- as.matrix(pl_dbh2[, "gamma[2,1]"])
+sigma_draws_dbh2 <- as.matrix(pl_dbh2[, "sigma"])
+
+num_sam_dbh2 <- nrow(gamma1_draws_dbh2)
+num_obs_dbh2 <- nrow(stan_data_lr_dbh2$log_x)
+
+log_y_pred_draws_dbh2 <- matrix(NA, nrow = num_sam_dbh2, ncol = num_obs_dbh2)
+
+for (i in 1:num_sam_dbh2) {
+  log_y_pred_draws_dbh2[i, ] <- gamma1_draws_dbh2[i] + 
+                                gamma2_draws_dbh2[i] * stan_data_lr_dbh2$log_x[, 2]
+}
+
+var_log_y_pred_dbh2 <- apply(log_y_pred_draws_dbh2, 1, var)
+
+var_res_dbh2 <- sigma_draws_dbh2^2
+
+bayes_R2_draws_dbh2 <- var_log_y_pred_dbh2 / (var_log_y_pred_dbh2 + var_res_dbh2)
+
+summary_bayes_R2_dbh2 <- summary(bayes_R2_draws_dbh2)
+
+summary_bayes_R2_dbh2
+```
+
+
+# DBH3
+
+
+```{r}
+stan_data_lr_dbh3 <- tar_read(stan_data_lr_dbh3)
+str(stan_data_lr_dbh3)
+
+# Without wood density
+pl_nou_dbh3 <- tar_read(fit_lr2_draws_power_law1_nou_dbh3)
+pl_nou_dbh3
+
+gamma1_draws_nou_dbh3 <- as.matrix(pl_nou_dbh3[, "gamma[1]"])
+gamma2_draws_nou_dbh3 <- as.matrix(pl_nou_dbh3[, "gamma[2]"])
+sigma_draws_nou_dbh3 <- as.matrix(pl_nou_dbh3[, "sigma"])
+
+num_sam_nou_dbh3 <- nrow(gamma1_draws_nou_dbh3)
+num_obs_nou_dbh3 <- nrow(stan_data_lr_dbh3$log_x)
+
+log_y_pred_draws_nou_dbh3 <- matrix(NA, nrow = num_sam_nou_dbh3, ncol = num_obs_nou_dbh3)
+
+for (i in 1:num_sam_nou_dbh3) {
+  log_y_pred_draws_nou_dbh3[i, ] <- gamma1_draws_nou_dbh3[i] + 
+                                    gamma2_draws_nou_dbh3[i] * stan_data_lr_dbh3$log_x[, 2]
+}
+
+var_log_y_pred_nou_dbh3 <- apply(log_y_pred_draws_nou_dbh3, 1, var)
+
+var_res_nou_dbh3 <- sigma_draws_nou_dbh3^2
+
+bayes_R2_draws_nou_dbh3 <- var_log_y_pred_nou_dbh3 / (var_log_y_pred_nou_dbh3 + var_res_nou_dbh3)
+
+summary_bayes_R2_nou_dbh3 <- summary(bayes_R2_draws_nou_dbh3)
+
+summary_bayes_R2_nou_dbh3
+
+# With wood density
+pl_dbh3 <- tar_read(fit_lr2_draws_power_law1_dbh3)  
+pl_dbh3 
+
+gamma1_draws_dbh3 <- as.matrix(pl_dbh3[, "gamma[1,1]"])
+gamma2_draws_dbh3 <- as.matrix(pl_dbh3[, "gamma[2,1]"])
+sigma_draws_dbh3 <- as.matrix(pl_dbh3[, "sigma"])
+
+num_sam_dbh3 <- nrow(gamma1_draws_dbh3)
+num_obs_dbh3 <- nrow(stan_data_lr_dbh3$log_x)
+
+log_y_pred_draws_dbh3 <- matrix(NA, nrow = num_sam_dbh3, ncol = num_obs_dbh3)
+
+for (i in 1:num_sam_dbh3) {
+  log_y_pred_draws_dbh3[i, ] <- gamma1_draws_dbh3[i] + 
+                                gamma2_draws_dbh3[i] * stan_data_lr_dbh3$log_x[, 2]
+}
+
+var_log_y_pred_dbh3 <- apply(log_y_pred_draws_dbh3, 1, var)
+
+var_res_dbh3 <- sigma_draws_dbh3^2
+
+bayes_R2_draws_dbh3 <- var_log_y_pred_dbh3 / (var_log_y_pred_dbh3 + var_res_dbh3)
+
+summary_bayes_R2_dbh3 <- summary(bayes_R2_draws_dbh3)
+
+summary_bayes_R2_dbh3
+```
+
+
+# gMM
+
+## H
+
+```{r}
+stan_data_nlr_h <- tar_read(stan_data_nlr_h)
+str(stan_data_nlr_h)
+
+# Without wood density
+gmm_nou_h <- tar_read(fit_nlr_draws_gmm1_nou_h)
+gmm_nou_h
+
+gamma1_draws_gmm_nou_h <- as.matrix(gmm_nou_h[, "gamma[1]"])
+gamma2_draws_gmm_nou_h <- as.matrix(gmm_nou_h[, "gamma[2]"])
+gamma3_draws_gmm_nou_h <- as.matrix(gmm_nou_h[, "gamma[3]"])
+
+sigma_draws_gmm_nou_h <- as.matrix(gmm_nou_h[, "sigma"])
+
+num_sam_gmm_nou_h <- nrow(gamma1_draws_gmm_nou_h)
+num_obs_gmm_nou_h <- length(stan_data_nlr_h$x)
+
+log_y_pred_draws_gmm_nou_h <- matrix(NA, nrow = num_sam_gmm_nou_h, ncol = num_obs_gmm_nou_h)
+
+for (i in 1:num_sam_gmm_nou_h) {
+  log_y_pred_draws_gmm_nou_h[i, ] <- exp(gamma1_draws_gmm_nou_h[i]) + 
+                                     exp(gamma2_draws_gmm_nou_h[i]) * log(stan_data_nlr_h$x) - 
+                                     log(exp(gamma3_draws_gmm_nou_h[i]) + (stan_data_nlr_h$x)^(exp(gamma2_draws_gmm_nou_h[i])))
+}
+
+var_log_y_pred_gmm_nou_h <- apply(log_y_pred_draws_gmm_nou_h, 1, var)
+
+var_res_gmm_nou_h <- sigma_draws_gmm_nou_h^2
+
+bayes_R2_draws_gmm_nou_h <- var_log_y_pred_gmm_nou_h / (var_log_y_pred_gmm_nou_h + var_res_gmm_nou_h)
+
+summary_bayes_R2_gmm_nou_h <- summary(bayes_R2_draws_gmm_nou_h)
+summary_bayes_R2_gmm_nou_h
+
+# With wood density
+gmm_h <- tar_read(fit_nlr_draws_gmm1_h)
+gmm_h
+
+gamma1_draws_gmm_h <- as.matrix(gmm_h[, "gamma[1,1]"])
+gamma2_draws_gmm_h <- as.matrix(gmm_h[, "gamma[1,2]"])
+gamma3_draws_gmm_h <- as.matrix(gmm_h[, "gamma[1,3]"])
+sigma_draws_gmm_h <- as.matrix(gmm_h[, "sigma"])
+
+num_sam_gmm_h <- nrow(gamma1_draws_gmm_h)
+num_obs_gmm_h <- length(stan_data_nlr_h$x)
+
+log_y_pred_draws_gmm_h <- matrix(NA, nrow = num_sam_gmm_h, ncol = num_obs_gmm_h)
+
+for (i in 1:num_sam_gmm_h) {
+  log_y_pred_draws_gmm_h[i, ] <- exp(gamma1_draws_gmm_h[i]) + 
+                                 exp(gamma2_draws_gmm_h[i]) * log(stan_data_nlr_h$x) - 
+                                 log(exp(gamma3_draws_gmm_h[i]) + (stan_data_nlr_h$x)^(exp(gamma2_draws_gmm_h[i])))
+}
+
+var_log_y_pred_gmm_h <- apply(log_y_pred_draws_gmm_h, 1, var)
+
+var_res_gmm_h <- sigma_draws_gmm_h^2
+
+bayes_R2_draws_gmm_h <- var_log_y_pred_gmm_h / (var_log_y_pred_gmm_h + var_res_gmm_h)
+
+summary_bayes_R2_gmm_h <- summary(bayes_R2_draws_gmm_h)
+summary_bayes_R2_gmm_h
+```
+
+
+## CR
+
+
+```{r}
+stan_data_nlr_cr <- tar_read(stan_data_nlr_cr)
+str(stan_data_nlr_cr)
+
+# Without wood density
+gmm_nou_cr <- tar_read(fit_nlr_draws_gmm1_nou_cr)
+gmm_nou_cr
+
+gamma1_draws_gmm_nou_cr <- as.matrix(gmm_nou_cr[, "gamma[1]"])
+gamma2_draws_gmm_nou_cr <- as.matrix(gmm_nou_cr[, "gamma[2]"])
+gamma3_draws_gmm_nou_cr <- as.matrix(gmm_nou_cr[, "gamma[3]"])
+
+sigma_draws_gmm_nou_cr <- as.matrix(gmm_nou_cr[, "sigma"])
+
+num_sam_gmm_nou_cr <- nrow(gamma1_draws_gmm_nou_cr)
+num_obs_gmm_nou_cr <- length(stan_data_nlr_cr$x)
+
+log_y_pred_draws_gmm_nou_cr <- matrix(NA, nrow = num_sam_gmm_nou_cr, ncol = num_obs_gmm_nou_cr)
+
+for (i in 1:num_sam_gmm_nou_cr) {
+  log_y_pred_draws_gmm_nou_cr[i, ] <- exp(gamma1_draws_gmm_nou_cr[i]) + 
+                                      exp(gamma2_draws_gmm_nou_cr[i]) * log(stan_data_nlr_cr$x) - 
+                                      log(exp(gamma3_draws_gmm_nou_cr[i]) + (stan_data_nlr_cr$x)^(exp(gamma2_draws_gmm_nou_cr[i])))
+}
+
+var_log_y_pred_gmm_nou_cr <- apply(log_y_pred_draws_gmm_nou_cr, 1, var)
+
+var_res_gmm_nou_cr <- sigma_draws_gmm_nou_cr^2
+
+bayes_R2_draws_gmm_nou_cr <- var_log_y_pred_gmm_nou_cr / (var_log_y_pred_gmm_nou_cr + var_res_gmm_nou_cr)
+
+summary_bayes_R2_gmm_nou_cr <- summary(bayes_R2_draws_gmm_nou_cr)
+summary_bayes_R2_gmm_nou_cr
+
+# With wood density
+gmm_cr <- tar_read(fit_nlr_draws_gmm1_cr)
+gmm_cr
+
+gamma1_draws_gmm_cr <- as.matrix(gmm_cr[, "gamma[1,1]"])
+gamma2_draws_gmm_cr <- as.matrix(gmm_cr[, "gamma[1,2]"])
+gamma3_draws_gmm_cr <- as.matrix(gmm_cr[, "gamma[1,3]"])
+sigma_draws_gmm_cr <- as.matrix(gmm_cr[, "sigma"])
+
+num_sam_gmm_cr <- nrow(gamma1_draws_gmm_cr)
+num_obs_gmm_cr <- length(stan_data_nlr_cr$x)
+
+log_y_pred_draws_gmm_cr <- matrix(NA, nrow = num_sam_gmm_cr, ncol = num_obs_gmm_cr)
+
+for (i in 1:num_sam_gmm_cr) {
+  log_y_pred_draws_gmm_cr[i, ] <- exp(gamma1_draws_gmm_cr[i]) + 
+                                  exp(gamma2_draws_gmm_cr[i]) * log(stan_data_nlr_cr$x) - 
+                                  log(exp(gamma3_draws_gmm_cr[i]) + (stan_data_nlr_cr$x)^(exp(gamma2_draws_gmm_cr[i])))
+}
+
+var_log_y_pred_gmm_cr <- apply(log_y_pred_draws_gmm_cr, 1, var)
+
+var_res_gmm_cr <- sigma_draws_gmm_cr^2
+
+bayes_R2_draws_gmm_cr <- var_log_y_pred_gmm_cr / (var_log_y_pred_gmm_cr + var_res_gmm_cr)
+
+summary_bayes_R2_gmm_cr <- summary(bayes_R2_draws_gmm_cr)
+summary_bayes_R2_gmm_cr
+```
+
+
+# Weibull
+
+## H
+
+
+```{r}
+stan_data_nlr_h <- tar_read(stan_data_nlr_h)
+str(stan_data_nlr_h)
+
+# Without wood density
+wb_nou_h <- tar_read(fit_nlr_draws_weibull1_nou_h)
+wb_nou_h
+
+gamma1_draws_wb_nou_h <- as.matrix(wb_nou_h[, "gamma[1]"])
+gamma2_draws_wb_nou_h <- as.matrix(wb_nou_h[, "gamma[2]"])
+gamma3_draws_wb_nou_h <- as.matrix(wb_nou_h[, "gamma[3]"])
+
+sigma_draws_wb_nou_h <- as.matrix(wb_nou_h[, "sigma"])
+
+num_sam_wb_nou_h <- nrow(gamma1_draws_wb_nou_h)
+num_obs_wb_nou_h <- length(stan_data_nlr_h$x)
+
+log_y_pred_draws_wb_nou_h <- matrix(NA, nrow = num_sam_wb_nou_h, ncol = num_obs_wb_nou_h)
+
+for (i in 1:num_sam_wb_nou_h) {
+  log_y_pred_draws_wb_nou_h[i, ] <- exp(gamma1_draws_wb_nou_h[i]) + 
+                                    log(1- exp(-(exp(gamma2_draws_wb_nou_h[i])) * (stan_data_nlr_h$x)^(exp(gamma3_draws_wb_nou_h[i]))))
+}
+
+var_log_y_pred_wb_nou_h <- apply(log_y_pred_draws_wb_nou_h, 1, var)
+
+var_res_wb_nou_h <- sigma_draws_wb_nou_h^2
+
+bayes_R2_draws_wb_nou_h <- var_log_y_pred_wb_nou_h / (var_log_y_pred_wb_nou_h + var_res_wb_nou_h)
+
+summary_bayes_R2_wb_nou_h <- summary(bayes_R2_draws_wb_nou_h)
+summary_bayes_R2_wb_nou_h
+
+# With wood density
+wb_h <- tar_read(fit_nlr_draws_weibull1_h)
+wb_h
+
+# Extract the gamma and sigma draws
+gamma1_draws_wb_h <- as.matrix(wb_h[, "gamma[1,1]"])
+gamma2_draws_wb_h <- as.matrix(wb_h[, "gamma[1,2]"])
+gamma3_draws_wb_h <- as.matrix(wb_h[, "gamma[1,3]"])
+sigma_draws_wb_h <- as.matrix(wb_h[, "sigma"])
+
+num_sam_wb_h <- nrow(gamma1_draws_wb_h)
+num_obs_wb_h <- length(stan_data_nlr_h$x)
+
+log_y_pred_draws_wb_h <- matrix(NA, nrow = num_sam_wb_h, ncol = num_obs_wb_h)
+
+for (i in 1:num_sam_wb_h) {
+  log_y_pred_draws_wb_h[i, ] <- exp(gamma1_draws_wb_h[i]) + 
+                                log(1 - exp(-(exp(gamma2_draws_wb_h[i])) * 
+                                (stan_data_nlr_h$x)^(exp(gamma3_draws_wb_h[i]))))
+}
+
+var_log_y_pred_wb_h <- apply(log_y_pred_draws_wb_h, 1, var)
+
+var_res_wb_h <- sigma_draws_wb_h^2
+
+bayes_R2_draws_wb_h <- var_log_y_pred_wb_h / (var_log_y_pred_wb_h + var_res_wb_h)
+
+summary_bayes_R2_wb_h <- summary(bayes_R2_draws_wb_h)
+
+summary_bayes_R2_wb_h
+```
+
+
+## CR
+
+
+```{r}
+wb_nou_cr <- tar_read(fit_nlr_draws_weibull1_nou_cr)
+wb_nou_cr
+
+gamma1_draws_wb_nou_cr <- as.matrix(wb_nou_cr[, "gamma[1]"])
+gamma2_draws_wb_nou_cr <- as.matrix(wb_nou_cr[, "gamma[2]"])
+gamma3_draws_wb_nou_cr <- as.matrix(wb_nou_cr[, "gamma[3]"])
+sigma_draws_wb_nou_cr <- as.matrix(wb_nou_cr[, "sigma"])
+
+num_sam_wb_nou_cr <- nrow(gamma1_draws_wb_nou_cr)
+num_obs_wb_nou_cr <- length(stan_data_nlr_cr$x)
+
+log_y_pred_draws_wb_nou_cr <- matrix(NA, nrow = num_sam_wb_nou_cr, ncol = num_obs_wb_nou_cr)
+
+for (i in 1:num_sam_wb_nou_cr) {
+  log_y_pred_draws_wb_nou_cr[i, ] <- exp(gamma1_draws_wb_nou_cr[i]) + 
+                                     log(1 - exp(-(exp(gamma2_draws_wb_nou_cr[i])) * 
+                                     (stan_data_nlr_cr$x)^(exp(gamma3_draws_wb_nou_cr[i]))))
+}
+
+var_log_y_pred_wb_nou_cr <- apply(log_y_pred_draws_wb_nou_cr, 1, var)
+
+var_res_wb_nou_cr <- sigma_draws_wb_nou_cr^2
+
+bayes_R2_draws_wb_nou_cr <- var_log_y_pred_wb_nou_cr / (var_log_y_pred_wb_nou_cr + var_res_wb_nou_cr)
+
+summary_bayes_R2_wb_nou_cr <- summary(bayes_R2_draws_wb_nou_cr)
+
+summary_bayes_R2_wb_nou_cr
+
+# With wood density 
+wb_cr <- tar_read(fit_nlr_draws_weibull1_cr)
+wb_cr
+
+gamma1_draws_wb_cr <- as.matrix(wb_cr[, "gamma[1,1]"])
+gamma2_draws_wb_cr <- as.matrix(wb_cr[, "gamma[1,2]"])
+gamma3_draws_wb_cr <- as.matrix(wb_cr[, "gamma[1,3]"])
+sigma_draws_wb_cr <- as.matrix(wb_cr[, "sigma"])
+
+num_sam_wb_cr <- nrow(gamma1_draws_wb_cr)
+num_obs_wb_cr <- length(stan_data_nlr_cr$x)
+
+log_y_pred_draws_wb_cr <- matrix(NA, nrow = num_sam_wb_cr, ncol = num_obs_wb_cr)
+
+for (i in 1:num_sam_wb_cr) {
+  log_y_pred_draws_wb_cr[i, ] <- exp(gamma1_draws_wb_cr[i]) + 
+                                 log(1 - exp(-(exp(gamma2_draws_wb_cr[i])) * 
+                                 (stan_data_nlr_cr$x)^(exp(gamma3_draws_wb_cr[i]))))
+}
+
+var_log_y_pred_wb_cr <- apply(log_y_pred_draws_wb_cr, 1, var)
+
+var_res_wb_cr <- sigma_draws_wb_cr^2
+
+bayes_R2_draws_wb_cr <- var_log_y_pred_wb_cr / (var_log_y_pred_wb_cr + var_res_wb_cr)
+
+summary_bayes_R2_wb_cr <- summary(bayes_R2_draws_wb_cr)
+
+summary_bayes_R2_wb_cr
+```
+
+```{r}
+# H (Height) data
+stan_data_lr_h <- tar_read(stan_data_lr_h)
+pl_nou_h <- tar_read(fit_lr2_draws_power_law1_nou_h)
+pl_h <- tar_read(fit_lr2_draws_power_law1_h)
+
+# CR (Crown Radius) data
+stan_data_lr_cr <- tar_read(stan_data_lr_cr)
+pl_nou_cr <- tar_read(fit_lr2_draws_power_law1_nou_cr)
+pl_cr <- tar_read(fit_lr2_draws_power_law1_cr)
+
+# DBH0 (Diameter at Breast Height) data
+stan_data_lr_dbh <- tar_read(stan_data_lr_dbh)
+pl_nou_dbh <- tar_read(fit_lr2_draws_power_law1_nou_dbh)
+pl_dbh <- tar_read(fit_lr2_draws_power_law1_dbh)
+
+# DBH1 data
+stan_data_lr_dbh1 <- tar_read(stan_data_lr_dbh1)
+pl_nou_dbh1 <- tar_read(fit_lr2_draws_power_law1_nou_dbh1)
+pl_dbh1 <- tar_read(fit_lr2_draws_power_law1_dbh1)
+
+# DBH2 data
+stan_data_lr_dbh2 <- tar_read(stan_data_lr_dbh2)
+pl_nou_dbh2 <- tar_read(fit_lr2_draws_power_law1_nou_dbh2)
+pl_dbh2 <- tar_read(fit_lr2_draws_power_law1_dbh2)
+
+# DBH3 data
+stan_data_lr_dbh3 <- tar_read(stan_data_lr_dbh3)
+pl_nou_dbh3 <- tar_read(fit_lr2_draws_power_law1_nou_dbh3)
+pl_dbh3 <- tar_read(fit_lr2_draws_power_law1_dbh3)
+
+# gMM models for H
+stan_data_nlr_h <- tar_read(stan_data_nlr_h)
+gmm_nou_h <- tar_read(fit_nlr_draws_gmm1_nou_h)
+gmm_h <- tar_read(fit_nlr_draws_gmm1_h)
+
+# gMM models for CR
+stan_data_nlr_cr <- tar_read(stan_data_nlr_cr)
+gmm_nou_cr <- tar_read(fit_nlr_draws_gmm1_nou_cr)
+gmm_cr <- tar_read(fit_nlr_draws_gmm1_cr)
+
+# Weibull models for H
+wb_nou_h <- tar_read(fit_nlr_draws_weibull1_nou_h)
+wb_h <- tar_read(fit_nlr_draws_weibull1_h)
+
+# Weibull models for CR
+wb_nou_cr <- tar_read(fit_nlr_draws_weibull1_nou_cr)
+wb_cr <- tar_read(fit_nlr_draws_weibull1_cr)
+```
+
+
+
+# Usage
+
+
+```{r}
+source("R/functions.R")
+
+# lr
+bayes_R2_pl_nou_h <- calculate_bayes_R2_lr(stan_data_lr_h, pl_nou_h, c("gamma[1]", "gamma[2]"))
+bayes_R2_pl_h <- calculate_bayes_R2_lr(stan_data_lr_h, pl_h, c("gamma[1,1]", "gamma[2,1]"))
+
+
+bayes_R2_pl_nou_cr <- calculate_bayes_R2_lr(stan_data_lr_cr, pl_nou_cr, c("gamma[1]", "gamma[2]"))
+bayes_R2_pl_cr <- calculate_bayes_R2_lr(stan_data_lr_cr, pl_cr, c("gamma[1,1]", "gamma[2,1]"))
+
+
+bayes_R2_pl_nou_dbh <- calculate_bayes_R2_lr(stan_data_lr_dbh, pl_nou_dbh, c("gamma[1]", "gamma[2]", "gamma[3]"))
+bayes_R2_pl_dbh <- calculate_bayes_R2_lr(stan_data_lr_dbh, pl_dbh, c("gamma[1,1]", "gamma[2,1]", "gamma[3,1]"))
+
+
+bayes_R2_pl_nou_dbh1 <- calculate_bayes_R2_lr(stan_data_lr_dbh1, pl_nou_dbh1, c("gamma[1]", "gamma[2]"))
+bayes_R2_pl_dbh1 <- calculate_bayes_R2_lr(stan_data_lr_dbh1, pl_dbh1, c("gamma[1,1]", "gamma[2,1]"))
+
+
+bayes_R2_pl_nou_dbh2 <- calculate_bayes_R2_lr(stan_data_lr_dbh2, pl_nou_dbh2, c("gamma[1]", "gamma[2]"))
+bayes_R2_pl_dbh2 <- calculate_bayes_R2_lr(stan_data_lr_dbh2, pl_dbh2, c("gamma[1,1]", "gamma[2,1]"))
+
+
+bayes_R2_pl_nou_dbh3 <- calculate_bayes_R2_lr(stan_data_lr_dbh3, pl_nou_dbh3, c("gamma[1]", "gamma[2]"))
+bayes_R2_pl_dbh3 <- calculate_bayes_R2_lr(stan_data_lr_dbh3, pl_dbh3, c("gamma[1,1]", "gamma[2,1]"))
+
+
+
+bayes_R2_gmm_nou_h <- calculate_bayes_R2_nlr(stan_data_nlr_h, gmm_nou_h, c("gamma[1]", "gamma[2]", "gamma[3]"), "gmm")
+bayes_R2_gmm_h <- calculate_bayes_R2_nlr(stan_data_nlr_h, gmm_h, c("gamma[11,]", "gamma[1,2]", "gamma[1,3]"), "gmm")
+
+bayes_R2_gmm_nou_cr <- calculate_bayes_R2_nlr(stan_data_nlr_cr, gmm_nou_cr, c("gamma[1]", "gamma[2]", "gamma[3]"), "gmm")
+bayes_R2_gmm_cr <- calculate_bayes_R2_nlr(stan_data_nlr_cr, gmm_cr, c("gamma[1,1]", "gamma[1,2]", "gamma[1,3]"), "gmm")
+
+
+
+bayes_R2_wb_nou_h <- calculate_bayes_R2_nlr(stan_data_nlr_h, wb_nou_h, c("gamma[1]", "gamma[2]", "gamma[3]"), "gmm")
+bayes_R2_wb_h <- calculate_bayes_R2_nlr(stan_data_nlr_h, wb_h, c("gamma[1,1]", "gamma[1,2]", "gamma[1,3]"), "gmm")
+
+bayes_R2_wb_nou_cr <- calculate_bayes_R2_nlr(stan_data_nlr_cr, wb_nou_cr, c("gamma[1]", "gamma[2]", "gamma[3]"), "weibull")
+bayes_R2_wb_cr <- calculate_bayes_R2_nlr(stan_data_nlr_cr, wb_cr, c("gamma[1,1]", "gamma[1,2]", "gamma[1,3]"), "weibull")
+
+```
+
+```{r}
+source("R/functions.R")
+r2_df <- tar_read(R2_df)
+r2_df
+r2_tbl <- generate_r2_table(r2_df)
+r2_tbl
+
+loo_tbl <- tar_read(loo_tbl)
+loo_tbl
+com_tbl <- generate_comparison_table(loo_tbl)
+com_tbl
+
+loo_r2_tbl <- loo_r2_table(r2_tbl, com_tbl)
+loo_r2_tbl
+```

@@ -1,0 +1,164 @@
+---
+title: "CR-DBH allometry convergence's checking"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: coderpro
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/workspaces/tree-allometry")
+```
+
+```{r global_options, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+```
+
+```{r, include=FALSE}
+library(targets)
+library(dplyr)
+```
+
+
+# Power-law
+
+## Without wood density
+
+```{r}
+
+fit_lr2_summary_power_law1_nou_cr <- tar_read(fit_lr2_summary_power_law1_nou_cr)
+fit_lr2_summary_power_law1_nou_cr
+beta_pl_nou_cr <- fit_lr2_summary_power_law1_nou_cr |> filter(grepl("beta\\[", variable))
+summary(beta_pl_nou_cr)
+```
+
+- No problem
+
+# With wood density
+```{r}
+fit_lr2_summary_power_law1_cr <- tar_read(fit_lr2_summary_power_law1_cr)
+fit_lr2_summary_power_law1_cr
+beta_pl_cr <- fit_lr2_summary_power_law1_cr |> filter(grepl("beta\\[", variable))
+beta_pl_cr
+summary(beta_pl_cr)
+```
+
+- No problem
+
+# gMM
+
+## Without wood density
+
+```{r}
+fit_nlr_summary_gmm1_nou_cr <- tar_read(fit_nlr_summary_gmm1_nou_cr)
+fit_nlr_summary_gmm1_nou_cr
+beta_gmm_nou_cr <- fit_nlr_summary_gmm1_nou_cr |> filter(grepl("beta\\[", variable))
+summary(beta_gmm_nou_cr)
+
+low_ess_gmm_nou_cr_beta <- beta_gmm_nou_cr |>
+  filter(ess_bulk < 300)
+
+low_ess_gmm_nou_cr_beta
+summary(low_ess_gmm_nou_cr_beta)
+```
+
+- 5 species has convergent issue but ESS >= 250 so I think it OK.
+
+## With wood density
+```{r}
+fit_nlr_summary_gmm1_cr <- tar_read(fit_nlr_summary_gmm1_cr)
+fit_nlr_summary_gmm1_cr
+beta_gmm_cr <- fit_nlr_summary_gmm1_cr |> filter(grepl("beta\\[", variable))
+summary(beta_gmm_cr)
+
+low_ess_gmm_cr_beta <- beta_gmm_cr |>
+  filter(ess_bulk < 300)
+
+print(low_ess_gmm_cr_beta, n = Inf)
+
+low_ess_gmm_cr_beta <- low_ess_gmm_cr_beta |>
+  mutate(sp_id = sub("beta\\[([0-9]+),[0-9]+\\]", "\\1", variable),
+         dimension = sub("beta\\[[0-9]+,([0-9]+)\\]", "\\1", variable))
+
+species_counts <- low_ess_gmm_cr_beta |>
+  group_by(sp_id) |>
+  summarise(dimension_count = n_distinct(dimension))
+
+species_counts
+
+num_species <- low_ess_gmm_cr_beta |>
+  distinct(sp_id) |>
+  nrow()
+```
+
+- 22 species has convergent issue but ESS >= 250
+
+# Weibull
+
+## Without wood density
+
+```{r}
+fit_nlr_summary_weibull1_nou_cr <- tar_read(fit_nlr_summary_weibull1_nou_cr)
+fit_nlr_summary_weibull1_nou_cr
+beta_weibull_nou_cr <- fit_nlr_summary_weibull1_nou_cr |> filter(grepl("beta\\[", variable))
+summary(beta_weibull_nou_cr)
+
+low_ess_weibull_nou_cr_beta <- beta_weibull_nou_cr |>
+  filter(ess_bulk < 300)
+
+low_ess_weibull_nou_cr_beta
+summary(low_ess_weibull_nou_cr_beta)
+
+low_ess_weibull_nou_cr_beta <- low_ess_weibull_nou_cr_beta |>
+  mutate(sp_id = sub("beta\\[([0-9]+),[0-9]+\\]", "\\1", variable))
+
+num_species_low_ess <- low_ess_weibull_nou_cr_beta |>
+  distinct(sp_id) |>
+  nrow()
+
+print(num_species_low_ess)
+```
+
+# With wood density
+
+```{r}
+fit_nlr_summary_weibull1_cr <- tar_read(fit_nlr_summary_weibull1_cr)
+fit_nlr_summary_weibull1_cr
+beta_weibull_cr <- fit_nlr_summary_weibull1_cr |> filter(grepl("beta\\[", variable))
+summary(beta_weibull_cr)
+
+low_ess_weibull_cr_beta <- beta_weibull_cr |>
+  filter(ess_bulk < 300)
+  
+low_ess_weibull_cr_beta
+
+summary(low_ess_weibull_cr_beta)
+print(low_ess_weibull_cr_beta, n = Inf)
+
+low_ess_weibull_cr_beta <- low_ess_weibull_cr_beta |>
+  mutate(sp_id = sub("beta\\[([0-9]+),[0-9]+\\]", "\\1", variable))
+
+num_species_low_ess <- low_ess_weibull_cr_beta |>
+  distinct(sp_id) |>
+  nrow()
+
+print(num_species_low_ess)
+```
+
+- 400 sp have convergent issue.

@@ -1,0 +1,124 @@
+---
+title: "Checking gmm model"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: coderpro
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r global_options, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+```
+
+# Load the required packages
+
+```{r}
+library(dplyr)
+library(readr)
+library(targets)
+library(stringr)
+library(cmdstanr)
+library(tidyverse)
+library(reshape2)
+library(bayesplot)
+library(cmdstanr) 
+library(posterior) 
+```
+
+# Data preparation
+```{r}
+tallo_wd_200_df <- read_csv("data/tallo_wd_200.csv")
+tallo_wd_200_df
+stan_data_nlr_cr <- tar_read(stan_data_nlr_cr)
+str(stan_data_nlr_cr)
+
+options(width = 100)
+gmm_cr <- tar_read(fit_nlr_mcmc_gmm_cr)
+gmm_cr
+
+gmm2_cr <- tar_read(fit_nlr_mcmc_gmm2_cr)
+gmm2_cr
+
+gmm_beta <- gmm_cr$summary(variable = "beta")
+gmm2_beta <- gmm2_cr$summary(variable = "beta")
+
+gmm_beta
+gmm2_beta
+
+summary(gmm_beta)
+summary(gmm2_beta)
+
+# Filter beta parameters with small ESS
+small_ess_gmm_beta <- gmm_beta |>
+  filter(ess_bulk < 300) |>
+  arrange(ess_bulk) |>
+  mutate(species_id = as.integer(str_extract(variable, "\\d+")))
+
+small_ess_gmm1_beta <- gmm1_beta |>
+  filter(ess_bulk < 300) |>
+  arrange(ess_bulk)
+small_ess_gmm1_beta
+
+
+high_rhat_gmm1_beta <- gmm1_beta |>
+   filter(rhat > 1.1) |> 
+   arrange(rhat)
+
+high_rhat_gmm1_beta
+```
+
+# Species with low ESS of gmm_cr and gmm2_cr model
+
+```{r}
+beta1 <- gmm_beta |> filter(str_detect(variable, "beta\\[\\d+,1\\]"))
+beta1
+summary(beta1)
+
+small_ess_beta1 <- beta1 |>
+  filter(ess_bulk < 300) |>
+  arrange(ess_bulk) |>
+  mutate(species_id = as.integer(str_extract(variable, "\\d+")))
+
+
+small_ess_beta1
+
+beta2 <- gmm_beta |> filter(str_detect(variable, "beta\\[\\d+,2\\]"))
+
+beta2
+summary(beta2)
+
+
+beta3 <- gmm_beta |> filter(str_detect(variable, "beta\\[\\d+,3\\]"))
+
+beta3
+summary(beta3)
+```
+
+
+```{r}
+gamma_trace <- gmm_cr$draws("gamma")
+mcmc_trace(gamma_trace)
+
+mcmc_trace(gamma_trace) + ggtitle("Trace Plot for gmm_cr Gamma")
+
+gamma2_trace <- gmm2_cr$draws("gamma")
+mcmc_trace(gamma2_trace) + ggtitle("Trace Plot for gmm2_cr Gamma")
+
+mcmc_trace(gamma_trace) + ggtitle("Trace plot of gmm1_cr")
+```

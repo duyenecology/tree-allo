@@ -1,0 +1,330 @@
+---
+title: "Comparing CR models"
+author: "Nguyen Thi Duyen"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: coderpro
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    standalone: true
+    embed-resources: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = TRUE, message = TRUE)
+knitr::opts_knit$set(root.dir = here::here())
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  fig.show = "hold"
+)
+
+```
+
+```{r, include=FALSE}
+library(targets)
+library(tidyverse)
+library(scales)
+library(MASS)
+```
+
+# Read in data
+
+```{r}
+options(width = 200)
+tallo_wd_df_cr <- tar_read(tallo_wd_df_cr)
+tallo_wd_df_cr
+
+ang_cr_df <- tallo_wd_df_cr |> filter(division == "Angiosperm")
+ang_cr_df
+
+gym_cr_df <- tallo_wd_df_cr |> filter(division == "Gymnosperm")
+gym_cr_df
+
+```
+
+# Power-law
+
+## Ang
+```{r}
+fit_lr_nou_data_ang_cr <- tar_read(fit_lr_nou_data_ang_cr)
+str(fit_lr_nou_data_ang_cr)
+
+pl_ang_cr <- tar_read(fit_lr_nou_summary_pl_ang_cr)
+pl_ang_cr
+
+gamma_ang_pl <- pl_ang_cr |> filter(grepl("gamma", variable))
+
+community_log_a_ang_pl <- gamma_ang_pl |> filter(variable == "gamma[1]") |> pull(q50)
+community_b_ang_pl <- gamma_ang_pl |> filter(variable == "gamma[2]") |> pull(q50)
+
+log_x_range_ang <- fit_lr_nou_data_ang_cr$log_x[,2] |> range()
+log_x_seq_ang <- seq(log_x_range_ang[1], log_x_range_ang[2], length.out = 100)
+fitted_log_y_seq_ang <- community_log_a_ang_pl + community_b_ang_pl * log_x_seq_ang
+y_pred_ang <- exp(fitted_log_y_seq_ang)
+df_ang_pl_cr <- tibble(y = y_pred_ang, x = exp(log_x_seq_ang))
+
+ggplot() +
+  geom_bin2d(data = ang_cr_df, aes(x = dbh, y = cr), bins = 100)  +
+  scale_fill_viridis_c(option = "D") +
+  geom_line(data = df_ang_pl_cr, aes(x = x, y = y)) +
+  labs(x = "DBH (cm)", y = "CR (m)")
+
+```
+
+## Gym
+
+```{r}
+fit_lr_nou_data_gym_cr <- tar_read(fit_lr_nou_data_gym_cr)
+str(fit_lr_nou_data_gym_cr)
+
+# pl_gym_cr <- tar_read(fit_lr_nou_summary_pl_biome_gym_cr)
+# pl_gym_cr
+
+pl_gym_cr <- tar_read(fit_lr_nou_summary_pl_gym_cr)
+pl_gym_cr
+
+
+gamma_gym_pl <- pl_gym_cr |> filter(grepl("gamma", variable))
+
+community_log_a_gym_pl <- gamma_gym_pl |> filter(variable == "gamma[1]") |> pull(q50)
+community_b_gym_pl <- gamma_gym_pl |> filter(variable == "gamma[2]") |> pull(q50)
+
+log_x_range_gym_cr <- fit_lr_nou_data_gym_cr$log_x[,2] |> range()
+log_x_seq_gym_cr <- seq(log_x_range_gym_cr[1], log_x_range_gym_cr[2], length.out = 100)
+
+fitted_log_y_seq_gym <- community_log_a_gym_pl + community_b_gym_pl * log_x_seq_gym_cr
+y_pred_gym_cr <- exp(fitted_log_y_seq_gym)
+
+df_gym_pl_cr <- tibble(y = y_pred_gym_cr, x = exp(log_x_seq_gym_cr))
+df_gym_pl_cr
+
+ggplot() +
+  geom_bin2d(data = gym_cr_df, aes(x = dbh, y = cr), bins = 100) +
+  scale_fill_viridis_c(option = "D") +
+  geom_line(data = df_gym_pl_cr, aes(x = x, y = y))
+
+```
+
+# gMM
+
+## Ang
+```{r}
+fit_nlr_nou_data_ang_cr <- tar_read(fit_nlr_nou_data_ang_cr)
+str(fit_nlr_nou_data_ang_cr)
+
+x_nlr_range_ang <- range(fit_nlr_nou_data_ang_cr$x)
+x_nlr_seq_ang <- seq(x_nlr_range_ang[1], x_nlr_range_ang[2], length.out = 100)
+
+gmm_ang_cr <- tar_read(fit_nlr_nou_summary_gmm_ang_cr)
+gamma_ang_gmm <- gmm_ang_cr |> filter(grepl("gamma(?!_hat)", variable, perl = TRUE))
+community_log_a_ang_gmm <- gamma_ang_gmm |> filter(variable == "gamma[1]") |> pull(q50)
+community_b_ang_gmm <- gamma_ang_gmm |> filter(variable == "gamma[2]") |> pull(q50)
+community_k_ang_gmm <- gamma_ang_gmm |> filter(variable == "gamma[3]") |> pull(q50)
+
+community_fitted_log_y_cr_gmm_seq <- community_log_a_ang_gmm + community_b_ang_gmm * log(x_nlr_seq_ang) - log(community_k_ang_gmm + x_nlr_seq_ang^community_b_ang_gmm)
+y_ang_gmm_pred <- exp(community_fitted_log_y_cr_gmm_seq)
+df_ang_gmm_cr <- tibble(y = y_ang_gmm_pred, x = x_nlr_seq_ang)
+
+ggplot() +
+  geom_bin2d(data = ang_cr_df, aes(x = dbh, y = cr), bins = 100) +
+  scale_fill_viridis_c(option = "D") +
+  geom_line(data = df_ang_gmm_cr, aes(x = x, y = y)) +
+  labs(x = "DBH (cm)", y = "CR (m)")
+
+```
+
+## Gym
+
+```{r}
+fit_nlr_nou_data_gym_cr <- tar_read(fit_nlr_nou_data_gym_cr)
+str(fit_nlr_nou_data_gym_cr)
+
+x_nlr_range_gym_cr <- range(fit_nlr_nou_data_gym_cr$x)
+x_nlr_seq_gym_cr  <- seq(x_nlr_range_gym_cr[1], x_nlr_range_gym_cr[2], length.out = 100)
+
+gmm_gym_cr <- tar_read(fit_nlr_nou_summary_gmm_gym_cr)
+gmm_gym_cr
+
+gamma_gym_gmm <- gmm_gym_cr |> filter(grepl("gamma(?!_hat)", variable, perl = TRUE))
+gamma_gym_gmm
+
+community_log_a_gym_gmm <- gamma_gym_gmm |> filter(variable == "gamma[1]") |> pull(q50)
+community_b_gym_gmm <- gamma_gym_gmm |> filter(variable == "gamma[2]") |> pull(q50)
+community_k_gym_gmm <- gamma_gym_gmm |> filter(variable == "gamma[3]") |> pull(q50)
+
+community_fitted_log_y_cr_gym_gmm_seq <- community_log_a_gym_gmm + community_b_gym_gmm * log(x_nlr_seq_gym_cr) - log(community_k_gym_gmm + x_nlr_seq_gym_cr^community_b_gym_gmm)
+
+y_gym_gmm_pred_cr <- exp(community_fitted_log_y_cr_gym_gmm_seq)
+
+
+df_gym_gmm_cr <- tibble(y = y_gym_gmm_pred_cr, x = x_nlr_seq_gym_cr)
+df_gym_gmm_cr
+
+ggplot() +
+  geom_bin2d(data = gym_cr_df, aes(x = dbh, y = cr), bins = 100)  +
+  scale_fill_viridis_c(option = "D") +
+  geom_line(data = df_gym_gmm_cr, aes(x = x, y = y))
+```
+
+# Weibull
+
+## Ang
+```{r}
+fit_nlr_nou_data_ang_cr <- tar_read(fit_nlr_nou_data_ang_cr)
+x_nlr_range_ang_cr <- range(fit_nlr_nou_data_ang_cr$x)
+x_nlr_seq_ang_cr <- seq(x_nlr_range_ang_cr[1], x_nlr_range_ang_cr[2], length.out = 100)
+
+weibull_ang_cr <- tar_read(fit_nlr_nou_summary_weibull_ang_cr)
+weibull_ang_cr
+
+gamma_ang_wb <- weibull_ang_cr |> filter(grepl("gamma", variable))
+community_log_a_ang_wb <- gamma_ang_wb |> filter(variable == "gamma[1]") |> pull(q50)
+community_b_ang_wb <- gamma_ang_wb |> filter(variable == "gamma[2]") |> pull(q50)
+community_k_ang_wb <- gamma_ang_wb |> filter(variable == "gamma[3]") |> pull(q50)
+
+community_fitted_log_y_cr_wb_ang_seq <- community_log_a_ang_wb + log(1 - exp(-community_b_ang_wb * (x_nlr_seq_ang ^ community_k_ang_wb)))
+
+y_ang_wb_pred_cr <- exp(community_fitted_log_y_cr_wb_ang_seq)
+
+df_ang_wb_cr <- tibble(y = y_ang_wb_pred_cr, x = x_nlr_seq_ang_cr)
+
+ggplot() +
+  geom_bin2d(data = ang_cr_df, aes(x = dbh, y = cr), bins = 100) +
+  scale_fill_viridis_c(option = "D") +
+  geom_line(data = df_ang_wb_cr, aes(x = x, y = y)) +
+  labs(x = "DBH (cm)", y = "CR (m)")
+```
+
+## Gym
+
+```{r}
+fit_nlr_nou_data_gym_cr <- tar_read(fit_nlr_nou_data_gym_cr)
+str(fit_nlr_nou_data_gym_cr)
+
+x_nlr_range_gym_cr <- range(fit_nlr_nou_data_gym_cr$x)
+x_nlr_seq_gym_cr <- seq(x_nlr_range_gym_cr[1], x_nlr_range_gym_cr[2], length.out = 100)
+
+weibull_gym_cr <- tar_read(fit_nlr_nou_summary_weibull_gym_cr)
+gamma_gym_wb <- weibull_gym_cr |> filter(grepl("gamma", variable))
+
+community_log_a_gym_wb <- gamma_gym_wb |> filter(variable == "gamma[1]") |> pull(q50)
+community_b_gym_wb <- gamma_gym_wb |> filter(variable == "gamma[2]") |> pull(q50)
+community_k_gym_wb <- gamma_gym_wb |> filter(variable == "gamma[3]") |> pull(q50)
+
+community_fitted_log_y_cr_wb_gym_seq <- community_log_a_gym_wb + log(1 - exp(-community_b_gym_wb * (x_nlr_seq_gym_cr ^ community_k_gym_wb)))
+
+y_gym_wb_pred_cr <- exp(community_fitted_log_y_cr_wb_gym_seq)
+
+df_gym_wb_cr <- tibble(y = y_gym_wb_pred_cr, x = x_nlr_seq_gym_cr)
+
+ggplot() +
+  geom_bin2d(data = gym_cr_df, aes(x = dbh, y = cr), bins = 100) +
+  scale_fill_viridis_c(option = "D") +
+  geom_line(data = df_gym_wb_cr, aes(x = x, y = y))
+```
+
+
+# Plotting with density-based coloring log-scale
+
+## Ang
+
+```{r}
+dens <- with(ang_cr_df, kde2d(log10(dbh), log10(cr), n = 300))
+ix <- findInterval(log10(ang_cr_df$dbh), dens$x)
+iy <- findInterval(log10(ang_cr_df$cr), dens$y)
+ang_cr_df$density <- dens$z[cbind(ix, iy)]
+
+p_ang_cr_den <- ggplot(data = ang_cr_df, aes(x = dbh, y = cr, color = density)) +
+  geom_point(size = 0.5, alpha = 0.8) +
+  scale_color_gradientn(colors = c("black", "purple", "orange", "yellow"), name = "Density") +
+  geom_line(data = df_gym_pl_cr, aes(x = x, y = y), color = "#FF5733", size = 0.8) +
+  geom_line(data = df_ang_gmm_cr, aes(x = x, y = y), color = "#2ECC71", size = 0.8) +
+  geom_line(data = df_ang_wb_cr, aes(x = x, y = y), color = "#0f92e9", size = 0.8) +
+  labs(x = "DBH_ang (cm)", y = "CR_ang (m)") +
+  scale_x_log10() +
+  scale_y_log10() +
+  theme_minimal()
+
+p_ang_cr_den
+
+ggsave("figs/p_cr_ang_den.png", plot = p_ang_cr_den, width = 8, height = 6, dpi = 300, bg = "white")
+```
+
+## Gym
+
+```{r}
+dens <- with(gym_cr_df, kde2d(log10(dbh), log10(cr), n = 300))
+ix <- findInterval(log10(gym_cr_df$dbh), dens$x)
+iy <- findInterval(log10(gym_cr_df$cr), dens$y)
+gym_cr_df$density <- dens$z[cbind(ix, iy)]
+
+# Create the plot with log scale
+p_gym_cr_den_log <- ggplot(data = gym_cr_df, aes(x = dbh, y = cr, color = density)) +
+  geom_point(size = 0.5, alpha = 0.8) +
+  scale_color_gradientn(colors = c("black", "purple", "orange", "yellow"), name = "Density") +
+  geom_line(data = df_gym_pl_cr, aes(x = x, y = y), color = "#FF5733", size = 0.8) +
+  geom_line(data = df_gym_gmm_cr, aes(x = x, y = y), color = "#2ECC71", size = 0.8) +
+  geom_line(data = df_gym_wb_cr, aes(x = x, y = y), color = "#0f92e9", size = 0.8) +
+  labs(x = "DBH_gym (cm)", y = "CR_gym (m)") +
+  scale_x_log10() +
+  scale_y_log10() +
+  theme_minimal()
+
+p_gym_cr_den_log
+
+ggsave("figs/p_gym_cr_log_den.png", plot = p_gym_cr_den_log, width = 8, height = 6, dpi = 300, bg = "white")
+```
+
+# Plotting with density-based coloring non-log scale
+
+## Ang
+
+```{r}
+dens <- with(ang_cr_df, kde2d(dbh, cr, n = 300))
+ix <- findInterval(ang_cr_df$dbh, dens$x)
+iy <- findInterval(ang_cr_df$cr, dens$y)
+ang_cr_df$density <- dens$z[cbind(ix, iy)]
+
+p_ang_cr_den_non <- ggplot(data = ang_cr_df, aes(x = dbh, y = cr, color = density)) +
+  geom_point(size = 0.5, alpha = 0.8) +
+  scale_color_gradientn(colors = c("black", "purple", "orange", "yellow"), name = "Density") +
+  geom_line(data = df_ang_pl_cr, aes(x = x, y = y), color = "#FF5733", size = 0.8) +
+  geom_line(data = df_ang_gmm_cr, aes(x = x, y = y), color = "#2ECC71", size = 0.8) +
+  geom_line(data = df_ang_wb_cr, aes(x = x, y = y), color = "#0f92e9", size = 0.8) +
+  labs(x = "DBH_ang (cm)", y = "CR_ang (m)") +
+  theme_minimal()
+
+p_ang_cr_den_non
+
+ggsave("figs/p_ang_cr_non_den_non.png", plot = p_ang_cr_den_non, width = 8, height = 6, dpi = 300, bg = "white")
+```
+
+## Gym
+
+```{r}
+dens <- with(gym_cr_df, kde2d(dbh, cr, n = 300))
+ix <- findInterval(gym_cr_df$dbh, dens$x)
+iy <- findInterval(gym_cr_df$cr, dens$y)
+gym_cr_df$density <- dens$z[cbind(ix, iy)]
+
+p_gym_cr_den_non <- ggplot(data = gym_cr_df, aes(x = dbh, y = cr, color = density)) +
+  geom_point(size = 0.5, alpha = 0.8) +
+  scale_color_gradientn(colors = c("black", "purple", "orange", "yellow"), name = "Density") +
+  geom_line(data = df_gym_pl_cr, aes(x = x, y = y), color = "#FF5733", size = 0.8) +
+  geom_line(data = df_gym_gmm_cr, aes(x = x, y = y), color = "#2ECC71", size = 0.8) +
+  geom_line(data = df_gym_wb_cr, aes(x = x, y = y), color = "#0f92e9", size = 0.8) +
+  labs(x = "DBH_gym (cm)", y = "CR_gym (m)") +
+  theme_minimal()
+
+p_gym_cr_den_non
+
+ggsave("figs/p_gym_cr_non_den.png", plot = p_gym_cr_den_non, width = 8, height = 6, dpi = 300, bg = "white")
+```
