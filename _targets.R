@@ -128,29 +128,6 @@ data_ <- list(
     format = "file"
   ),
   tar_target(
-    bb_allometry_csv,
-    "data-raw/bb_allometry.csv",
-    format = "file"
-  ),
-  tar_target(
-    bb_sp_list_csv,
-    "data-raw/bb_sp_list.csv",
-    format = "file"
-  ),
-  tar_target(
-    abund_xtbg_csv,
-    "data-raw/abund_xtbg.csv",
-    format = "file"
-  ),
-  tar_target(
-    bb_allometry_re_csv,
-    sp_name_match(
-      bb_sp_list_csv, abund_xtbg_csv, bb_allometry_csv,
-      "data/bb_allometry_re.csv"
-    ),
-    format = "file"
-  ),
-  tar_target(
     try_wd_txt,
     "data-raw/30953.txt",
     format = "file"

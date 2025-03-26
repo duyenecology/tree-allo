@@ -1,5 +1,5 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
-.Random.seed|object|07513b9dbc05d912|||||||||||||||
+.Random.seed|object|51fccde5d8689db0|||||||||||||||
 abund_xtbg_csv|stem|124fe0566f3ffdc3|90d84b131028a0a0|2c530c1562a7fbd1|-850319039|data-raw/abund_xtbg.csv|t20173.5278319823s|7246f525c6d771c1|20131|file|local|vector|||1.011||
 add_r2_to_com_tbl|function|38847d1f5651f79e|||||||||||||||
 ae6228b22b5bf16|1973c5b8209aca62|db289e838f806b6c|214984209|||23c5199cbe97be21|325|rds||vector|||0.024||||
@@ -41,7 +41,7 @@ combined_agb_plot4|stem|c02d8d30df79f30a|e6e3f754b7d50e95|a104aa55c14c8392|15646
 combined_wd_plot|stem|000c3a80e001a4dc|71b7e8b06e98ace7|8815d2f99fd2d001|-335756275|figs/wd_com.pdf*figs/wd_com.png|t20173.5278383019s|5531b8890bef0b81|1663699|file|local|vector|||13.63|collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values|
 create_legend|function|a9fdb751bc688044|||||||||||||||
 curve_plot|stem|e0ec56f53db884c9|51bcf087f830e500|9c259aba1c583e67|-674442642|figs/curve.pdf*figs/curve.png|t20173.5278399223s|b3b34a5a0fd70487|154738|file|local|vector|||0.546|Using size aesthetic for lines was deprecated in ggplot2 3.4.0.ℹ Please use linewidth instead.. The legend.text.align argument of theme is deprecated as of ggplot23.5.0.ℹ Please use themelegend.text  element_texthjust instead.|
-data_|object|f2ec2bbf43f9b015|||||||||||||||
+data_|object|ada609aeacdb68da|||||||||||||||
 data_map|function|1621e57b317251b9|||||||||||||||
 data_names|object|9815d3251134f760|||||||||||||||
 data_yaml|stem|08d5f59e833de599|94c4a38f60e8cf66|bc3231b41d41b52a|-1383455890||t0s|a10b0861f057ffab|0|file|local|vector|||0.168||
@@ -1468,7 +1468,7 @@ loo_r2_tbl|stem|b6daec83d1b1b609|9c961a521ca1b0dd|3885c17d3450671e|708849449||t2
 loo_r2_tbl_csv|stem|b3fb18196fe596dd|2d4d5a28988ded6d|40a41a5b4cfdb7a5|-1818433670|data/loo_r2_tbl.csv|t20173.5278344476s|b54d11f82f064570|2086|file|local|vector|||0.082||
 loo_tbl|stem|a970555a664dfd9c|d8aa6b8d3ee31713|cd7691c06fa1f318|1654956673||t20173.5278260563s|b312dd5525983c7d|1726|rds|local|vector|||0.015||
 lr_values|object|b8efdbdd266857c6|||||||||||||||
-main_|object|bb8f82107ccbd168|||||||||||||||
+main_|object|a7a21868fa00a8db|||||||||||||||
 map_data|stem|3026d0d064340f90|c6bad4d12ecf4233|cf4d71903f0d9c85|-78652023||t19988.3582084847s|3fd308add9cfb9e5|2779466|rds|local|group|||0.129|Dropping draws_df class as required metadata was removed.|
 map_data_7a5245aa63ace3df|branch|c8ed9071202a79df|a1906252164def2d|d11d80c10ad18716|-215792408||t19988.3488860201s|97e4db5b0080eafd|364273|rds|local|vector|map_data||0.722||
 map_data_a1fae23be8780d19|branch|87b45f3d4676a539|a1906252164def2d|d11d80c10ad18716|-1353548043||t19988.3488720964s|362d8385bb599225|364352|rds|local|vector|map_data||1.185||
