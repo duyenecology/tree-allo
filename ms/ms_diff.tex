@@ -1,7 +1,7 @@
 % Options for packages loaded elsewhere
 %DIF LATEXDIFF DIFFERENCE FILE
-%DIF DEL ms_old.tex   Tue Mar 25 07:45:08 2025
-%DIF ADD ms.tex       Tue Mar 25 07:44:39 2025
+%DIF DEL ms_old.tex   Wed Mar 26 14:56:18 2025
+%DIF ADD ms.tex       Wed Mar 26 14:52:01 2025
 \PassOptionsToPackage{unicode}{hyperref}
 \PassOptionsToPackage{hyphens}{url}
 \PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
@@ -445,9 +445,10 @@ integrating airborne imagery into carbon monitoring programs
 
 Accurately representing tree allometry relationships also requires
 considering underlying ecological constraints, particularly the
-interplay of plant functional traits and their trade-offs \DIFaddbegin \DIFadd{that
-}\DIFaddend influences individual tree architecture and the composition of entire
-forest communities (e.g., \citeproc{ref-Iida2012}{Iida et al. 2012};
+interplay of plant functional traits and their trade-offs \DIFdelbegin \DIFdel{influences
+}\DIFdelend \DIFaddbegin \DIFadd{influence
+}\DIFaddend individual tree architecture and the composition of entire forest
+communities (e.g., \citeproc{ref-Iida2012}{Iida et al. 2012};
 \citeproc{ref-LoubotaPanzou2018}{Loubota Panzou et al. 2018};
 \citeproc{ref-Yang2023}{Yang and Swenson 2023}). Under closed-canopy
 conditions, strong light competition makes the balance between vertical
@@ -511,18 +512,19 @@ estimation?
 Our analysis combined tree allometry data from Tallo, which includes
 standardized measurements of DBH, height, \DIFaddbegin \DIFadd{and }\DIFaddend crown radius for 5,163
 species across various biomes (\citeproc{ref-Jucker2022}{Jucker et al.
-2022}, https://doi.org/10.5281/zenodo.6637599) along with wood density
-data for 10,995 species from TRY version 6
-(\citeproc{ref-Kattge2020}{Kattge et al. 2020},
-https://www.try-db.org/TryWeb/Home.php) (see Supplementary Table S1 for
-further details). We thoroughly processed the Tallo dataset by removing
-998 outliers following Jucker et al. (\citeproc{ref-Jucker2022}{2022}).
-To ensure consistency, we selected only species with standardized wood
-density values in g cm\textsuperscript{-3} from TRY and removed any
-records with missing data. Subsequently, we created an overlapping
-dataset between Tallo and TRY, resulting in a combined dataset
-encompassing allometric and wood density information for 355,881
-individuals across 2,961 species.
+2022}\DIFdelbegin \DIFdel{,
+https://doi.org/10.5281/zenodo.6637599)along }\DIFdelend \DIFaddbegin \DIFadd{), }\DIFaddend with wood density data for 10,995 species from TRY version 6
+(\citeproc{ref-Kattge2020}{Kattge et al. 2020}\DIFdelbegin \DIFdel{, https://www.try-db.org/TryWeb/Home.php}\DIFdelend ) (see Supplementary Table
+S1 for further details). \DIFaddbegin \DIFadd{Detailed information on data access and
+availability can be found in the Data availability section. }\DIFaddend We
+thoroughly processed the Tallo dataset by removing 998 outliers
+following Jucker et al. (\citeproc{ref-Jucker2022}{2022}). To ensure
+consistency, we selected only species with standardized wood density
+values in g cm\textsuperscript{-3} from TRY and removed any records with
+missing data. Subsequently, we created an overlapping dataset between
+Tallo and TRY, resulting in a combined dataset encompassing allometric
+and wood density information for 355,881 individuals across 2,961
+species.
 
 To reduce computational complexity and ensure the robustness of the
 models, we further filtered species with fewer than 20 individuals and
@@ -662,8 +664,10 @@ Statistical analyses were performed in R version 4.3.2
 (\citeproc{ref-RCoreTeam2023}{R Core Team 2023}), using the R packages
 \emph{targets} version 1.7.0 for workflow management
 (\citeproc{ref-Landau2021}{Landau 2021}). Codes are made available on
-GitHub at \url{https://github.com/duyenecology/tree-allometry} (Stan
-code is provided in Supplementary Section S2).
+\DIFdelbegin \DIFdel{GitHub at }%DIFDELCMD < \url{https://github.com/duyenecology/tree-allometry} %%%
+\DIFdel{(}\DIFdelend \DIFaddbegin \DIFadd{Zenodo (https://zenodo.org) and GitHub
+(}\url{https://github.com/duyenecology/tree-allo}\DIFadd{). }\DIFaddend Stan code is provided
+in Supplementary Section S2\DIFdelbegin \DIFdel{)}\DIFdelend .
 
 \subsection{Aboveground biomass
 estimates}\label{aboveground-biomass-estimates}
@@ -1384,7 +1388,7 @@ forecasting ecosystem services in forests with a broad range of species
 and structural heterogeneity. Future studies should investigate
 additional functional traits and environmental factors to improve both
 ecological understanding and carbon monitoring practices at global
-scales monitoring practices at global scales.
+scales\DIFdelbegin \DIFdel{monitoring practices at global scales}\DIFdelend .
 
 \newpage
 
@@ -1404,7 +1408,24 @@ Province, the }\DIFaddend Xishuangbanna State Rainforest Talent Support Program
 (E4BN041B01)\DIFaddbegin \DIFadd{, }\DIFaddend and the CAS President's International Fellowship
 Initiative (2020FYB0003).
 
-\newpage
+\DIFaddbegin \section*{\DIFadd{Data availability}}\label{data-availability}
+\addcontentsline{toc}{section}{\DIFadd{Data availability}}
+
+\DIFadd{The tree allometry data is avaiable from tallo
+(\mbox{%DIFAUXCMD
+\citeproc{ref-Jucker2022}{Jucker et al. 2022}}\hspace{0pt}%DIFAUXCMD
+,
+https://doi.org/10.5281/zenodo.6637599), and the wood density data are
+available on request from TRY version 6
+(\mbox{%DIFAUXCMD
+\citeproc{ref-Kattge2020}{Kattge et al. 2020}}\hspace{0pt}%DIFAUXCMD
+,
+}\url{https://www.try-db.org/TryWeb/Home.php}\DIFadd{). All codes and scripts
+used for analysis are available on Zenodo (https://zenodo.org) and
+GitHub (}\url{https://github.com/duyenecology/tree-allo}\DIFadd{).
+}
+
+\DIFaddend \newpage
 
 \section*{References}\label{references}
 \addcontentsline{toc}{section}{References}

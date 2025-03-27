@@ -68,6 +68,9 @@ We standardized the reporting of parameters, corrected figure labels, restructur
 
 We believe these revisions have strengthened the manuscript by clarifying our objectives, improving consistency and readability, and addressing key methodological concerns—thereby better highlighting the significance of our findings.
 
+We have also updated the data availability statement.
+The programming code of this study will be deposited at Zenodo (https://zenodo.org) and made available on Github (<https://github.com/duyenecology/tree-allo>).
+
 Below we provide detailed responses.
 The editing history is recorded in a separate pdf file.
 

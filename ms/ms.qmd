@@ -148,7 +148,8 @@ Specifically, we ask the following questions:
 
 ## Data
 
-Our analysis combined tree allometry data from Tallo, which includes standardized measurements of DBH, height, and crown radius for 5,163 species across various biomes [@Jucker2022, https://doi.org/10.5281/zenodo.6637599] along with wood density data for 10,995 species from TRY version 6 [@Kattge2020, https://www.try-db.org/TryWeb/Home.php] (see Supplementary Table S1 for further details).
+Our analysis combined tree allometry data from Tallo, which includes standardized measurements of DBH, height, and crown radius for 5,163 species across various biomes [@Jucker2022], with wood density data for 10,995 species from TRY version 6 [@Kattge2020] (see Supplementary Table S1 for further details).
+Detailed information on data access and availability can be found in the Data availability section.
 We thoroughly processed the Tallo dataset by removing 998 outliers following @Jucker2022.
 To ensure consistency, we selected only species with standardized wood density values in g cm^-3^ from TRY and removed any records with missing data.
 Subsequently, we created an overlapping dataset between Tallo and TRY, resulting in a combined dataset encompassing allometric and wood density information for `r data_params$ori_sample_size` individuals across `r data_params$ori_species_number` species.
@@ -225,7 +226,8 @@ We also reported the median and 95\% Bayesian credible intervals (CIs) for each 
 Estimates were considered significant when 95\% CIs did not overlap with zero.
 
 Statistical analyses were performed in R version 4.3.2 [@RCoreTeam2023], using the R packages *targets* version 1.7.0 for workflow management [@Landau2021].
-Codes are made available on GitHub at <https://github.com/duyenecology/tree-allometry> (Stan code is provided in Supplementary Section S2).
+Codes are made available on Zenodo (https://zenodo.org) and GitHub (<https://github.com/duyenecology/tree-allo>).
+Stan code is provided in Supplementary Section S2.
 
 ## Aboveground biomass estimates
 
@@ -641,6 +643,7 @@ Our results also highlight the importance of incorporating saturating models whe
 Future studies should investigate additional functional traits and environmental factors to improve both ecological understanding and carbon monitoring practices at global scales.
 
 \newpage
+
 # Acknowledgments {.unnumbered}
 
 We thank the editors and two anonymous reviewers, whose comments greatly improved the manuscript.
@@ -655,8 +658,9 @@ the CAS President's International Fellowship Initiative (2020FYB0003).
 
 # Data availability {.unnumbered}
 
-Tallo and TRY data are available from their respective platforms.
-Codes are available from Zenodo at xxx
+The tree allometry data is avaiable from tallo [@Jucker2022, https://doi.org/10.5281/zenodo.6637599], and
+the wood density data are available on request from TRY version 6  [@Kattge2020, <https://www.try-db.org/TryWeb/Home.php>].
+All codes and scripts used for analysis are available on Zenodo (https://zenodo.org) and GitHub (<https://github.com/duyenecology/tree-allo>).
 
 \newpage
 # References

@@ -1,0 +1,370 @@
+---
+fontsize: 12pt
+geometry: margin=1in
+link-citations: true
+bibliography: "../ms/tree-allometry.bib"
+csl: "../ms/journal-of-forestry-research.csl"
+crossref:
+  fig-title: Figure
+  fig-prefix: Figure
+  tbl-title: Table
+  eq-prefix: Eq.
+format:
+  pdf:
+    toc: false
+    keep-tex: true
+    latex-clean: false
+    pdf-engine: xelatex
+    include-in-header:
+      text: |
+        \usepackage[default]{sourcesanspro}
+        \usepackage{sourcecodepro}
+        \usepackage{lineno}
+        \usepackage{setspace}
+        \doublespacing
+        \linenumbers
+        \renewcommand{\thetable}{S\arabic{table}}
+        \renewcommand{\thefigure}{S\arabic{figure}}
+    prefer-html: true
+  docx:
+    toc: false
+    include-in-header:
+      text: |
+        \usepackage[default]{sourcesanspro}
+        \usepackage{lineno}
+        \linespread{1.2}
+
+---
+
+*Supplement of*
+
+**Saturating allometric relationships reveal how wood density shapes global tree architecture**
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+knitr::opts_knit$set(root.dir = here::here())
+```
+
+```{r include=FALSE}
+library(targets)
+library(tidyverse)
+library(here)
+library(kableExtra)
+library(targets)
+library(patchwork)
+library(MASS)
+library(scales)
+library(grid)
+library(knitr)
+library(gsubfn)
+library(yaml)
+library(flextable)
+library(officer)
+
+source("R/figs.R")
+source("R/functions.R")
+data_params <- read_yaml("data.yaml")
+data_posterior <- read_yaml("posterior.yaml")
+data_metrics <- read_yaml("agb_metrics_ang.yaml")
+```
+
+\newpage
+
+This supplement includes the following materials:
+
+# Section S1. Extra figures and tables
+
+**Table S1.** List of sources for wood density data used in this study, as released in version 6 of the TRY database.
+The table includes authors' names, dataset IDs, and the name of each dataset.
+
+**Table S2.** Characteristics of sub-datasets were used to select the best predictive model of each allometric relationship for angiosperms and gymnosperms.
+
+**Table S3.** Parameter estimates for all hierarchical models for tree height allometry.
+
+**Table S4.** Parameter estimates for all hierarchical models for crown radius allometry.
+
+**Table S5.** Parameter estimates for all hierarchical models for DBH allometry.
+
+**Table S6.** Parameter estimates for predicting tree height (m) from DBH (cm) of 1290 species (see file TableS6_height_sp_estimates.xlsx).
+
+**Table S7.** Parameter estimates for predicting crown radius (m) from DBH (cm) of 821 species (see file TableS7_crown_radius_sp_estimates.xlsx).
+
+**Table S8.** Parameter estimates for predicting DBH (cm) from crown radius (m) and tree height (m) of 800 species (see file TableS8_dbh_sp_estimates.xlsx).
+
+**Figure S1.** Function curves are used to describe allometric relationships of tree dimensions with DBH in log scale.
+
+# Section S2. Stan code used to fit alternative allometric models
+
+\newpage
+
+# Section S1. Extra tables and figures
+
+**Table S1**: List of sources for wood density data utilized in this study, as released in version 6 of the TRY database.
+The table includes authors' names, dataset IDs, and the name of each dataset.
+
+```{r echo=FALSE, results='asis'}
+try_data <- process_try_data("data-raw/30953.txt")
+try_data <- try_data |>
+  mutate(across(where(is.character), ~iconv(.x, to = "UTF-8", sub = "")))
+
+ft <- try_data |> flextable () |>
+  align(j = colnames(try_data), align = "center", part = "all") |>
+  fontsize(size = 7, part = "all") |>
+  set_table_properties(layout = "autofit") |>
+  autofit()
+
+if (knitr::is_latex_output()) {
+  try_data |> kable(align = "c", booktabs = TRUE) |>
+    kable_styling(full_width = FALSE, position = "center", font_size = 10, latex_options = c("hold_position"))
+} else {
+    ft
+}
+
+```
+
+\newpage
+
+**Table S2**: Characteristics of sub-datasets used to select the best predictive model of each allometric relationship for angiosperms and gymnosperms.
+The ranges represent the minimum and maximum values for the respective variables: DBH (cm), tree height (H, m), crown radius (CR, m), and wood density (WD, g cm$^{-3}$).
+
+```{r echo=FALSE, results='asis'}
+tbl_subdata <- tar_read(tbl_subdata)
+
+line_rows <- c(5, 10, 15, 20, 25)
+
+ft <- tbl_subdata |>
+  flextable() |>
+  set_header_labels(
+    `Dependent variables` = "Dependent\nvariable",
+    `Predictor variable` = "Predictor\nvariable",
+    `Characteristics` = "Characteristic",
+    `Angiosperm` = "Angiosperm",
+    `Gymnosperm` = "Gymnosperm"
+  ) |>
+  # add_header_row(
+  #   values = c("", "", "", "Division"),
+  #   colwidths = c(1, 1, 1, 2)
+  # ) |>
+  align(align = "center", part = "all") |>
+  merge_h(i = 1, part = "header") |>
+  fontsize(size = 6, part = "all") |>
+  set_table_properties(layout = "autofit") |>
+  autofit() |>
+  border(i = line_rows, j = 1:ncol(tbl_subdata), border.bottom = fp_border())
+
+if (knitr::is_latex_output()) {
+  tbl_subdata |> kable(align = "c", booktabs = TRUE) |>
+    kable_styling(full_width = FALSE, position = "center", font_size = 10, latex_options = c("hold_position"))
+} else {
+    ft
+}
+
+```
+
+\newpage
+**Table S3**: Posterior estimates of the parameters of the hierarchical models for tree height allometry.
+Table entries correspond to the median and 95\% CIs for the community-level parameters of each allometric function.
+
+```{r echo=FALSE, results='asis'}
+posterior_rounded_df <- tar_read(posterior_rounded_df)
+df_h <- posterior_rounded_df |>
+  filter(Dependent_variable == "Tree Height") |>
+  dplyr::select(-Dependent_variable) |>
+  mutate(
+    Functional_form = factor(Functional_form, levels = c("Power-Law", "gMM", "Weibull")),
+    Wood_density = factor(Wood_density, levels = c("Without", "With"))
+  ) |>
+  arrange(Division, Functional_form, Wood_density)
+
+line_rows <- c(2, 5, 8, 11, 13, 16, 19)
+special_line_rows <- c(11)
+
+ft <- df_h |>
+  flextable() |>
+  set_header_labels(
+    Division = "Division",
+    Functional_form = "Functional\nform",
+    Wood_density = "Wood\ndensity",
+    Parameter = "Parameter",
+    Intercept_CI = "γ₀ (Base line)",
+    Slope_CI = "γ₁ (Exponent rate)",
+    Tau_CI = "σ (Variation)"
+  ) |>
+  align(align = "center", part = "all") |>
+  merge_v(j = 1, part = "body") |>
+  fontsize(size = 6, part = "all") |>
+  set_table_properties(layout = "autofit") |>
+  autofit() |>
+  border(i = line_rows, j = 2:ncol(df_h), border.bottom = fp_border()) |>
+  border(i = special_line_rows, j = 1:ncol(df_h), border.bottom = fp_border())
+
+if (knitr::is_latex_output()) {
+  df_h |> kable(align = "c", booktabs = TRUE) |>
+    kable_styling(full_width = FALSE, position = "center", font_size = 10, latex_options = c("hold_position"))
+} else {
+    ft
+}
+
+```
+
+\newpage
+**Table S4**: Posterior estimates of the parameters of the hierarchical models for crown radius allometry.
+Table entries correspond to the median and 95\% CIs for the community-level parameters of each allometric function.
+
+```{r echo=FALSE, results='asis'}
+posterior_rounded_df <- tar_read(posterior_rounded_df)
+df_cr <- posterior_rounded_df |>
+  filter(Dependent_variable == "Crown Radius") |>
+  dplyr::select(-Dependent_variable) |>
+  mutate(
+    Functional_form = factor(Functional_form, levels = c("Power-Law", "gMM", "Weibull")),
+    Wood_density = factor(Wood_density, levels = c("Without", "With"))
+  ) |>
+  arrange(Division, Functional_form, Wood_density)
+
+line_rows <- c(2, 4, 7, 10, 12, 15, 18)
+special_line_rows <- c(10)
+
+ft <- df_cr |>
+  flextable() |>
+  set_header_labels(
+    Division = "Division",
+    Functional_form = "Functional\nform",
+    Wood_density = "Wood\ndensity",
+    Parameter = "Parameter",
+    Intercept_CI = "γ₀ (Base line)",
+    Slope_CI = "γ₁ (Exponent rate)",
+    Tau_CI = "σ (Variation)"
+  ) |>
+  align(align = "center", part = "all") |>
+  merge_v(j = 1, part = "body") |>
+  fontsize(size = 6, part = "all") |>
+  set_table_properties(layout = "autofit") |>
+  autofit() |>
+  border(i = line_rows, j = 2:ncol(df_cr), border.bottom = fp_border()) |>
+  border(i = special_line_rows, j = 1:ncol(df_cr), border.bottom = fp_border())
+
+if (knitr::is_latex_output()) {
+  df_cr |> kable(align = "c", booktabs = TRUE) |>
+    kable_styling(full_width = FALSE, position = "center", font_size = 10, latex_options = c("hold_position"))
+} else {
+    ft
+}
+
+```
+
+\newpage
+**Table S5**: Posterior estimates of the parameters of the hierarchical models for DBH allometry.
+Table entries correspond to the median and 95\% CIs for the community-level parameters of each allometric function.
+
+```{r echo=FALSE, results='asis'}
+posterior_rounded_df <- tar_read(posterior_rounded_df)
+
+df_dbh <- posterior_rounded_df |>
+  filter(Dependent_variable %in% c("DBH", "DBH1", "DBH2", "DBH3")) |>
+  mutate(
+    Predictor = case_when(
+      Dependent_variable == "DBH1" ~ "CR × H",
+      Dependent_variable == "DBH2" ~ "CR",
+      Dependent_variable == "DBH3" ~ "H",
+      Dependent_variable == "DBH" ~ "CR, H",
+      TRUE ~ NA_character_
+    )
+  ) |>
+  dplyr::select(-Dependent_variable)
+
+df_dbh <- df_dbh |>
+  mutate(Predictor = factor(Predictor, levels = c("CR, H", "CR × H", "CR", "H"))) |>
+  dplyr::select(Division, Predictor, everything()) |>
+  dplyr::arrange(Division,
+          Predictor,
+          factor(Wood_density, levels = c("Without", "With")),
+          Parameter)
+
+line_rows <- c(3, 6, 8, 10, 12, 15, 18, 20, 22)
+special_line_rows <- c(12)
+
+ft <- df_dbh |>
+  flextable() |>
+
+  set_header_labels(
+    Division = "Division",
+    Predictor = "Predictor\nvariable",
+    Functional_form = "Functional\nform",
+    Wood_density = "Wood\ndensity",
+    Parameter = "Parameter",
+    Intercept_CI = "γ₀ (Base line)",
+    Slope_CI = "γ₁ (Exponent rate)",
+    Tau_CI = "σ (Variation)"
+  ) |>
+
+  align(align = "center", part = "all") |>
+  merge_v(j = 1, part = "body") |>
+  fontsize(size = 6, part = "all") |>
+  set_table_properties(layout = "autofit") |>
+  autofit()
+
+ft <- ft |>
+  border(i = line_rows, j = 2:ncol(df_dbh), border.bottom = fp_border()) |>
+  border(i = special_line_rows, j = 1:ncol(df_dbh), border.bottom = fp_border())
+
+if (knitr::is_latex_output()) {
+  df_dbh |> kable(align = "c", booktabs = TRUE) |>
+    kable_styling(full_width = FALSE, position = "center", font_size = 10, latex_options = c("hold_position"))
+} else {
+    ft
+}
+```
+
+\newpage
+
+![
+Allometric relationships between tree height and crown radius with DBH of angiosperm (a, c) and gymnosperm (b, d) based on three different models: power-law (orange), generalized Michaelis-Menten (green), and Weibull (blue).
+The density of overlapping points is shown using a colour gradient ranging from black (low density) to yellow (high density).
+Point density was calculated using a 2D kernel density estimation on a 300 $\times$ 300 grid, estimating the concentration of data points in the log-transformed space of DBH and tree height or crown radius.
+All axes are on the log scale.
+](../figs/h_cr_dbh_log.png){#fig-compare fig-pos="H"}
+
+\newpage
+
+# Section S2. Stan code used to fit alternative allometric models
+
+## Power-law model
+
+```{stan, class.source="small", file="stan/pl.stan", echo=TRUE, eval=FALSE, output.var="hoge", tidy=TRUE}
+```
+
+\newpage
+
+## Power-law model with wood density
+
+```{stan, size="small", file="stan/pl_wd.stan", echo=TRUE, eval=FALSE, output.var="hoge", tidy=TRUE}
+```
+
+\newpage
+
+## Generalized Michaelis-Menten model
+
+```{stan, size="small", file="stan/gmm.stan", echo=TRUE, eval=FALSE, output.var="hoge"}
+```
+
+\newpage
+
+## Generalized Michaelis-Menten model with wood density
+
+```{stan, size="small", file="stan/gmm_wd.stan", echo=TRUE, eval=FALSE, output.var="hoge"}
+```
+
+\newpage
+
+## Weibull model
+
+```{stan, size="small", file="stan/weibull.stan", echo=TRUE, eval=FALSE, output.var="hoge"}
+```
+
+\newpage
+
+## Weibull model with wood density
+
+```{stan, size="small", file="stan/weibull_wd.stan", echo=TRUE, eval=FALSE, output.var="hoge"}
+```
