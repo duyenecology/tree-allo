@@ -337,9 +337,8 @@ if (knitr::is_latex_output()) {
 \newpage
 
 ![
-Allometric relationships between tree height and crown radius versus DBH for angiosperms (a, c) and gymnosperms (b, d) based on three different models: power-law (orange), generalized Michaelis-Menten (green), and Weibull (blue).
-The density of overlapping points is represented using a colour gradient ranging from black (low density) to yellow (high density).
-Point density was calculated using a 2D kernel density estimation on a 300 $\times$ 300 grid, which estimate the concentration of data points in the log-transformed DBH and tree height or crown radius.
+Allometric relationships between DBH and tree height or crown radius in angiosperms (a, c) and gymnosperms (b, d), based on three different models: power-law (orange), generalized Michaelis-Menten (green), and Weibull (blue).
+A color gradient from black (low density) to yellow (high density) indicates the density of overlapping data points, calculated via 2D kernel density estimation on a 300 $\times$ 300 grid.
 All axes are shown on the log scale.
 ](../figs/h_cr_dbh_log.png){#fig-compare fig-pos="H"}
 
