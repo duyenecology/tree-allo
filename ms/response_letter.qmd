@@ -115,7 +115,7 @@ We have standardized the presentation of all parameter estimates throughout the 
 
 > 5) Table 1: The table does not clearly explain how much of a difference in ΔLOOIC is considered significant between the two models.
 
-We have revised the caption of Table 1 to clarify that a $\Delta$LOOIC greater than 4 suggests a meaningful difference in predictive performance (line 262-264).
+We have revised the caption of Table 1 to clarify that a $\Delta$LOOIC greater than 4 suggests a meaningful difference in predictive performance (line 263-265).
 
 > 6) Figure S1: According to the supplementary materials section, the figure is incorrectly labeled Figure 1. It should be Figure S1.
 
@@ -132,7 +132,7 @@ We have reformatted Supplementary Tables S6, S7, and S8 for improved readability
 > 9) A revision of the English is needed as some sentences aren't properly structured, and it's often difficult to grasp what the authors are saying.
 
 We have revised the manuscript for language, grammar, and sentence structure to enhance clarity and improve overall readability.
-For example, we revised lines 481–486 in the Discussion section to ensure sentence brevity and clarity.
+For example, we revised lines 482–487 in the Discussion section to ensure sentence brevity and clarity.
 Additionally, we updated the figure legends and table captions for greater clarity and carefully cross-checked all technical terms to maintain consistency throughout the text.
 
 > Reviewer #5: Congratulations on a well-written and clear manuscript. Your approach to exploring allometric relationships between DBH, height, wood density, biomass, and crown radius is highly interesting and contributes significantly to the field. While I primarily focus on the data analysis section and found no major concerns, I would like to suggest a few minor corrections and discussion points.
