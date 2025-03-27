@@ -1,6 +1,5 @@
 ---
 author: ""
-date: "`r format(Sys.time(), '%B %d, %Y')`"
 fontsize: 12pt
 format:
   pdf:
@@ -53,6 +52,8 @@ knitr::opts_chunk$set(
 )
 ```
 
+March xxx, 2025
+
 Dear Editor,
 
 We hereby resubmit the manuscript (JFR-D-25-00026), "Saturating allometric relationships reveal how wood density shapes global tree architecture".
@@ -103,15 +104,15 @@ We appreciate your positive feedback on the abstract.
 > 3) The objectives must be modified for a better understanding of the reader.
 
 Thank you for your suggestion.
-We have revised the Introduction to clearly state the main objective of the study before presenting the specific questions (line XXX).
+We have revised the Introduction to clearly state the main objective of the study before presenting the specific questions (line 117-119).
 
 > 4) Line 366-369 & Table 2: In the sentence "In addition, the estimated exponent aligns closely with MST predictions for crown radius, supporting the selection of the power-law model for angiosperms, where the community-level exponent b is near the expected *2/3* ($b_{ang}$=0.625775 0.6168636,0.6345041, Table 2)" and the parameter estimates in Table 2, the values are not consistently presented. Check whole of the manuscript for a uniform presentation of the values.
 
-We have standardized the presentation of all parameter estimates throughout the manuscript, including Table 2 and Table S6-8 and corresponding text.
+We have standardized the presentation of all parameter estimates throughout the manuscript, including Table 2 and Tables S6-8 and corresponding text.
 
 > 5) Table 1: The table does not clearly explain how much of a difference in ΔLOOIC is considered significant between the two models.
 
-We have revised the caption of Table 1 to clarify that a $\Delta$LOOIC greater than 4 suggests a meaningful difference in predictive performance (line XXX).
+We have revised the caption of Table 1 to clarify that a $\Delta$LOOIC greater than 4 suggests a meaningful difference in predictive performance (line 262-264).
 
 > 6) Figure S1: According to the supplementary materials section, the figure is incorrectly labeled Figure 1. It should be Figure S1.
 
@@ -119,7 +120,7 @@ We have corrected the figure label.
 
 > 7) The reference section was informative. However, incorporate some latest references and arrange them according to the journal guidelines.
 
-We have updated the references with recent publications, including xxx, and formatted them according to the journal guidelines.
+We have updated the references with recent publications, including Tavankar et al. (2019), Murphy and Bradford (2022), Fajardo et al. (2022), Cochrane et al. (2023), Sivula et al. (2023), and formatted them according to the journal guidelines.
 
 > 8) Supplementary Table S6 is very congested and hard to read. Please revise for better understanding.
 
@@ -128,7 +129,7 @@ We have reformatted Supplementary Tables S6, S7, and S8 for improved readability
 > 9) A revision of the English is needed as some sentences aren't properly structured, and it's often difficult to grasp what the authors are saying.
 
 We have revised the manuscript for language, grammar, and sentence structure to enhance clarity and improve overall readability.
-For example, we revised lines XXX–YYY in the Discussion section to ensure sentence brevity and clarity.
+For example, we revised lines 481–486 in the Discussion section to ensure sentence brevity and clarity.
 Additionally, we updated the figure legends and table captions for greater clarity and carefully cross-checked all technical terms to maintain consistency throughout the text.
 
 > Reviewer #5: Congratulations on a well-written and clear manuscript. Your approach to exploring allometric relationships between DBH, height, wood density, biomass, and crown radius is highly interesting and contributes significantly to the field. While I primarily focus on the data analysis section and found no major concerns, I would like to suggest a few minor corrections and discussion points.
@@ -138,16 +139,17 @@ Thank you so much for your encouraging and constructive feedback.
 > 1) In Figure 3, the distinction between species with light and dense wood density is presented. However, the criteria used for this classification are not mentioned in the Materials and Methods section. Clarifying this would improve the transparency of your methodology.
 
 Thank you for pointing this out.
-We have added a description in the Methods section clarifying the classification criteria (line XXX).
+We have added a description in the Methods section clarifying the classification criteria (line 197-202).
 
 > 2) Figure 4 appears to have a formatting issue, as the letters 'a' and 'd' are not displayed.
 
-We have corrected the formatting issue in Figure 4.
+We were unable to see the absence of the letters "a" and "d" in Figure 4 of the submitted manuscript, so we are unsure how to address this issue.
+Nevertheless, we slightly increased the left margin of the panel labels in case clipping was the cause.
 
 > 3) It may be valuable to discuss the potential confounding effects of environmental factors on observed allometric correlations when considering wood density. Given intraspecific variation, wood density may not have a strong impact on those allometric relationships, since Fajardo et al. (2022) suggest that wood density is more closely linked to vessel anatomy than to tree architecture within the same species across different environments.
 
 We agree with your point and have expanded the Discussion section to address potential environmental confounding effects.
-We also cited Fajardo et al. (2022) to highlight less clear linkages between tree architecture and intraspecific variation in wood density  (line XXX).
+We also cited Fajardo et al. (2022) to highlight less clear linkages between tree architecture and intraspecific variation in wood density  (line 437-444).
 
 > 4) I found the "Consequences for AGB Estimates" section particularly insightful.
 
@@ -155,4 +157,5 @@ Thank you for your positive feedback.
 
 > 5) Pages 132-140 are blank, likely due to a formatting issue with the final table. The table appears to have fixed columns that prevent the complete display of cell information.
 
-We have resolved the formatting issue that caused the blank pages in the supplementary file.
+We have resolved the formatting issue of Tables S6–S8 that may have caused the blank pages in the supplementary file.
+These tables, which were submitted as Excel files, were included in the PDF due to a system-related submission setting.
