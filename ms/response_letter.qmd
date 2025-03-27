@@ -89,7 +89,7 @@ Email: katabuchi@xtbg.ac.cn; mattocci27@gmail.com
 
 # Responses
 
-Please note that line numbers refer to ms_diff.pdf that contains editing history.
+Please note that line numbers refer to **ms_diff.pdf** that contains editing history.
 The word file has slightly different line numbers.
 
 > Reviewer #3: The manuscript presents a comprehensive study on developing allometric models for estimating forest carbon biomass using global datasets and Bayesian hierarchical models. The authors highlighted the importance of saturating functions and wood density to improve allometric models without using two-step fitting approaches in previous studies (which seems problematic). Overall, the study provides valuable contributions to ecological theory and practical forestry applications. I have reviewed the entire manuscript very carefully and prepared below a detailed list of corrections and suggestions that will certainly improve the quality and make clearer the text.
@@ -146,8 +146,9 @@ We have added a description in the Methods section clarifying the classification
 
 > 2) Figure 4 appears to have a formatting issue, as the letters 'a' and 'd' are not displayed.
 
-We were unable to see the absence of the letters "a" and "d" in Figure 4 of the submitted manuscript, so we are unsure how to address this issue.
+We were unable to see the absence of the letters "a" and "d" in Figure 4 of the generated PDF file.
 Nevertheless, we slightly increased the left margin of the panel labels in case clipping was the cause.
+We hope this adjustment addresses the concern and would be happy to make further modifications if needed.
 
 > 3) It may be valuable to discuss the potential confounding effects of environmental factors on observed allometric correlations when considering wood density. Given intraspecific variation, wood density may not have a strong impact on those allometric relationships, since Fajardo et al. (2022) suggest that wood density is more closely linked to vessel anatomy than to tree architecture within the same species across different environments.
 
@@ -160,5 +161,5 @@ Thank you for your positive feedback.
 
 > 5) Pages 132-140 are blank, likely due to a formatting issue with the final table. The table appears to have fixed columns that prevent the complete display of cell information.
 
-We have resolved the formatting issue of Tables S6–S8 that may have caused the blank pages in the supplementary file.
-These tables, which were submitted as Excel files, were included in the PDF due to a system-related submission setting.
+We have reduced the number of significant digits in the tables to prevent column overflow and ensure a complete display of cell information, which should resolve the formatting issue.
+These tables were submitted as Excel files, but due to a system-related submission setting, they are still included in the PDF.

@@ -44,14 +44,28 @@
 \setlength{\emergencystretch}{3em} % prevent overfull lines
 \setcounter{secnumdepth}{-\maxdimen} % remove section numbering
 % Make \paragraph and \subparagraph free-standing
+\makeatletter
 \ifx\paragraph\undefined\else
   \let\oldparagraph\paragraph
-  \renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+  \renewcommand{\paragraph}{
+    \@ifstar
+      \xxxParagraphStar
+      \xxxParagraphNoStar
+  }
+  \newcommand{\xxxParagraphStar}[1]{\oldparagraph*{#1}\mbox{}}
+  \newcommand{\xxxParagraphNoStar}[1]{\oldparagraph{#1}\mbox{}}
 \fi
 \ifx\subparagraph\undefined\else
   \let\oldsubparagraph\subparagraph
-  \renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+  \renewcommand{\subparagraph}{
+    \@ifstar
+      \xxxSubParagraphStar
+      \xxxSubParagraphNoStar
+  }
+  \newcommand{\xxxSubParagraphStar}[1]{\oldsubparagraph*{#1}\mbox{}}
+  \newcommand{\xxxSubParagraphNoStar}[1]{\oldsubparagraph{#1}\mbox{}}
 \fi
+\makeatother
 
 
 \providecommand{\tightlist}{%
@@ -67,15 +81,17 @@
 \makesavenoteenv{longtable}
 \usepackage{graphicx}
 \makeatletter
-\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
-\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
-\makeatother
-% Scale images if necessary, so that they will not overflow the page
-% margins by default, and it is still possible to overwrite the defaults
-% using explicit options in \includegraphics[width, height, ...]{}
-\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
 % Set default figure placement to htbp
-\makeatletter
 \def\fps@figure{htbp}
 \makeatother
 
@@ -102,10 +118,6 @@
   {\begin{customblockquote}\color{blockquote-text}\ignorespaces}
   {\end{customblockquote}}
 \KOMAoption{captions}{tableheading}
-\makeatletter
-\makeatother
-\makeatletter
-\makeatother
 \makeatletter
 \@ifpackageloaded{caption}{}{\usepackage{caption}}
 \AtBeginDocument{%
@@ -142,23 +154,14 @@
 \newcommand*\listoflistings{\listof{codelisting}{List of Listings}}
 \makeatother
 \makeatletter
+\makeatother
+\makeatletter
 \@ifpackageloaded{caption}{}{\usepackage{caption}}
 \@ifpackageloaded{subcaption}{}{\usepackage{subcaption}}
 \makeatother
-\makeatletter
-\@ifpackageloaded{tcolorbox}{}{\usepackage[skins,breakable]{tcolorbox}}
-\makeatother
-\makeatletter
-\@ifundefined{shadecolor}{\definecolor{shadecolor}{rgb}{.97, .97, .97}}
-\makeatother
-\makeatletter
-\makeatother
-\makeatletter
-\makeatother
-\ifLuaTeX
-  \usepackage{selnolig}  % disable illegal ligatures
-\fi
-\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+
+\usepackage{bookmark}
+
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \urlstyle{same} % disable monospaced font for URLs
 \hypersetup{
@@ -169,11 +172,12 @@
   urlcolor={Blue},
   pdfcreator={LaTeX via pandoc}}
 
+
 \author{}
 \date{}
 
 \begin{document}
-\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[boxrule=0pt, frame hidden, borderline west={3pt}{0pt}{shadecolor}, sharp corners, breakable, enhanced, interior hidden]}{\end{tcolorbox}}\fi
+
 
 March xxx, 2025
 
@@ -229,11 +233,11 @@ Email: katabuchi@xtbg.ac.cn; mattocci27@gmail.com
 
 \newpage
 
-\hypertarget{responses}{%
-\section{Responses}\label{responses}}
+\section{Responses}\label{responses}
 
-Please note that line numbers refer to ms\_diff.pdf that contains
-editing history. The word file has slightly different line numbers.
+Please note that line numbers refer to \textbf{ms\_diff.pdf} that
+contains editing history. The word file has slightly different line
+numbers.
 
 \begin{quote}
 Reviewer \#3: The manuscript presents a comprehensive study on
@@ -427,9 +431,10 @@ Methods section clarifying the classification criteria (line 197-202).
 \end{quote}
 
 We were unable to see the absence of the letters ``a'' and ``d'' in
-Figure 4 of the submitted manuscript, so we are unsure how to address
-this issue. Nevertheless, we slightly increased the left margin of the
-panel labels in case clipping was the cause.
+Figure 4 of the generated PDF file. Nevertheless, we slightly increased
+the left margin of the panel labels in case clipping was the cause. We
+hope this adjustment addresses the concern and would be happy to make
+further modifications if needed.
 
 \begin{quote}
 \begin{enumerate}
@@ -477,10 +482,12 @@ Thank you for your positive feedback.
 \end{enumerate}
 \end{quote}
 
-We have resolved the formatting issue of Tables S6--S8 that may have
-caused the blank pages in the supplementary file. These tables, which
-were submitted as Excel files, were included in the PDF due to a
-system-related submission setting.
+We have reduced the number of significant digits in the tables to
+prevent column overflow and ensure a complete display of cell
+information, which should resolve the formatting issue. These tables
+were submitted as Excel files, but due to a system-related submission
+setting, they are still included in the PDF.
+
 
 
 
