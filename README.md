@@ -5,9 +5,6 @@
 
 Code repostitory to run the analysis and generate the manuscript for Nguyen and Katabuchi "Saturating allometric relationships reveal how wood density shapes global tree architecture"
 
-Thi Duyen Nguyen
-Masatoshi Katabuchi,
-
 ## Reproduce the results
 
 Codes (R and STAN) and workflow are managed with the R package `targets` (https://github.com/ropensci/targets).
