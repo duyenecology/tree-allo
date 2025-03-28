@@ -52,7 +52,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-March xxx, 2025
+March 28, 2025
 
 Dear Editor,
 
@@ -107,7 +107,7 @@ We appreciate your positive feedback on the abstract.
 > 3) The objectives must be modified for a better understanding of the reader.
 
 Thank you for your suggestion.
-We have revised the Introduction to clearly state the main objective of the study before presenting the specific questions (line 117-119).
+We have revised the Introduction to clearly state the main objective of the study before presenting the specific questions (line 105-107).
 
 > 4) Line 366-369 & Table 2: In the sentence "In addition, the estimated exponent aligns closely with MST predictions for crown radius, supporting the selection of the power-law model for angiosperms, where the community-level exponent b is near the expected *2/3* ($b_{ang}$=0.625775 0.6168636,0.6345041, Table 2)" and the parameter estimates in Table 2, the values are not consistently presented. Check whole of the manuscript for a uniform presentation of the values.
 
@@ -115,7 +115,7 @@ We have standardized the presentation of all parameter estimates throughout the 
 
 > 5) Table 1: The table does not clearly explain how much of a difference in ΔLOOIC is considered significant between the two models.
 
-We have revised the caption of Table 1 to clarify that a $\Delta$LOOIC greater than 4 suggests a meaningful difference in predictive performance (line 263-265).
+We have revised the caption of Table 1 to clarify that a $\Delta$LOOIC greater than 4 suggests a meaningful difference in predictive performance (line 238-239).
 
 > 6) Figure S1: According to the supplementary materials section, the figure is incorrectly labeled Figure 1. It should be Figure S1.
 
@@ -132,7 +132,7 @@ We have reformatted Supplementary Tables S6, S7, and S8 for improved readability
 > 9) A revision of the English is needed as some sentences aren't properly structured, and it's often difficult to grasp what the authors are saying.
 
 We have revised the manuscript for language, grammar, and sentence structure to enhance clarity and improve overall readability.
-For example, we revised lines 482–487 in the Discussion section to ensure sentence brevity and clarity.
+For example, we revised lines 432-438, 448-452 in the Discussion section to ensure sentence brevity and clarity.
 Additionally, we updated the figure legends and table captions for greater clarity and carefully cross-checked all technical terms to maintain consistency throughout the text.
 
 > Reviewer #5: Congratulations on a well-written and clear manuscript. Your approach to exploring allometric relationships between DBH, height, wood density, biomass, and crown radius is highly interesting and contributes significantly to the field. While I primarily focus on the data analysis section and found no major concerns, I would like to suggest a few minor corrections and discussion points.
@@ -142,7 +142,7 @@ Thank you so much for your encouraging and constructive feedback.
 > 1) In Figure 3, the distinction between species with light and dense wood density is presented. However, the criteria used for this classification are not mentioned in the Materials and Methods section. Clarifying this would improve the transparency of your methodology.
 
 Thank you for pointing this out.
-We have added a description in the Methods section clarifying the classification criteria (line 197-202).
+We have added a description in the Methods section clarifying the classification criteria (line 178-183).
 
 > 2) Figure 4 appears to have a formatting issue, as the letters 'a' and 'd' are not displayed.
 
@@ -153,7 +153,7 @@ We hope this adjustment addresses the concern and would be happy to make further
 > 3) It may be valuable to discuss the potential confounding effects of environmental factors on observed allometric correlations when considering wood density. Given intraspecific variation, wood density may not have a strong impact on those allometric relationships, since Fajardo et al. (2022) suggest that wood density is more closely linked to vessel anatomy than to tree architecture within the same species across different environments.
 
 We agree with your point and have expanded the Discussion section to address potential environmental confounding effects.
-We also cited Fajardo et al. (2022) to highlight less clear linkages between tree architecture and intraspecific variation in wood density  (line 437-444).
+We also cited Fajardo et al. (2022) to highlight less clear linkages between tree architecture and intraspecific variation in wood density  (line 392-398).
 
 > 4) I found the "Consequences for AGB Estimates" section particularly insightful.
 
