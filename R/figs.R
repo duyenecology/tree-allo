@@ -300,8 +300,8 @@ generate_allo_plot <- function(
   # Add labels for Angiosperm and Gymnosperm sections
   p <- ggdraw() +
     draw_plot(p, x = 0, y = 0, width = 1, height = 0.95) +
-    draw_label("Angiosperms", x = 0.26, y = 0.93, fontface = 'bold', size = 10) +  
-    draw_label("Gymnosperms", x = 0.685, y = 0.93, fontface = 'bold', size = 10)
+    draw_label("Angiosperm", x = 0.26, y = 0.93, fontface = 'bold', size = 10) +  
+    draw_label("Gymnosperm", x = 0.685, y = 0.93, fontface = 'bold', size = 10)
 
   return(p)
 }
@@ -727,8 +727,8 @@ generate_wd_para_cr <- function(
   # Add labels
   p <- ggdraw() +
     draw_plot(p, x = 0, y = 0, width = 1, height = 0.9) +  
-    draw_label("WD vs. CR-DBH: Angiosperms", x = 0.295, y = 0.91, fontface = 'bold', size = 10) +  
-    draw_label("WD vs. CR-DBH: Gymnosperms", x = 0.78, y = 0.91, fontface = 'bold', size = 10)
+    draw_label("WD vs. CR-DBH: Angiosperm", x = 0.295, y = 0.91, fontface = 'bold', size = 10) +  
+    draw_label("WD vs. CR-DBH: Gymnosperm", x = 0.78, y = 0.91, fontface = 'bold', size = 10)
   # p <- ggdraw() +
   #   draw_plot(p, x = 0, y = 0, width = 1, height = 0.9) +  
   #   draw_label("Angiosperm", x = 0.295, y = 0.91, fontface = 'bold', size = 10) +  
