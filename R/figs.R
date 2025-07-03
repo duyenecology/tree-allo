@@ -32,27 +32,53 @@ my_ggsave <- function(filename, plot, units = "mm", height = NA, width = NA, dpi
     dpi = dpi,
     ...
   )
+
+    # Save as JPG
+  ggsave(
+    filename = paste0(filename, ".jpg"),
+    plot = plot,
+    height = height,
+    width = width,
+    units = units,
+    dpi = dpi,
+    ...
+  )
   # Return the paths to the saved files
   # return(paste0(filename, c(".tiff", ".pdf", ".png")))
-  return(paste0(filename, c(".pdf", ".png")))
+  return(paste0(filename, c(".pdf", ".png", ".jpg")))
 
 }
 
+
+# my_theme <- function(){
+#   theme_bw() %+replace%
+#   theme(
+#     plot.margin = margin(t = 5, r = 10, b = 5, l = 5, unit = "pt"),
+#     legend.key.size = unit(0.3, "cm"),
+#     legend.spacing.y = unit(0.15, "cm"),
+#     legend.text.align = 0,
+#     legend.text = element_text(size = 8),
+#     legend.title = element_text(size = 9),
+#     legend.background = element_blank()
+#   )
+# }
 
 my_theme <- function(){
-  theme_bw() %+replace%
-  theme(
-    plot.margin = margin(t = 5, r = 10, b = 5, l = 5, unit = "pt"),
-    legend.key.size = unit(0.3, "cm"),
-    legend.spacing.y = unit(0.15, "cm"),
-    legend.text.align = 0,
-    legend.text = element_text(size = 8),
-    legend.title = element_text(size = 9),
-    legend.background = element_blank()
-  )
+  theme_bw(base_size = 8, base_family = "serif") %+replace%
+    theme(
+      plot.margin = margin(t = 5, r = 10, b = 5, l = 5, unit = "pt"),
+      legend.key.size = unit(0.3, "cm"),
+      legend.spacing.y = unit(0.15, "cm"),
+      legend.text.align = 0,
+      legend.text = element_text(size = 8, family = "serif"),
+      legend.title = element_text(size = 8, family = "serif"),
+      axis.title = element_text(size = 8, family = "serif"),
+      axis.text = element_text(size = 8, family = "serif"),
+      strip.text = element_text(size = 8, family = "serif"),
+      plot.title = element_text(size = 8, face = "bold", family = "serif"),
+      legend.background = element_blank()
+    )
 }
-
-
 
 #' Plot Latitude and Longitude Data on a World Map
 #' Generates a map displaying locations based on latitude and longitude data. Points are overlaid on a world map to visualize their distribution.
@@ -73,6 +99,7 @@ data_map <- function(tallo_wd_df0) {
     geom_point(data = lat_long, aes(x = longitude, y = latitude), 
                color = "#d7191c", alpha = 0.5, size = 1.5) +
     labs(x = "Longitude", y = "Latitude") +
+    
     my_theme()
 
   return(p)
@@ -254,8 +281,8 @@ generate_allo_plot <- function(
       my_theme() +
       theme(
         # legend.position = c(0.9, 0.2),
-        legend.text = element_text(size = 6),
-        legend.title = element_text(size = 6)
+        legend.text = element_text(size = 8),
+        legend.title = element_text(size = 8)
       )
     if (log_scale) {
       p <- p + scale_x_log10() + scale_y_log10() +
@@ -298,10 +325,15 @@ generate_allo_plot <- function(
   p <- plot_grid(combined_plot, legend_curve_type, rel_widths = c(0.6, 0.1))
 
   # Add labels for Angiosperm and Gymnosperm sections
-  p <- ggdraw() +
-    draw_plot(p, x = 0, y = 0, width = 1, height = 0.95) +
-    draw_label("Angiosperm", x = 0.26, y = 0.93, fontface = 'bold', size = 10) +  
-    draw_label("Gymnosperm", x = 0.685, y = 0.93, fontface = 'bold', size = 10)
+  # p <- ggdraw() +
+  #   draw_plot(p, x = 0, y = 0, width = 1, height = 0.95) +
+  #   draw_label("Angiosperm", x = 0.26, y = 0.93, fontface = 'bold', size = 10) +  
+  #   draw_label("Gymnosperm", x = 0.685, y = 0.93, fontface = 'bold', size = 10)
+# Add labels for Angiosperm and Gymnosperm sections
+p <- ggdraw() +
+  draw_plot(p, x = 0, y = 0, width = 1, height = 0.95) +
+  draw_label("Angiosperm", x = 0.249, y = 0.93, fontface = 'bold', size = 8, fontfamily = "serif") +  
+  draw_label("Gymnosperm", x = 0.673, y = 0.93, fontface = 'bold', size = 8, fontfamily = "serif")
 
   return(p)
 }
@@ -891,12 +923,21 @@ generate_wd_para_com <- function(
         mutate(median = median, lower = lower, upper = upper)
     }
     
-    # Set y-axis label based on parameter
-    y_label <- case_when(
-      param_name == "log_a" ~ "Asymptote parameter, log a",
-      param_name == "b" ~ "Scale parameter, b",
-      param_name == "k" ~ "Shape parameter, k"
-    )
+    # # Set y-axis label based on parameter
+    # y_label <- case_when(
+    #   param_name == "log_a" ~ "Asymptote parameter, log a",
+    #   param_name == "b" ~ "Scale parameter, b",
+    #   param_name == "k" ~ "Shape parameter, k"
+    # )
+    if (param_name == "log_a") {
+      y_label <- expression(Asymptote~parameter~","~log~italic(a))
+    } else if (param_name == "b") {
+      y_label <- expression(Scale~parameter~","~italic(b))
+    } else if (param_name == "k") {
+      y_label <- expression(Shape~parameter~","~italic(k))
+    } else {
+      y_label <- NULL
+    }
 
     # Create plot
     plot <- ggplot() +
@@ -1090,17 +1131,35 @@ generate_wd_para_com <- function(
 
   fit_with_ci <- left_join(fit_line, ci_ribbon, by = "wd")
   
-  # Define y-labels for Angiosperms and Gymnosperms
-  y_label <- if (is_angiosperm) {
-    ifelse(param_name == "log_a", "Scaling factor, log a", "Exponent parameter, b")
+  # # Define y-labels for Angiosperms and Gymnosperms
+  # y_label <- if (is_angiosperm) {
+  #   ifelse(param_name == "log_a", "Scaling factor, log a", "Exponent parameter, b")
+  # } else {
+  #   case_when(
+  #     param_name == "log_a" ~ "Asymptote parameter, log a",
+  #     param_name == "b" ~ "Exponent parameter, b",
+  #     param_name == "k" ~ "Scaling constant, k"
+  #   )
+  # }
+  # Define y-axis label based on group and parameter
+  if (is_angiosperm) {
+    if (param_name == "log_a") {
+      y_label <- expression(Scaling~factor~","~log~italic(a))
+    } else {
+      y_label <- expression(Exponent~parameter~","~italic(b))
+    }
   } else {
-    case_when(
-      param_name == "log_a" ~ "Asymptote parameter, log a",
-      param_name == "b" ~ "Exponent parameter, b",
-      param_name == "k" ~ "Scaling constant, k"
-    )
+    if (param_name == "log_a") {
+      y_label <- expression(Asymptote~parameter~","~log~italic(a))
+    } else if (param_name == "b") {
+      y_label <- expression(Exponent~parameter~","~italic(b))
+    } else if (param_name == "k") {
+      y_label <- expression(Scaling~constant~","~italic(k))
+    } else {
+      y_label <- NULL  # Optional fallback
+    }
   }
-  
+
   # Create plot
   plot <- ggplot() +
     geom_errorbar(data = summary_stats, aes(x = wd, ymin = lower, ymax = upper), 
@@ -1171,8 +1230,8 @@ generate_wd_para_com <- function(
 
   p <- ggdraw() +
     draw_plot(p, x = 0, y = 0, width = 1, height = 1) +
-    draw_label("WD vs. H-DBH", x = 0.02, y = 0.76, angle = 90, fontface = 'bold', size = 10) + 
-    draw_label("WD vs. CR-DBH", x = 0.02, y = 0.27, angle = 90, fontface = 'bold', size = 10) 
+    draw_label("WD vs. H-DBH", x = 0.02, y = 0.765, angle = 90, fontface = 'bold', size = 8, fontfamily = "serif") + 
+    draw_label("WD vs. CR-DBH", x = 0.02, y = 0.27, angle = 90, fontface = 'bold', size = 8, fontfamily = "serif") 
 
   return(p)
 }
@@ -1611,9 +1670,9 @@ generate_wd_ef <- function(
   
   p <- ggdraw() +
   draw_plot(p, x = 0, y = 0, width = 1, height = 0.95) +  
-  draw_label("Angiosperm", x = 0.172, y = 0.94, fontface = 'bold', size = 10) +  
-  draw_label("Angiosperm", x = 0.429, y = 0.94, fontface = 'bold', size = 10) +  
-  draw_label("Gymnosperm", x = 0.689, y = 0.94, fontface = 'bold', size = 10)
+  draw_label("Angiosperm", x = 0.172, y = 0.94, fontface = 'bold', size = 8, fontfamily = "serif") +  
+  draw_label("Angiosperm", x = 0.437, y = 0.94, fontface = 'bold', size = 8, fontfamily = "serif") +  
+  draw_label("Gymnosperm", x = 0.705, y = 0.94, fontface = 'bold', size = 8, fontfamily = "serif")
 
   return(p)
 }
@@ -2461,42 +2520,32 @@ calculate_agb <- function(filtered_data) {
 
   # Define the plotting function for Angiosperms and Gymnosperms
   plot_agb <- function(agb_df, metrics_df, model_colors, division_label) {
-      # create_plot <- function(data, baseline, predicted, rmse, bias, model_name, tag_label, x_axis_label = NULL) {
-      #   ggplot(data, aes(x = exp(baseline), y = exp(predicted))) +
-      #     geom_point(alpha = 0.5, color = "grey", size = 0.3) +
-      #     geom_smooth(method = "lm", se = FALSE, color = model_colors[model_name], size = 0.5) +
-      #     geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "black", size = 0.5) +
-      #     scale_x_log10(
-      #       breaks = c(0.1, 10, 1000, 1e5), 
-      #       # limits = c(NA, 1e5),
-      #       labels = scales::trans_format("log10", scales::math_format(10^.x))
-      #     ) +
-      #     scale_y_log10(
-      #       breaks = c(0.1, 10, 1000, 1e5), 
-      #       # limits = c(NA, 1e5),
-      #       labels = scales::trans_format("log10", scales::math_format(10^.x))
-      #     ) +
-      #       labs(tag = tag_label, 
-      #           x = x_axis_label, 
-      #           y = switch(model_name,
-      #                       "h_wb" = expression(Predicted~AGB[paste(H, " - ", WB)]~"(kg)"),
-      #                       "h_pl" = expression(Predicted~AGB[paste(H, " - ", PL)]~"(kg)"),
-      #                       "dbh_pl" = expression(Predicted~AGB[paste(DBH, " ~ ", CR, " , ", H)]~"(kg)"),
-      #                       "dbh1_pl" = expression(Predicted~AGB[paste(DBH, " ~ ", CR, " × ", H)]~"(kg)"),
-      #                       "dbh2_pl" = expression(Predicted~AGB[paste(DBH, " ~ ", CR)]~"(kg)"),
-      #                       "dbh3_pl" = expression(Predicted~AGB[paste(DBH, " ~ ", H)]~"(kg)"))) +
+    # create_plot <- function(data, baseline, predicted, rmse, bias, model_name, tag_label, x_axis_label = NULL) {
+    #   # Calculate the range of predicted values to adjust the y position dynamically
+    #   max_predicted <- max(exp(predicted), na.rm = TRUE)  # Using exp to scale back from log
+    create_plot <- function(data, baseline, predicted, rmse, bias, model_name, tag_label,
+                            x_axis_label = NULL, y_rmse = NULL, y_bias = NULL) {
 
-      #     annotate("text", x = 0.1, y = 1e5, label = paste("RMSE =", format(round(rmse, 3), nsmall = 3), "Mg"), hjust = 0, size = 2) +
-      #     annotate("text", x = 0.1, y = 3e4, label = paste("Bias =", format(round(bias * 100, 3), nsmall = 3), "%"), hjust = 0, size = 2) +
-      #     my_theme()
-      # }
-    create_plot <- function(data, baseline, predicted, rmse, bias, model_name, tag_label, x_axis_label = NULL) {
-      # Calculate the range of predicted values to adjust the y position dynamically
-      max_predicted <- max(exp(predicted), na.rm = TRUE)  # Using exp to scale back from log
+      max_predicted <- max(exp(predicted), na.rm = TRUE)
 
-      # Adjust positions based on the max value of predicted AGB
-      y_position_rmse <- max_predicted * 0.9  # Place RMSE slightly below the top
-      y_position_bias <- max_predicted * 0.4  # Place Bias slightly lower
+      if (tag_label == "(d)") {
+        # For panel (d), force specific offset-based positioning
+        y_position_rmse <- max_predicted * 0.78
+        offset <- max_predicted * 0.62
+        y_position_bias <- y_position_rmse - offset
+      } else {
+        # Default for other panels
+        log_max <- log10(max_predicted)
+        y_position_rmse <- if (!is.null(y_rmse)) y_rmse else 10^(log_max - 0.1)
+        y_position_bias <- if (!is.null(y_bias)) y_bias else 10^(log_max - 0.54)
+      }
+      # # Adjust positions based on the max value of predicted AGB
+      # y_position_rmse <- max_predicted * 0.9  # Place RMSE slightly below the top
+      # y_position_bias <- max_predicted * 0.3  # Place Bias slightly lower
+
+      # offset <- max_predicted * 0.575
+      # y_position_rmse <- max_predicted * 0.9
+      # y_position_bias <- y_position_rmse - offset
 
       ggplot(data, aes(x = exp(baseline), y = exp(predicted))) +
         geom_point(alpha = 0.5, color = "grey", size = 0.3) +
@@ -2525,10 +2574,10 @@ calculate_agb <- function(filtered_data) {
         # annotate("text", x = 0.1, y = y_position_bias, label = paste("Bias =", format(round(bias * 100, 3), nsmall = 3), "%"), hjust = 0, size = 2) +
         annotate("text", x = 0.1, y = y_position_rmse, 
                 label = paste("RMSE =", sprintf("%.3g", rmse), "Mg"), 
-                hjust = 0, size = 2) +
+                hjust = 0, size = 2.5, family = "serif") +
         annotate("text", x = 0.1, y = y_position_bias, 
                 label = paste("Bias =", sprintf("%.3g", bias * 100), "%"), 
-                hjust = 0, size = 2) +
+                hjust = 0, size = 2.5, family = "serif") +
 
         my_theme()
     }
@@ -2581,17 +2630,17 @@ calculate_agb <- function(filtered_data) {
       plot_annotation(tag_levels = list(c("(a)", "(b)", "(c)", "(d)", "(e)", "(f)"))) &
       my_theme() +
       theme(
-        text = element_text(size = 6.5),
-        axis.title = element_text(size = 8),
-        axis.text = element_text(size = 7),
-        legend.text = element_text(size = 6),
-        legend.title = element_text(size = 6),
+        text = element_text(size = 8, family = "serif"),
+        axis.title = element_text(size = 8, family = "serif"),
+        axis.text = element_text(size = 8, family = "serif"),
+        legend.text = element_text(size = 8, family = "serif"),
+        legend.title = element_text(size = 8, family = "serif"),
         plot.margin = margin(t = 3, r = 3, b = 3, l = 2.5, unit = "pt")
       )
     
     p <- ggdraw() +
       draw_plot(p, x = 0, y = 0, width = 1, height = 0.95) +
-      draw_label("Angiosperm", x = 0.545, y = 0.965, fontface = 'bold', size = 10)
+      draw_label("Angiosperm", x = 0.54, y = 0.965, fontface = 'bold', size = 8, fontfamily = "serif")
 
   if (export_yaml) {
     yaml::write_yaml(list(metrics_agb_ang = as.list(metrics_agb_ang)), yaml_file)
@@ -3670,11 +3719,11 @@ generate_com_sp_plot <- function(stan_data_nlr_h, stan_data_nlr_cr,
 # SPECIES-LEVEL PLOTS 
 #=======================
 generate_h_sp_plot <- function(
-  tallo_reduced_lr_df_ang_h,
+  tallo_reduced_nlr_df_ang_h,
   sp_posterior_h_df,
-  num_species = 32) {
+  num_species = 28) {
   
-  h_data <- tallo_reduced_lr_df_ang_h |> 
+  h_data <- tallo_reduced_nlr_df_ang_h |> 
     filter(!is.na(h))
   
   # Sample a specific number of species
@@ -3768,12 +3817,227 @@ generate_h_sp_plot <- function(
 }
 
 #=======================================
+# SPECIES-LEVEL PLOTS: H-DBH ANG
+#=======================================
+generate_h_sp_ang_plot <- function(
+  tallo_reduced_nlr_df_ang_h,
+  sp_posterior_h_df,
+  species_names = c(
+  "Sclerocarya birrea", "Semialarium mexicanum", "Anonidium mannii", "Ficus variegata",
+  "Dipterocarpus indicus", "Quercus alba", "Jacaratia mexicana", "Forchhammeria pallida",
+  "Erythrophleum suaveolens", "Eucalyptus similis", "Eupomatia laurina", "Pterocarpus angolensis",
+  "Knema attenuata", "Elaeocarpus ruminatus", "Ficus auriculata", "Syzygium araiocladum",
+  "Grewia eriocarpa", "Citronella smythii", "Nauclea officinalis", "Vouacapoua americana",
+  "Sterculia lanceolata", "Symplocos anomala", "Casearia sylvestris", "Vachellia campechiana",
+  "Hirtella americana", "Brachychiton diversifolius", "Poeppigia procera", "Vochysia maxima"
+)) {
+  
+  h_data_ang <- tallo_reduced_nlr_df_ang_h |> 
+    filter(division == "Angiosperm") |>
+    filter(!is.na(h))
+  
+  # Split the dataset by species
+  sub_datasets <- h_data_ang |>
+    filter(sp %in% species_names) |>
+    group_split(sp)
+  
+  # Assign species names as dataset names
+  names(sub_datasets) <- species_names
+  
+  # Calculate the range of DBH for each species
+  dbh_range <- h_data_ang |>
+    group_by(sp) |>
+    summarize(
+      min_dbh = min(dbh, na.rm = TRUE),
+      max_dbh = max(dbh, na.rm = TRUE),
+      .groups = "drop"
+    )
+  
+  # Function to create DBH sequence for a given species
+  create_dbh_sequence <- function(species, length_out = 200) {
+    min_dbh <- dbh_range$min_dbh[dbh_range$sp == species]
+    max_dbh <- dbh_range$max_dbh[dbh_range$sp == species]
+    # seq(min_dbh * 0.5, max_dbh * 1.5, length.out = length_out)
+    seq(min_dbh, max_dbh, length.out = length_out)
+  }
+  
+  combined_data <- data.frame()
+  
+  for (i in seq_along(sub_datasets)) {
+    species_data <- sub_datasets[[i]]
+    species_name <- names(sub_datasets)[i]
+    
+    # Extract posterior data for the current species
+    species_post <- sp_posterior_h_df |>
+      filter(Division == "Angiosperm") |>
+      filter(Species == species_name)
+    
+    if (nrow(species_post) == 0) {
+      warning(paste("No posterior data for species:", species_name))
+      next
+    }
+    
+    # Extract Weibull parameters
+    a <- as.numeric(sub(" \\(.*\\)", "", species_post$a))
+    log_a <- log(a)
+    b <- as.numeric(sub(" \\(.*\\)", "", species_post$b))
+    k <- as.numeric(sub(" \\(.*\\)", "", species_post$k))
+    
+    # Generate DBH sequence for the current species
+    extended_dbh <- create_dbh_sequence(species_name)
+    
+    # Compute the fitted height values for the extended range
+    fitted_log_y <- log_a + log(1 - exp(-b * (extended_dbh ^ k)))
+    fitted_height <- exp(fitted_log_y)
+    
+    # Create a dataframe for the fitted curve
+    fitted_curve <- data.frame(
+      DBH = extended_dbh,
+      H = fitted_height,
+      sp = species_name,
+      Source = "Fitted"
+    )
+    
+    # Combine observed and fitted data
+    combined_species_data <- species_data |>
+      mutate(Species = species_name, Source = "Observed") |>
+      dplyr::select(DBH = dbh, H = h, sp, Source) |>
+      bind_rows(fitted_curve)
+    
+    # Append to the combined dataset
+    combined_data <- bind_rows(combined_data, combined_species_data)
+  }
+  
+  # Plot the combined dataset
+  p <- ggplot(combined_data, aes(x = DBH, y = H, color = Source)) +
+    geom_point(data = combined_data |> filter(Source == "Observed"), alpha = 0.5, color = "gray") +
+    geom_line(data = combined_data |> filter(Source == "Fitted"), aes(group = sp), color = "#0f92e9", linewidth = 0.6) +
+    facet_wrap(~ sp, scales = "free", ncol = 4) +
+    labs(
+      x = "DBH (cm)",
+      y = "Tree Height (m)"
+    ) +
+    # scale_x_log10() +
+    # scale_y_log10() + 
+    my_theme()
+  
+  return(p)
+}
+
+#=======================================
+# SPECIES-LEVEL PLOTS: H-DBH GYM
+#=======================================
+generate_h_sp_gym_plot <- function(
+  tallo_reduced_nlr_df_gym_h,
+  sp_posterior_h_df,
+  species_names = c(
+  "Pinus flexilis", "Callitris columellaris", "Abies lasiocarpa", "Pinus fenzeliana",
+  "Tsuga mertensiana", "Pinus contorta", "Pinus resinosa", "Abies amabilis",
+  "Abies balsamea", "Pinus jeffreyi", "Pinus banksiana", "Juniperus oxycedrus",
+  "Phyllocladus aspleniifolius", "Pinus strobus", "Pinus cembra", "Thuja occidentalis",
+  "Picea glauca", "Pinus ponderosa", "Podocarpus totara", "Dacrycarpus imbricatus",
+  "Juniperus thurifera", "Picea abies", "Pinus palustris", "Cunninghamia lanceolata",
+  "Abies grandis", "Pinus taeda", "Larix decidua", "Juniperus virginiana"
+)) {
+  
+  h_data_gym <- tallo_reduced_nlr_df_gym_h |> 
+    filter(division == "Gymnosperm") |>
+    filter(!is.na(h))
+  
+  # Split the dataset by species
+  sub_datasets <- h_data_gym |>
+    filter(sp %in% species_names) |>
+    group_split(sp)
+  
+  # Assign species names as dataset names
+  names(sub_datasets) <- species_names
+  
+  # Calculate the range of DBH for each species
+  dbh_range <- h_data_gym |>
+    group_by(sp) |>
+    summarize(
+      min_dbh = min(dbh, na.rm = TRUE),
+      max_dbh = max(dbh, na.rm = TRUE),
+      .groups = "drop"
+    )
+  
+  # Function to create DBH sequence for a given species
+  create_dbh_sequence <- function(species, length_out = 200) {
+    min_dbh <- dbh_range$min_dbh[dbh_range$sp == species]
+    max_dbh <- dbh_range$max_dbh[dbh_range$sp == species]
+    seq(min_dbh, max_dbh, length.out = length_out)
+  }
+  
+  combined_data <- data.frame()
+  
+  for (i in seq_along(sub_datasets)) {
+    species_data <- sub_datasets[[i]]
+    species_name <- names(sub_datasets)[i]
+    
+    # Extract posterior data for the current species
+    species_post <- sp_posterior_h_df |>
+      filter(Division == "Gymnosperm") |>
+      filter(Species == species_name)
+    
+    if (nrow(species_post) == 0) {
+      warning(paste("No posterior data for species:", species_name))
+      next
+    }
+    
+    # Extract Weibull parameters
+    a <- as.numeric(sub(" \\(.*\\)", "", species_post$a))
+    log_a <- log(a)
+    b <- as.numeric(sub(" \\(.*\\)", "", species_post$b))
+    k <- as.numeric(sub(" \\(.*\\)", "", species_post$k))
+    
+    # Generate DBH sequence for the current species
+    extended_dbh <- create_dbh_sequence(species_name)
+    
+    # Compute the fitted height values for the extended range
+    fitted_log_y <- log_a + log(1 - exp(-b * (extended_dbh ^ k)))
+    fitted_height <- exp(fitted_log_y)
+    
+    # Create a dataframe for the fitted curve
+    fitted_curve <- data.frame(
+      DBH = extended_dbh,
+      H = fitted_height,
+      sp = species_name,
+      Source = "Fitted"
+    )
+    
+    # Combine observed and fitted data
+    combined_species_data <- species_data |>
+      mutate(Species = species_name, Source = "Observed") |>
+      dplyr::select(DBH = dbh, H = h, sp, Source) |>
+      bind_rows(fitted_curve)
+    
+    # Append to the combined dataset
+    combined_data <- bind_rows(combined_data, combined_species_data)
+  }
+  
+  # Plot the combined dataset
+  p <- ggplot(combined_data, aes(x = DBH, y = H, color = Source)) +
+    geom_point(data = combined_data |> filter(Source == "Observed"), alpha = 0.5, color = "gray") +
+    geom_line(data = combined_data |> filter(Source == "Fitted"), aes(group = sp), color = "#0f92e9", linewidth = 0.6) +
+    facet_wrap(~ sp, scales = "free", ncol = 4) +
+    labs(
+      x = "DBH (cm)",
+      y = "Tree Height (m)"
+    ) +
+    # scale_x_log10() +
+    # scale_y_log10() + 
+    my_theme()
+  
+  return(p)
+}
+
+#=======================================
 # SPECIES-LEVEL PLOTS: H-DBH LARGE TREES
 #=======================================
 generate_h_sp_large_plot <- function(
   tallo_reduced_lr_df_ang_h,
   sp_posterior_h_df,
-  num_species = 32) {
+  num_species = 28) {
   
   # Filter data to ensure H values are not missing and only include species with DBH > 200
   h_data <- tallo_reduced_lr_df_ang_h |> 
@@ -3867,6 +4131,306 @@ generate_h_sp_large_plot <- function(
     ) +
     # scale_x_log10() +
     # scale_y_log10() + 
+    my_theme()
+  
+  return(p)
+}
+
+#=======================================
+# SPECIES-LEVEL PLOTS: CR-DBH ANG
+#=======================================
+generate_cr_sp_ang_plot <- function(
+  tallo_reduced_lr_df_ang_cr,
+  sp_posterior_cr_df,
+  species_names = c(
+  "Paranephelium xestophyllum", "Nauclea officinalis", "Pouteria guianensis",
+  "Quercus hemisphaerica", "Platea parvifolia", "Lindera metcalfiana",
+  "Kalmia latifolia", "Polyspora hainanensis", "Cecropia peltata",
+  "Walsura robusta", "Quercus rubra", "Banara guianensis",
+  "Betula alleghaniensis", "Fagus crenata", "Cochlospermum vitifolium",
+  "Vachellia tortilis", "Clarisia racemosa", "Gonystylus bancanus",
+  "Litsea glutinosa", "Pouteria reticulata", "Fraxinus americana",
+  "Sagotia racemosa", "Protium copal", "Acacia mearnsii",
+  "Reevesia thyrsoidea", "Protium tenuifolium", "Garcinia punctata",
+  "Prunus arborea"
+)) {
+  
+  cr_data_ang <- tallo_reduced_lr_df_ang_cr |> 
+    filter(division == "Angiosperm") |>
+    filter(!is.na(cr))
+  
+  # # Sample a specific number of species
+  # species_names <- sample(unique(cr_data_ang$sp), min(num_species, n_distinct(cr_data_ang$sp)))
+  
+  # Split the dataset by species
+  sub_datasets <- cr_data_ang |>
+    filter(sp %in% species_names) |>
+    group_split(sp)
+  
+  # Assign species names as dataset names
+  names(sub_datasets) <- species_names
+  
+  # Calculate the range of DBH for each species
+  dbh_range <- cr_data_ang |>
+    group_by(sp) |>
+    summarize(
+      min_dbh = min(dbh, na.rm = TRUE),
+      max_dbh = max(dbh, na.rm = TRUE),
+      .groups = "drop"
+    )
+  
+  # Function to create DBH sequence for a given species
+  create_dbh_sequence <- function(species, length_out = 200) {
+    min_dbh <- dbh_range$min_dbh[dbh_range$sp == species]
+    max_dbh <- dbh_range$max_dbh[dbh_range$sp == species]
+    seq(min_dbh, max_dbh, length.out = length_out)
+  }
+  
+  combined_data <- data.frame()
+  
+  for (i in seq_along(sub_datasets)) {
+    species_data <- sub_datasets[[i]]
+    species_name <- names(sub_datasets)[i]
+    
+    # Extract posterior data for the current species
+    species_post <- sp_posterior_cr_df |>
+      filter(Division == "Angiosperm") |>
+      filter(Species == species_name)
+    
+    if (nrow(species_post) == 0) {
+      warning(paste("No posterior data for species:", species_name))
+      next
+    }
+    
+    # Extract power-law parameters
+    a <- as.numeric(sub(" \\(.*\\)", "", species_post$a))
+    b <- as.numeric(sub(" \\(.*\\)", "", species_post$b))
+    
+    # Generate DBH sequence for the current species
+    extended_dbh <- create_dbh_sequence(species_name)
+    
+    # Compute the fitted crown radius values for the extended range
+    fitted_cr <- a * (extended_dbh ^ b)
+    
+    # Create a dataframe for the fitted curve
+    fitted_curve <- data.frame(
+      DBH    = extended_dbh,
+      CR     = fitted_cr,
+      sp     = species_name,
+      Source = "Fitted"
+    )
+    
+    # Combine observed and fitted data
+    combined_species_data <- species_data |>
+      mutate(Species = species_name, Source = "Observed") |>
+      dplyr::select(DBH = dbh, CR = cr, sp, Source) |>
+      bind_rows(fitted_curve)
+    
+    # Append to the combined dataset
+    combined_data <- bind_rows(combined_data, combined_species_data)
+  }
+  
+  # Plot the combined dataset
+  p <- ggplot(combined_data, aes(x = DBH, y = CR, color = Source)) +
+    geom_point(data = combined_data |> filter(Source == "Observed"), alpha = 0.5, color = "gray") +
+    geom_line(data = combined_data |> filter(Source == "Fitted"), aes(group = sp), color = "#FF5733", linewidth = 0.6) +
+    facet_wrap(~ sp, scales = "free", ncol = 4) +
+    labs(
+      x = "DBH (cm)",
+      y = "Crown Radius (m)"
+    ) +
+    my_theme()
+  
+  return(p)
+}
+
+
+#=======================================
+# SPECIES-LEVEL PLOTS: CR-DBH GYM (gMM)
+#=======================================
+# generate_cr_sp_gym_plot <- function(
+#   tallo_reduced_nlr_df_gym_cr,
+#   sp_posterior_cr_df,
+#   num_species = 28) {
+  
+#   cr_data_gym <- tallo_reduced_nlr_df_gym_cr |> 
+#     filter(division == "Gymnosperm") |>
+#     filter(!is.na(cr))
+  
+#   # Sample a specific number of species
+#   species_names <- sample(unique(cr_data_gym$sp), min(num_species, n_distinct(cr_data_gym$sp)))
+  
+#   # Split the dataset by species
+#   sub_datasets <- cr_data_gym |>
+#     filter(sp %in% species_names) |>
+#     group_split(sp)
+  
+#   # Assign species names as dataset names
+#   names(sub_datasets) <- species_names
+  
+#   # Calculate the range of DBH for each species
+#   dbh_range <- cr_data_gym |>
+#     group_by(sp) |>
+#     summarize(
+#       min_dbh = min(dbh, na.rm = TRUE),
+#       max_dbh = max(dbh, na.rm = TRUE),
+#       .groups = "drop"
+#     )
+  
+#   # Function to create DBH sequence for a given species
+#   create_dbh_sequence <- function(species, length_out = 200) {
+#     min_dbh <- dbh_range$min_dbh[dbh_range$sp == species]
+#     max_dbh <- dbh_range$max_dbh[dbh_range$sp == species]
+#     seq(min_dbh, max_dbh, length.out = length_out)
+#   }
+  
+#   combined_data <- data.frame()
+  
+#   for (i in seq_along(sub_datasets)) {
+#     species_data <- sub_datasets[[i]]
+#     species_name <- names(sub_datasets)[i]
+    
+#     # Extract posterior data for the current species
+#     species_post <- sp_posterior_cr_df |>
+#       filter(Division == "Gymnosperm") |>
+#       filter(Species == species_name)
+    
+#     if (nrow(species_post) == 0) {
+#       warning(paste("No posterior data for species:", species_name))
+#       next
+#     }
+    
+#     # Extract gMM parameters
+#     a <- as.numeric(sub(" \\(.*\\)", "", species_post$a))
+#     log_a <- log(a)
+#     b <- as.numeric(sub(" \\(.*\\)", "", species_post$b))
+#     k <- as.numeric(sub(" \\(.*\\)", "", species_post$k))
+    
+#     # Generate DBH sequence for the current species
+#     extended_dbh <- create_dbh_sequence(species_name)
+    
+#     # Compute the fitted crown radius values for the extended range
+#     fitted_log_cr <- log_a + log((extended_dbh ^ b) / (k + extended_dbh ^ b))
+#     fitted_cr     <- exp(fitted_log_cr)    
+#     # Create a dataframe for the fitted curve
+#     fitted_curve <- data.frame(
+#       DBH = extended_dbh,
+#       CR  = fitted_cr,
+#       sp  = species_name,
+#       Source = "Fitted"
+#     )
+    
+#     # Combine observed and fitted data
+#     combined_species_data <- species_data |>
+#       mutate(sp = species_name, Source = "Observed") |>
+#       dplyr::select(DBH = dbh, CR = cr, sp, Source) |>
+#       bind_rows(fitted_curve)
+    
+#     # Append to the combined dataset
+#     combined_data <- bind_rows(combined_data, combined_species_data)
+#   }
+  
+#   # Plot the combined dataset
+#   p <- ggplot(combined_data, aes(x = DBH, y = CR, color = Source)) +
+#     geom_point(data = combined_data |> filter(Source == "Observed"), alpha = 0.5, color = "gray") +
+#     geom_line(data = combined_data |> filter(Source == "Fitted"), aes(group = sp), color = "#1b9e77", linewidth = 0.6) +
+#     facet_wrap(~ sp, scales = "free", ncol = 4) +
+#     labs(
+#       x = "DBH (cm)",
+#       y = "Crown Radius (m)"
+#     ) +
+#     my_theme()
+  
+#   return(p)
+# }
+
+generate_cr_sp_gym_plot <- function(
+  tallo_reduced_nlr_df_gym_cr,
+  sp_posterior_cr_df,
+  species_names = c(
+  "Juniperus oxycedrus", "Pinus mugo", "Tsuga mertensiana", "Abies balsamea",
+  "Larix decidua", "Larix occidentalis", "Cryptomeria japonica", "Pinus elliottii",
+  "Tsuga heterophylla", "Larix gmelinii", "Podocarpus latifolius", "Picea glauca",
+  "Larix kaempferi", "Pinus monticola", "Pinus fenzeliana", "Larix laricina",
+  "Juniperus virginiana", "Picea abies", "Thuja occidentalis", "Pseudotsuga menziesii",
+  "Pinus massoniana", "Podocarpus totara", "Pinus palustris", "Pinus pinea",
+  "Pinus resinosa", "Abies lasiocarpa", "Chamaecyparis obtusa", "Pinus taeda"
+)
+) {
+  
+  cr_data_gym <- tallo_reduced_nlr_df_gym_cr |> 
+    filter(division == "Gymnosperm") |>
+    filter(!is.na(cr))
+  
+  # species_names <- sample(unique(cr_data_gym$sp), min(num_species, n_distinct(cr_data_gym$sp)))
+  
+  sub_datasets <- cr_data_gym |>
+    filter(sp %in% species_names) |>
+    group_split(sp)
+  names(sub_datasets) <- species_names
+  
+  dbh_range <- cr_data_gym |>
+    group_by(sp) |>
+    summarize(
+      min_dbh = min(dbh, na.rm = TRUE),
+      max_dbh = max(dbh, na.rm = TRUE),
+      .groups = "drop"
+    )
+  
+  create_dbh_sequence <- function(species, length_out = 200) {
+    min_dbh <- dbh_range$min_dbh[dbh_range$sp == species]
+    max_dbh <- dbh_range$max_dbh[dbh_range$sp == species]
+    seq(min_dbh, max_dbh, length.out = length_out)
+  }
+  
+  combined_data <- data.frame()
+  
+  for (i in seq_along(sub_datasets)) {
+    species_data <- sub_datasets[[i]]
+    species_name <- names(sub_datasets)[i]
+    
+    species_post <- sp_posterior_cr_df |>
+      filter(Division == "Gymnosperm") |>
+      filter(Species == species_name)
+    
+    if (nrow(species_post) == 0) {
+      warning(paste("No posterior data for species:", species_name))
+      next
+    }
+    
+    a <- as.numeric(sub(" \\(.*\\)", "", species_post$a))
+    b <- as.numeric(sub(" \\(.*\\)", "", species_post$b))
+    k <- as.numeric(sub(" \\(.*\\)", "", species_post$k))
+    
+    extended_dbh <- create_dbh_sequence(species_name)
+    
+    fitted_cr <- a * (extended_dbh^b) / (k + extended_dbh^b)
+    
+    fitted_curve <- data.frame(
+      DBH = extended_dbh,
+      CR  = fitted_cr,
+      sp  = species_name,
+      Source = "Fitted"
+    )
+    
+    combined_species_data <- species_data |>
+      mutate(Species = species_name, Source = "Observed") |>
+      dplyr::select(DBH = dbh, CR = cr, sp, Source) |>
+      bind_rows(fitted_curve)
+    
+    combined_data <- bind_rows(combined_data, combined_species_data)
+  }
+  
+  p <- ggplot(combined_data, aes(x = DBH, y = CR, color = Source)) +
+    geom_point(data = combined_data |> filter(Source == "Observed"), 
+               alpha = 0.5, color = "gray") +
+    geom_line(data = combined_data |> filter(Source == "Fitted"), 
+              aes(group = sp), color = "#1b9e77", linewidth = 0.6) +
+    facet_wrap(~ sp, scales = "free", ncol = 4) +
+    labs(
+      x = "DBH (cm)",
+      y = "Crown Radius (m)"
+    ) +
     my_theme()
   
   return(p)

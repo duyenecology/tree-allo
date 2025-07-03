@@ -1,11 +1,11 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
-.Random.seed|object|4ad2b84dbb859ab9|||||||||||||||
+.Random.seed|object|aed2175925e0184e|||||||||||||||
 abund_xtbg_csv|stem|124fe0566f3ffdc3|90d84b131028a0a0|2c530c1562a7fbd1|-850319039|data-raw/abund_xtbg.csv|t20173.5278319823s|7246f525c6d771c1|20131|file|local|vector|||1.011||
 add_r2_to_com_tbl|function|38847d1f5651f79e|||||||||||||||
 ae6228b22b5bf16|1973c5b8209aca62|db289e838f806b6c|214984209|||23c5199cbe97be21|325|rds||vector|||0.024||||
-agb|stem|02fdde6bb2a7b0b2|75829fc1cd9388e9|9725356d2f7a89ed|919347098||t20173.5278240741s|8787748151c59d66|47552178|rds|local|vector|||4.945|Using size aesthetic for lines was deprecated in ggplot2 3.4.0.ℹ Please use linewidth instead.. The legend.text.align argument of theme is deprecated as of ggplot23.5.0.ℹ Please use themelegend.text  element_texthjust instead.|
-agb_ang_metrics_yaml|stem|321bf8b785b46ff1|1bf1ecc54145085d|dd550ec8154466e5|-998668173|agb_metrics_ang.yaml|t20173.3639795571s|b0e8a36a8bde68fd|362|file|local|vector|||0||
-agb_ang_plot|stem|049f2a0cce291b72|602b7cb8dece0bb6|4f29e2c35dd282e4|-171495948|figs/agb_ang.pdf*figs/agb_ang.png|t20207.5327562858s|a5546b85db97109d|34285644|file|local|vector|||19.301||
+agb|stem|eb9b1c7d5b9f1ea6|75829fc1cd9388e9|6e24263932cedeb4|919347098||t20272.2808448061s|452d489b3f8a2a00|47550728|rds|local|vector|||4.871|Using size aesthetic for lines was deprecated in ggplot2 3.4.0.ℹ Please use linewidth instead.. The legend.text.align argument of theme is deprecated as of ggplot23.5.0.ℹ Please use themelegend.text  element_texthjust instead.|
+agb_ang_metrics_yaml|stem|321bf8b785b46ff1|1bf1ecc54145085d|71e0f220d319be25|-998668173|agb_metrics_ang.yaml|t20272.280801518s|b0e8a36a8bde68fd|362|file|local|vector|||0||
+agb_ang_plot|stem|197413e0803cc1e8|602b7cb8dece0bb6|dd13341ea284bf8d|-171495948|figs/agb_ang.pdf*figs/agb_ang.png*figs/agb_ang.jpg|t20272.2811694441s|766d8224bf30c786|36073391|file|local|vector|||27.925||
 agb_com|stem|98e3402a427369e1|9a79eadff74a29dd|1b616e6b218119a1|-725024405||t20173.527831392s|66e6103de1036130|79248042|rds|local|vector|||7.456|Using size aesthetic for lines was deprecated in ggplot2 3.4.0.ℹ Please use linewidth instead.. Removed 4 rows containing nonfinite outside the scale range stat_smooth.. Removed 4 rows containing missing values or values outside the scale rangegeom_point.. Removed 4 rows containing nonfinite outside the scale range stat_smooth.. Removed 4 rows containing missing values or values outside the scale rangegeom_point.. Removed 3 rows containing nonfinite outside the scale range stat_smooth.. Removed 3 rows containing missing values or values outside the scale rangegeom_point.. Removed 556 rows containing nonfinite outside the scale rangestat_smooth.. Removed 556 rows containing missing values or values outside the scale rangegeom_point.. Removed 3 rows containing missing values or values outside the scale rangegeom_smooth.. Removed 37 rows containing nonfinite outside the scale rangestat_smooth.. Removed 37 rows containing missing values or values outside the scale rangegeom_point.. Removed 3 rows containing nonfinite outside the scale range stat_smooth.. Removed 3 rows containing missing values or values outside the scale rangegeom_point.. Removed 3 rows containing nonfinite outside the scale range stat_smooth.. Removed 3 rows containing missing values or values outside the scale rangegeom_point.|
 agb_com1|stem|1ef46f203c29ac44|647ef8ef1c4ed12c|88811dcee8dbdcff|-937344131||t20173.5278305703s|93e303c26e57f710|79303011|rds|local|vector|||7.126|Using size aesthetic for lines was deprecated in ggplot2 3.4.0.ℹ Please use linewidth instead.. The legend.text.align argument of theme is deprecated as of ggplot23.5.0.ℹ Please use themelegend.text  element_texthjust instead.. Removed 2 rows containing nonfinite outside the scale range stat_smooth.. Removed 2 rows containing missing values or values outside the scale rangegeom_point.. Removed 2 rows containing nonfinite outside the scale range stat_smooth.. Removed 2 rows containing missing values or values outside the scale rangegeom_point.. Removed 2 rows containing nonfinite outside the scale range stat_smooth.. Removed 2 rows containing missing values or values outside the scale rangegeom_point.. Removed 462 rows containing nonfinite outside the scale rangestat_smooth.. Removed 462 rows containing missing values or values outside the scale rangegeom_point.. Removed 2 rows containing missing values or values outside the scale rangegeom_smooth.. Removed 32 rows containing nonfinite outside the scale rangestat_smooth.. Removed 32 rows containing missing values or values outside the scale rangegeom_point.. Removed 2 rows containing nonfinite outside the scale range stat_smooth.. Removed 2 rows containing missing values or values outside the scale rangegeom_point.. Removed 2 rows containing nonfinite outside the scale range stat_smooth.. Removed 2 rows containing missing values or values outside the scale rangegeom_point.|
 agb_com2|stem|9eb86609c736e6ef|0ed5a9f9b30d4b6c|906515c50f20c18e|523859143||t20173.5278309638s|5fa13739e359dfbc|67127865|rds|local|vector|||7.033|Using size aesthetic for lines was deprecated in ggplot2 3.4.0.ℹ Please use linewidth instead.. Removed 65 rows containing nonfinite outside the scale rangestat_smooth.. Removed 65 rows containing missing values or values outside the scale rangegeom_point.. Removed 15 rows containing nonfinite outside the scale rangestat_smooth.. Removed 15 rows containing missing values or values outside the scale rangegeom_point.|
@@ -38,11 +38,15 @@ combined_agb_plot1|stem|0901c4030a386d0f|b2b2ebb3829623e8|65dcfecbb1e15194|18267
 combined_agb_plot2|stem|db22e2780d624b5d|587a89f6c804d6da|7e6b66ec44d92ec7|1476522859|figs/agb_com2.pdf*figs/agb_com2.png|t20173.5278398297s|85171796714eeda4|54768899|file|local|vector|||24.697||
 combined_agb_plot3|stem|e4ccb4445467ecb0|b2fbdd6ba7c0cedc|e36f06b1b20efa77|-376392167|figs/agb_com3.pdf*figs/agb_com3.png|t20173.5278398413s|57bf45b5866bda5c|51680702|file|local|vector|||24.073||
 combined_agb_plot4|stem|c02d8d30df79f30a|e6e3f754b7d50e95|a104aa55c14c8392|1564691413|figs/agb_com4.pdf*figs/agb_com4.png|t20173.5278398528s|2aef7d54812c7fcb|54099787|file|local|vector|||24.393||
-combined_wd_plot|stem|e870ae22ffd8f7af|71b7e8b06e98ace7|8815d2f99fd2d001|-335756275|figs/wd_com.pdf*figs/wd_com.png|t20207.5321729965s|5531b8890bef0b81|1663699|file|local|vector|||23.19|collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values|
+combined_wd_plot|stem|395bc11ddd3fe6aa|71b7e8b06e98ace7|2e0671f447a8b4f3|-335756275|figs/wd_com.pdf*figs/wd_com.png*figs/wd_com.jpg|t20272.2708307369s|5313011a0358e60c|4925122|file|local|vector|||25.816|collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. The legend.text.align argument of theme is deprecated as of ggplot23.5.0.ℹ Please use themelegend.text  element_texthjust instead.. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values|
+cr_sp_ang_plot|stem|51cf2454a01ff6f6|0270e3244aa580f1|3a5be9f44a8a55e2|-1505830460|figs/cr_sp_ang.pdf*figs/cr_sp_ang.png*figs/cr_sp_ang.jpg|t20272.1384602199s|275239e91f0a9318|7859094|file|local|vector|||5.184||
+cr_sp_gym_plot|stem|1c764c2684aa3386|792f6debc724ac8b|bdb640422311b013|-184038013|figs/cr_sp_gym.pdf*figs/cr_sp_gym.png*figs/cr_sp_gym.jpg|t20272.1384001256s|d31bf8122d5cfb2d|8379117|file|local|vector|||5.104||
+cr_sp_plot_ang|stem||b7838d7ed8504b0d|1f45f2460b48f8e3|-2040733260||t20227.3088506991s||0|file|local|vector|||0.324||ℹ In argument sp  sp_name.Caused by error in sp  sp_name comparison  is possible only for atomic and list types
+cr_sp_plot_gym|stem||c7e77cb5e608cba4|36b50d8d41d964e0|-858676535||t20227.3110925401s||0|file|local|vector|||0.311||ℹ In index 1.Caused by error object sp_posterior_cr_gym_df not found
 create_legend|function|a9fdb751bc688044|||||||||||||||
-curve_plot|stem|a5aea63122287bc3|51bcf087f830e500|9c259aba1c583e67|-674442642|figs/curve.pdf*figs/curve.png|t20207.5299343293s|b3b34a5a0fd70487|154738|file|local|vector|||1.184|Using size aesthetic for lines was deprecated in ggplot2 3.4.0.ℹ Please use linewidth instead.. The legend.text.align argument of theme is deprecated as of ggplot23.5.0.ℹ Please use themelegend.text  element_texthjust instead.|
+curve_plot|stem|356b106a45da19f9|51bcf087f830e500|31f6df40984d04e0|-674442642|figs/curve.pdf*figs/curve.png*figs/curve.jpg|t20272.1368076331s|2deca1fa75fff389|525138|file|local|vector|||1.181|Using size aesthetic for lines was deprecated in ggplot2 3.4.0.ℹ Please use linewidth instead.. The legend.text.align argument of theme is deprecated as of ggplot23.5.0.ℹ Please use themelegend.text  element_texthjust instead.|
 data_|object|f6e7060d594c6dad|||||||||||||||
-data_map|function|1621e57b317251b9|||||||||||||||
+data_map|function|09ebbaa926dd5ebb|||||||||||||||
 data_names|object|9815d3251134f760|||||||||||||||
 data_yaml|stem|08d5f59e833de599|94c4a38f60e8cf66|bc3231b41d41b52a|-1383455890||t0s|a10b0861f057ffab|0|file|local|vector|||0.168||
 df_small_ang_cr|stem|5ea6f599d5d7a59c|af05839d21f4c592|68a1d8f8717d8870|-21613152||t19995.4987143549s|bd12d9d23ae5eb95|1054763|rds|local|vector|||0.978||
@@ -1206,22 +1210,28 @@ fit_wd_mcmc_weibull_nc_wd_gym_h|stem|406dca7288bd6118|fb5c5d177b9b89c4|3c0768932
 format_ci|function|d75fc040c6afe6d6|||||||||||||||
 format_ci_sp|function|281753f711aef07f|||||||||||||||
 format_sp_posterior_df|function|58372ac3e8528c62|||||||||||||||
-generate_agb_estimation|function|b168caaa600718f1|||||||||||||||
-generate_agb_estimation_com|function|74bf9ff4857d3449|||||||||||||||
-generate_agb_estimation_com1|function|0874943524992662|||||||||||||||
-generate_agb_estimation_com2|function|6de0216c6e9f7aef|||||||||||||||
-generate_agb_estimation_com3|function|7e684715c081d538|||||||||||||||
-generate_agb_estimation_com4|function|d7e4219ffb97534c|||||||||||||||
+generate_agb_estimation|function|76e047ea238832a5|||||||||||||||
+generate_agb_estimation_com|function|468b2d3d21c3c922|||||||||||||||
+generate_agb_estimation_com1|function|7deed5b5ce63b2c2|||||||||||||||
+generate_agb_estimation_com2|function|d7940e7ad739bcf4|||||||||||||||
+generate_agb_estimation_com3|function|59f428c24dc6b3fa|||||||||||||||
+generate_agb_estimation_com4|function|af3c11e94d209f95|||||||||||||||
 generate_agb_estimation1|function|679107d5ee7131f6|||||||||||||||
-generate_allo_plot|function|352a03644eaa16e2|||||||||||||||
+generate_allo_plot|function|9212115da7568bd5|||||||||||||||
 generate_com_sp_plot|function|18e8b357ece20655|||||||||||||||
 generate_combined_plot|function|121f9ec6e112fa7d|||||||||||||||
 generate_comparison_table|function|32da5d83188da7ef|||||||||||||||
-generate_custom_curve_plot|function|5034413df768e7e6|||||||||||||||
+generate_cr_sp_ang_plot|function|e9d29cff355c2a30|||||||||||||||
+generate_cr_sp_gym_plot|function|e387ecd7345c3706|||||||||||||||
+generate_cr_sp_plot_ang|function|0979a63c57e2efb0|||||||||||||||
+generate_cr_sp_plot_gym|function|3488fce8466488f3|||||||||||||||
+generate_custom_curve_plot|function|ebdd4a54db35dcf9|||||||||||||||
 generate_h_dbh_comparison_plot|function|4f3888876052a0ec|||||||||||||||
 generate_h_dbh_plot|function|cc37feb0e1e88df8|||||||||||||||
-generate_h_sp_large_plot|function|92dda7e9f96a9da8|||||||||||||||
-generate_h_sp_plot|function|19a346a4ec918d8d|||||||||||||||
+generate_h_sp_ang_plot|function|aca627d675c2ca04|||||||||||||||
+generate_h_sp_gym_plot|function|382ff5fa1a90ebd6|||||||||||||||
+generate_h_sp_large_plot|function|a60b54451243be04|||||||||||||||
+generate_h_sp_plot|function|6b4ba371bbefcd51|||||||||||||||
 generate_loo_r2_table|function|f6de43ae8fc52fa5|||||||||||||||
 generate_loo_tbl|function|b787db771a2bcbcb|||||||||||||||
 generate_mcmc_summary|function|1f7509281d4eb829|||||||||||||||
@@ -1234,24 +1244,27 @@ generate_sp_posterior_df|function|6830af4567ecdaf5|||||||||||||||
 generate_sp_posterior_df_wd|function|beba8b8292377bc4|||||||||||||||
 generate_stan_data|function|5003fb6d81fe0204|||||||||||||||
 generate_subset_data|function|35d837d4692d47b2|||||||||||||||
-generate_wd_ef|function|3a854cee1e8fb5f0|||||||||||||||
-generate_wd_para_com|function|4c176b6c771bebd7|||||||||||||||
+generate_wd_ef|function|c29b0870c71fc195|||||||||||||||
+generate_wd_para_com|function|e7422e7e1562a466|||||||||||||||
 generate_wd_para_combined|function|81e038f75f927701|||||||||||||||
-generate_wd_para_cr|function|9568a4b5030a7e19|||||||||||||||
+generate_wd_para_cr|function|c1838ba5de33039d|||||||||||||||
 generate_wd_para_cr_ang|function|62fda025909609cc|||||||||||||||
 generate_wd_para_cr_gym|function|618b4f25befb18cd|||||||||||||||
 generate_wd_para_cr1|function|b6d0b7db33f5445b|||||||||||||||
-generate_wd_para_h|function|33fef52218f1e9f2|||||||||||||||
+generate_wd_para_h|function|9ea373ff02236211|||||||||||||||
 generate_wd_para_h1|function|c703a605a80d5cc9|||||||||||||||
 generate_wd_para_plot|function|725e5885b938008e|||||||||||||||
-geographical_coverage_map|stem|50ddfb9a520160f0|da73a1de1ef0ab21|16a10f1546336490|-1772311468|figs/map.pdf*figs/map.png|t20207.5301268795s|8471707a13d4445e|9740497|file|local|vector|||14.294||
+geographical_coverage_map|stem|76e22c1a8f1f343c|da73a1de1ef0ab21|a4d738ff2ec52b63|-1772311468|figs/map.pdf*figs/map.png*figs/map.jpg|t20272.1371129161s|fb49a119fcbb7f7c|11122094|file|local|vector|||24.91||
 gym_plot|stem|0af0b61a21debe2f|e57899fe24dabb0f|61ed68f0ebee9981|1586857079|figs/agb_gym.pdf*figs/agb_gym.png|t20020.3469452712s|2d7f1aefea80daa9|19639351|file|local|vector|||14.925||
 h_cr_dbh|stem|a43812ab70a95e3b|6a304617c7e4818c|4cbd8eafde4498a2|-810883659|figs/h_cr_dbh.pdf*figs/h_cr_dbh.png|t20020.3623077648s|18c06ab6a97a1592|8846830|file|local|vector|||10.638|Using size aesthetic for lines was deprecated in ggplot2 3.4.0.ℹ Please use linewidth instead.. The legend.text.align argument of theme is deprecated as of ggplot23.5.0.ℹ Please use themelegend.text  element_texthjust instead.. A numeric legend.position argument in theme was deprecated in ggplot23.5.0.ℹ Please use the legend.position.inside argument of theme instead.. Multiple components found returning the first one. To return all, use return_all  TRUE.|
-h_cr_dbh_log|stem|292ecbe9c821f4f2|474fcfbcab774038|648e3cfa7315de17|-1843356570|figs/h_cr_dbh_log.pdf*figs/h_cr_dbh_log.png|t20207.5341605998s|ef78e4031bbd4dd0|8837701|file|local|vector|||7.984|Using size aesthetic for lines was deprecated in ggplot2 3.4.0.ℹ Please use linewidth instead.. A numeric legend.position argument in theme was deprecated in ggplot23.5.0.ℹ Please use the legend.position.inside argument of theme instead.. Multiple components found returning the first one. To return all, use return_all  TRUE.|
-h_cr_dbh_non_log|stem|754c8efa45360cd9|5a6d066ea37dffa7|648e3cfa7315de17|-2099052157|figs/h_cr_dbh_non_log.pdf*figs/h_cr_dbh_non_log.png|t20207.5342377763s|3cd10f8be1a20f56|7793406|file|local|vector|||6.662|Multiple components found returning the first one. To return all, use return_all  TRUE.|
+h_cr_dbh_log|stem|8849013c6fbe7f0b|474fcfbcab774038|1af24496f027bf1e|-1843356570|figs/h_cr_dbh_log.pdf*figs/h_cr_dbh_log.png*figs/h_cr_dbh_log.jpg|t20272.2296579461s|3a8b56bbfea50cf1|9665560|file|local|vector|||10.593|Using size aesthetic for lines was deprecated in ggplot2 3.4.0.ℹ Please use linewidth instead.. The legend.text.align argument of theme is deprecated as of ggplot23.5.0.ℹ Please use themelegend.text  element_texthjust instead.. A numeric legend.position argument in theme was deprecated in ggplot23.5.0.ℹ Please use the legend.position.inside argument of theme instead.. Multiple components found returning the first one. To return all, use return_all  TRUE.|
+h_cr_dbh_non_log|stem|b6d49bf3ab23db04|5a6d066ea37dffa7|1af24496f027bf1e|-2099052157|figs/h_cr_dbh_non_log.pdf*figs/h_cr_dbh_non_log.png*figs/h_cr_dbh_non_log.jpg|t20272.2297454481s|7389fd3a29448098|8517809|file|local|vector|||7.548|Multiple components found returning the first one. To return all, use return_all  TRUE.|
 h_dbh|stem|6b00bde7d087248c|75ee8bad0c7f9352|b72b6490ed5a589d|-469681392|figs/h_dbh.pdf*figs/h_dbh.png|t20020.2440875038s||6562257|file|local|vector|||0.003||could not find function generate_h_dbh_plot
-h_sp_large_plot|stem|2c00e9ada42437cb|5b6f8de50a4d0864|c04b85a930254015|2017585559|figs/h_sp_large.pdf*figs/h_sp_large.png|t20207.532513831s|14fb4e52b4e94cb5|1877292|file|local|vector|||2.347||
-h_sp_plot|stem|5a92485a40b2dcd5|6224885d1749fb6c|05d5810cb89cd81e|881142273|figs/h_sp.pdf*figs/h_sp.png|t20207.5324864698s|10d97a7637e0787c|2865660|file|local|vector|||3.507||
+h_sp_ang_plot|stem|2767460e44c461b7|517dd8c4360b4920|283c7f9c47cc5304|754632604|figs/h_sp_ang.pdf*figs/h_sp_ang.png*figs/h_sp_ang.jpg|t20272.1383409574s|67cab07a38655474|8026649|file|local|vector|||4.923||
+h_sp_gym_plot|stem|7bbbba6cf423a075|f81e13655ce96f56|d2caa17b08609827|-873939939|figs/h_sp_gym.pdf*figs/h_sp_gym.png*figs/h_sp_gym.jpg|t20272.1382838725s|eaa352eeb805f432|8607780|file|local|vector|||4.838||
+h_sp_large_plot|stem|3d99b07db18dc762|5b6f8de50a4d0864|cbbcae6fa815032b|2017585559|figs/h_sp_large.pdf*figs/h_sp_large.png*figs/h_sp_large.jpg|t20272.1381737768s|785ead7b9034aa40|6186981|file|local|vector|||3.329||
+h_sp_plot|stem|aa442dae7392b8dd|6224885d1749fb6c|1ca0068d09d2a52b|881142273|figs/h_sp.pdf*figs/h_sp.png*figs/h_sp.jpg|t20272.1382278061s|6376dc2a2f368133|8211770|file|local|vector|||4.663||
+h_sp_plot_ang|stem||f4ebb94082beb436|def590e8ee1a1d50|1613062419||t20227.3852267994s||0|file|local|vector|||0.004||could not find function generate_h_sp_plot_ang
 hello_ang_cr|stem|4b6135a56683e31a|81602648e4198f55|82f030d489651f58|1172583691||t19996.3759113289s|6d37b73d8d00728d|1019496|rds|local|vector|||0.673||
 hello_ang_h|stem|996fba79b0fa2d0b|419ca2ba82cbb30a|82f030d489651f58|-2100033414||t19996.3758726593s|8b8ea3185611fc9d|1589830|rds|local|vector|||2.047||
 hello_gym_cr|stem|244b0dc3096450f7|81602648e4198f55|82f030d489651f58|627631838||t19996.3759017917s|98654532eb6254d0|1020926|rds|local|vector|||0.862||
@@ -1468,7 +1481,7 @@ loo_r2_tbl|stem|b6daec83d1b1b609|9c961a521ca1b0dd|3885c17d3450671e|708849449||t2
 loo_r2_tbl_csv|stem|b3fb18196fe596dd|2d4d5a28988ded6d|40a41a5b4cfdb7a5|-1818433670|data/loo_r2_tbl.csv|t20173.3642709515s|b54d11f82f064570|2086|file|local|vector|||0.082||
 loo_tbl|stem|a970555a664dfd9c|d8aa6b8d3ee31713|cd7691c06fa1f318|1654956673||t20173.5278240741s|b312dd5525983c7d|1726|rds|local|vector|||0.015||
 lr_values|object|b8efdbdd266857c6|||||||||||||||
-main_|object|89b3afc019576e30|||||||||||||||
+main_|object|dda22bd4e42065e4|||||||||||||||
 map_data|stem|3026d0d064340f90|c6bad4d12ecf4233|cf4d71903f0d9c85|-78652023||t19988.3582084847s|3fd308add9cfb9e5|2779466|rds|local|group|||0.129|Dropping draws_df class as required metadata was removed.|
 map_data_7a5245aa63ace3df|branch|c8ed9071202a79df|a1906252164def2d|d11d80c10ad18716|-215792408||t19988.3488860201s|97e4db5b0080eafd|364273|rds|local|vector|map_data||0.722||
 map_data_a1fae23be8780d19|branch|87b45f3d4676a539|a1906252164def2d|d11d80c10ad18716|-1353548043||t19988.3488720964s|362d8385bb599225|364352|rds|local|vector|map_data||1.185||
@@ -1505,9 +1518,9 @@ model_bases_lr|object|9bcb3f3f2f9d1f58|||||||||||||||
 model_bases_nlr|object|c4c538bc69a76f3f|||||||||||||||
 model_vars_lr|object|ccb9f87e85e3ad60|||||||||||||||
 model_vars_nlr|object|847cbf51730a513f|||||||||||||||
-my_ggsave|function|2941a266c8ad5079|||||||||||||||
+my_ggsave|function|eb2fa509024c3f97|||||||||||||||
 my_loo|function|0b75cb61f10dbbbe|||||||||||||||
-my_theme|function|f610b1f174a6d338|||||||||||||||
+my_theme|function|635ea558fa899f09|||||||||||||||
 my_write_csv|function|38b28103db763af7|||||||||||||||
 my_write_docx|function|aa3af8dc692edf6e|||||||||||||||
 name|type|data|command|depend||path|time|size||format|repository|iteration|parent|children||warnings|error
@@ -1690,7 +1703,7 @@ stan_data_small_nlr_gym_dbh|stem||ae83097661f477cd|b32155064ecd6dda|1602560490||
 stan_sim_data_none|stem|7f7b1837c52c45cd|1d9d44243a0dc09b|9c6d81efdab7d77f|-924304758||t20173.5264351852s|8ca48a8272febcc5|1695|rds|local|vector|||0||
 stan_sim_data_x|stem|46c9c4c2d171f3fa|635252c782ec2023|9c6d81efdab7d77f|661421369||t20173.5264351852s|5ea9e4a580f0fcc2|1699|rds|local|vector|||0.238||
 stan_sim_data_xy|stem|cf04b8596030ebd8|eb532bbf1ca09506|9c6d81efdab7d77f|-435966579||t20173.5264351852s|9656cbfbb054f9ee|1696|rds|local|vector|||0.256||
-subset_charac|function|5f63216683b57e9b|||||||||||||||
+subset_charac|function|23c8815e03afed27|||||||||||||||
 summary_map|object|f477e8851dcac5fe|||||||||||||||
 summary_names|object|4bd2c0314d376a03|||||||||||||||
 tallo_cleaned_csv|stem|0424ceb8031f62db|3ef3027a8ebe3941|52d198972ee7a6e8|-43404866||t19991.263621578s|a057b906461a46f0|75|rds|local|vector|||0.286||
@@ -1822,19 +1835,19 @@ tar_map_nlr_nou_each|object|fedbcd9e86138eff|||||||||||||||
 tar_map_reduced_data|object|60a77260962d3c61|||||||||||||||
 tar_map_wd|object|cc9d8f96ed2a2dc8|||||||||||||||
 tar_nlr_nou2|object|4eec97f60afaad7c|||||||||||||||
-tbl_subdata|stem|74c6c8b721df9458|015a28d61896aae7|47182d68f6c7a226|-996177582||t20173.5278240741s|c4562ec57f43f223|552|rds|local|vector|||0.595||
+tbl_subdata|stem|74c6c8b721df9458|015a28d61896aae7|421a918b30336f9c|-996177582||t20216.4722747794s|c4562ec57f43f223|552|rds|local|vector|||0.737||
 tbl1|stem|0f5223480baefed1|d062d598a01fd700|a98ca9c21647a234|-1686762844||t20017.3937175136s|ddfe06e62b1eba77|1023|rds|local|vector|||0.075||
 test_loo|stem|c7044b529a94a6ee|b6c4bde660f35e0d|9d89f4b58db8e5af|-1580940952||t20173.5272337963s|10540e4028a983c5|19941|rds|local|vector|||18.063|Some Pareto k diagnostic values are too high. See helpparetokdiagnostic for details.. Some Pareto k diagnostic values are too high. See helpparetokdiagnostic for details.. Some Pareto k diagnostic values are too high. See helpparetokdiagnostic for details.. Some Pareto k diagnostic values are too high. See helpparetokdiagnostic for details.. Some Pareto k diagnostic values are too high. See helpparetokdiagnostic for details.. Some Pareto k diagnostic values are too high. See helpparetokdiagnostic for details.|
 try_wd_txt|stem|c3d4426c681d30ee|1d1521bdc6337fd5|2c530c1562a7fbd1|351177807|data-raw/30953.txt|t20173.3640323822s|4972d0d103cf3427|488425955|file|local|vector|||0||
 values|object|3abcd647e967d626|||||||||||||||
 version_line|object|9631b6022bd1c062|||||||||||||||
-wd_cr|stem|fff48a607b39d377|9afdc2fb87636b04|400d2595b86b0909|-276166940|figs/wd_cr.pdf*figs/wd_cr.png|t20207.5340623121s|5b8fb11e21132b5f|943167|file|local|vector|||8.166|collapsing to unique x values. The legend.text.align argument of theme is deprecated as of ggplot23.5.0.ℹ Please use themelegend.text  element_texthjust instead.|
+wd_cr|stem|85d36d89646ee6b3|9afdc2fb87636b04|4453d72ce774734d|-276166940|figs/wd_cr.pdf*figs/wd_cr.png*figs/wd_cr.jpg|t20272.1372537055s|fe53423d07d083c8|3265405|file|local|vector|||8.286|collapsing to unique x values|
 wd_cr_a|stem|13f151d13d90a2db|399c238a9b27b6d3|ca1c64270e97146f|-1153677650|figs/wd_cr_a.tiff*figs/wd_cr_a.pdf*figs/wd_cr_a.png|t20016.2840383312s|48ccc196b1420bd1|23558051|file|local|vector|||6.266|collapsing to unique x values|
 wd_cr_g|stem|b76fdbe8fff7ea8e|9a1ba33fb3c4d470|b47a18409a8feeab|-976525587|figs/wd_cr_g.tiff*figs/wd_cr_g.pdf*figs/wd_cr_g.png|t20016.2849575539s|831665519e3a7cfb|34876295|file|local|vector|||4.575||
 wd_cr1|stem|41232964c00634d7|ef957ae85d11f292|5076c7eecf06370a|307884197|figs/wd_cr1.pdf*figs/wd_cr1.png|t20021.2246902071s|b2ec43df533e3d78|936265|file|local|vector|||8.784|collapsing to unique x values. The legend.text.align argument of theme is deprecated as of ggplot23.5.0.ℹ Please use themelegend.text  element_texthjust instead.|
 wd_csv|stem|49523d905d4be727|16228efcb819371a|52d198972ee7a6e8|1592698991|data/wd.csv|t19991.2636250272s|0ac52f1a56e42d70|96021|file|local|vector|||0.296||
-wd_ef_plot|stem|c03894bd9c35da9e|558bc8b7e1916def|c69e0e7e44f64157|-979284906|figs/wd_ef.pdf*figs/wd_ef.png|t20207.5322735061s|7ff62a06884983e3|275652|file|local|vector|||8.671||
-wd_h|stem|c983380034d8ce76|1e77b48ff1f736f5|17452d6c7b296dd2|324444027|figs/wd_h.pdf*figs/wd_h.png|t20207.5318015139s|29f5eba8de94da67|1275725|file|local|vector|||17.447|collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values|
+wd_ef_plot|stem|2479c86c864bdabc|558bc8b7e1916def|505bc1fc8265a6cd|-979284906|figs/wd_ef.pdf*figs/wd_ef.png*figs/wd_ef.jpg|t20272.2245396801s|3c69a790dd57f93d|1025487|file|local|vector|||9.664|The legend.text.align argument of theme is deprecated as of ggplot23.5.0.ℹ Please use themelegend.text  element_texthjust instead.|
+wd_h|stem|7d2e99751226cefc|1e77b48ff1f736f5|e4640a0794ff426d|324444027|figs/wd_h.pdf*figs/wd_h.png*figs/wd_h.jpg|t20272.1378810372s|4bf733079449b10e|4030164|file|local|vector|||17.14|collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values|
 wd_h1|stem|681923821ecfa3ea|1a9d5b965d30b286|adf9119091451e45|-1852074895|figs/wd_h1.pdf*figs/wd_h1.png|t20021.2249590548s|f26d98366039b1d4|1274338|file|local|vector|||18.964|collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values. collapsing to unique x values|
 write_data_yaml|function|f4bff55db3907672|||||||||||||||
 write_posterior_yaml|function|da26bf1c04cf0b8a|||||||||||||||

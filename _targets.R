@@ -1329,12 +1329,48 @@ main_ <- list(
         sp_posterior_h_df
       )
       my_ggsave(
-        plot = p,
+        plot     = p,
         filename = "figs/h_sp",
-        dpi = 600,
-        width = 200,
-        height = 300,
-        units = "mm"
+        dpi      = 600,
+        width    = 200,
+        height   = 300,
+        units    = "mm"
+      )
+    },
+    format = "file"
+  ),
+# ANG
+  tar_target(
+    h_sp_ang_plot, {
+      p <- generate_h_sp_ang_plot(
+        tallo_reduced_lr_df_ang_h,
+        sp_posterior_h_df
+      )
+      my_ggsave(
+        plot     = p,
+        filename = "figs/h_sp_ang",
+        dpi      = 600,
+        width    = 200,
+        height   = 300,
+        units    = "mm"
+      )
+    },
+    format = "file"
+  ),
+#GYM
+  tar_target(
+    h_sp_gym_plot, {
+      p <- generate_h_sp_gym_plot(
+        tallo_reduced_nlr_df_gym_h,
+        sp_posterior_h_df
+      )
+      my_ggsave(
+        plot     = p,
+        filename = "figs/h_sp_gym",
+        dpi      = 600,
+        width    = 200,
+        height   = 300,
+        units    = "mm"
       )
     },
     format = "file"
@@ -1357,6 +1393,43 @@ main_ <- list(
     },
     format = "file"
   ),
+# SPECIES-LEVEL CR-ANG
+  tar_target(
+    cr_sp_ang_plot, {
+      p <- generate_cr_sp_ang_plot(
+        tallo_reduced_lr_df_ang_cr,
+        sp_posterior_cr_df
+      )
+      my_ggsave(
+        plot     = p,
+        filename = "figs/cr_sp_ang",
+        dpi      = 600,
+        width    = 200,
+        height   = 300,
+        units    = "mm"
+      )
+    },
+    format = "file"
+  ),
+# SPECIES-LEVEL CR-GYM
+  tar_target(
+    cr_sp_gym_plot, {
+      p <- generate_cr_sp_gym_plot(
+        tallo_reduced_nlr_df_gym_cr,
+        sp_posterior_cr_df
+      )
+      my_ggsave(
+        plot     = p,
+        filename = "figs/cr_sp_gym",
+        dpi      = 600,
+        width    = 200,
+        height   = 300,
+        units    = "mm"
+      )
+    },
+    format = "file"
+  ),
+
 NULL
 )
 

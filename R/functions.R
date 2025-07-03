@@ -2410,13 +2410,22 @@ subset_charac <- function(tallo_reduced_lr_df_ang_h,
     group_by(sp) |> filter(n() >= 20) |>
     ungroup()
 
+  # ang_data_dbh1 <- tallo_reduced_lr_df_ang_dbh1 |>
+  #   filter(division == "Angiosperm", !is.na(dbh), !is.na(cr), !is.na(h)) |>
+  #   group_by(sp) |> filter(n() >= 20) |>
+  #   ungroup()
   ang_data_dbh1 <- tallo_reduced_lr_df_ang_dbh1 |>
-    filter(division == "Angiosperm", !is.na(dbh), !is.na(cr), !is.na(h)) |>
+    filter(division == "Angiosperm", !is.na(dbh), !is.na(cr*h)) |>
     group_by(sp) |> filter(n() >= 20) |>
     ungroup()
 
+  # gym_data_dbh1 <- tallo_reduced_lr_df_gym_dbh1 |>
+  #   filter(division == "Gymnosperm", !is.na(dbh), !is.na(cr), !is.na(h)) |>
+  #   group_by(sp) |> filter(n() >= 20) |>
+  #   ungroup()
+
   gym_data_dbh1 <- tallo_reduced_lr_df_gym_dbh1 |>
-    filter(division == "Gymnosperm", !is.na(dbh), !is.na(cr), !is.na(h)) |>
+    filter(division == "Gymnosperm", !is.na(dbh), !is.na(cr*h)) |>
     group_by(sp) |> filter(n() >= 20) |>
     ungroup()
 
