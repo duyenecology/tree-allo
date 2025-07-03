@@ -221,9 +221,9 @@ Katabuchi\textsuperscript{1}
 
 \[ \]
 
-\textsuperscript{1} CAS Key Laboratory of Tropical Forest Ecology,
-Xishuangbanna Tropical Botanical Garden, Chinese Academy of Sciences,
-Menglun, Yunnan 666303, China
+\textsuperscript{1} Yunnan Key Laboratory of Forest Ecosystem Stability
+and Global Change Response, Xishuangbanna Tropical Botanical Garden,
+Chinese Academy of Sciences, Menglun, Yunnan 666303, China
 
 \textsuperscript{2} University of Chinese Academy of Sciences, Beijing
 100049, China
@@ -458,7 +458,7 @@ representing either tree height, crown radius, or DBH for each tree
 
 where \(f(\cdot)\) predicts the expected natural log tree height or
 crown radius from observed DBH (and \emph{vice versa}),
-\(\pmb{\beta}_{j}=\{a_j, b_j, k_j\}\) denotes the vector of
+\(\pmb{\beta}_{j}=\{a_j, b_j, c_j, k_j\}\) denotes the vector of
 species-specific parameters, and \(\sigma_y\) represents the standard
 deviation of the observation error. We considered three functional forms
 for the relationship between tree allometric variables
@@ -500,18 +500,18 @@ radius, \(\mathrm{DBH} = a_4 \mathrm{CR}^{b_4}\). In contrast, the gMM
 and Weibull models were only used to estimate tree height and crown
 radius from DBH. Because these two models specifically describe
 saturating relationships (Eq.~\ref{eq-gMM}; Eq.~\ref{eq-wb}), their
-formulation does not allow simply switching the roles of explanatory and
-response variables.
+formulation does not allow for simply switching the roles of explanatory
+and response variables.
 
 To compare the performance of different models for the same response
 variable, we used Pareto-smoothed importance sampling leave-one-out
 cross-validation (PSIS-LOO; Vehtari et al.
 (\citeproc{ref-Vehtari2017}{2017})). PSIS-LOO is an accurate and
 reliable approximation to standard leave-one-out cross-validation (LOO),
-which is a robust method for comparing models with different numbers of
+a robust method for comparing models with different numbers of
 parameters (\citeproc{ref-Vehtari2017}{Vehtari et al. 2017}). We
 utilized PSIS-LOO to calculate the LOO Information Criterion (LOOIC) for
-each model. A model with lower LOOIC is considered to have better
+each model. A model with a lower LOOIC is considered to have better
 predictive accuracy (\citeproc{ref-Vehtari2017}{Vehtari et al. 2017}).
 
 Once the best-performing models for each allometric relationship were
@@ -523,13 +523,13 @@ wood density (\(u_j\)): \begin{equation}\phantomsection\label{eq-wood}{
 \beta_{j} \sim N(\gamma_{0} + \gamma_{1} u_j, \sigma_{\beta}),
 }\end{equation}
 
-where \(\gamma_{0}\) and \(\gamma_{1}\) are the species-level intercept
-and slope, respectively, and \(\sigma_{\beta}\) is the standard
-deviation of the species-specific parameters. To facilitate
-interpretation and visualization, species were then classified into
-``light'' and ``dense'' wood groups based on the 10th and 90th
-percentiles of wood density distribution in the observed dataset,
-respectively. This classification allowed us to illustrate the
+where \(\gamma_{0}\) and \(\gamma_{1}\) are the global-level
+hyperparameters for intercept and slope, respectively, and
+\(\sigma_{\beta}\) is the standard deviation of the species-specific
+parameters. To facilitate interpretation and visualization, species were
+then classified into ``light'' and ``dense'' wood groups based on the
+10th and 90th percentiles of wood density distribution in the observed
+dataset, respectively. This classification allowed us to illustrate the
 relationships between wood density and the parameters of the
 best-performing models, enabling an evaluation of how wood density
 contributes to variation in tree architecture. Additionally, we explored
@@ -557,7 +557,7 @@ effective sample sizes greater than 300
 (\citeproc{ref-Vehtari2021}{Vehtari et al. 2021}). We also reported the
 median and 95\% Bayesian credible intervals (CIs) for each parameter
 (Supplementary Tables S3-S8). Estimates were considered significant when
-95\% CIs did not overlap with zero.
+their 95\% CIs did not overlap with zero.
 
 Statistical analyses were performed in R version 4.3.2
 (\citeproc{ref-RCoreTeam2023}{R Core Team 2023}), using the R packages
@@ -858,7 +858,7 @@ association between the exponent parameter \(b\) and wood density
 (Fig.~\ref{fig-wood1} g, h; Fig.~\ref{fig-wood2} b). In gymnosperms, we
 found a positive association between wood density and the exponent
 parameter \(b\), whereas neither the asymptote parameter \(a\) nor the
-scaling constant \(k\) showed significant relationship with this
+scaling constant \(k\) showed a significant relationship with this
 functional trait (Fig.~\ref{fig-wood1} i, j, k; Fig.~\ref{fig-wood2} c).
 
 \begin{figure}[H]
@@ -903,7 +903,7 @@ significant associations from Fig.~\ref{fig-wood1} are plotted.}
 biomass}\label{estimating-aboveground-biomass}
 
 AGB estimates based on the Weibull model (\(\text{AGB}_\text{H-WB}\))
-showed the highest predictive accuracy based both on the lowest root
+showed the highest predictive accuracy based on both the lowest root
 mean square error (RMSE) of 0.279 Mg and the smallest bias of 2.04\%
 (Fig.~\ref{fig-agb} a). Estimates based on the power-law model
 (\(\text{AGB}_\text{H-PL}\)) also showed competitive performance but had
@@ -962,7 +962,7 @@ functional traits, and forest biomass estimation.
 
 \subsection{Tree allometry}\label{tree-allometry}
 
-Our result supported a saturating H-DBH relationship in both angiosperm
+Our results supported a saturating H-DBH relationship in both angiosperm
 and gymnosperm species, consistent with theoretical expectations
 (\citeproc{ref-Falster2003}{Falster and Westoby 2003};
 \citeproc{ref-Niklas2007}{Niklas 2007}) and empirical observations
@@ -1013,8 +1013,8 @@ the community-level exponent \emph{b} is near the expected 2/3
 the CR-DBH allometry in gymnosperms showed an asymptotic relationship
 best described by the gMM function, with the Weibull function also
 showing competitive predictive performance (Table 1). This asymptotic
-pattern likely arises from structural constraints in gymnosperms growth
-forms that favour vertical over lateral expansion (e.g.,
+pattern likely arises from structural constraints in gymnosperms' growth
+forms that favor vertical over lateral expansion (e.g.,
 \citeproc{ref-Lines2012}{Lines et al. 2012};
 \citeproc{ref-Hulshof2015}{Hulshof et al. 2015};
 \citeproc{ref-Jucker2024}{Jucker et al. 2024}), an adaptation that can
@@ -1123,7 +1123,7 @@ functional traits and environmental variables to deepen our
 understanding of the factors driving DBH growth.
 
 Our analysis indicated distinct patterns in which wood density has a
-greater influence on the interspecific variation in angiosperms than
+greater influence on interspecific variation in angiosperms than in
 gymnosperms. Variation in wood density has consequential implications
 for the mechanical properties of wood and hence influences the
 mechanical stability of stems and branches
